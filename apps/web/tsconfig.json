@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "types": ["vite/client", "node"],
+    "paths": {
+      "@api-generated": ["./node_modules/.cache/generated-api/index.d.ts"],
+      "@api-generated/*": ["./node_modules/.cache/generated-api/*"]
+    }
+  },
+  "include": ["src", "vite.config.ts", "openapi-ts.config.ts"],
+  "exclude": ["src/shared/api/generated"]
+}

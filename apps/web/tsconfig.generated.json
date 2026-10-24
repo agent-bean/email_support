@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "exactOptionalPropertyTypes": false,
+    "noEmit": false,
+    "declaration": true,
+    "outDir": "node_modules/.cache/generated-api",
+    "rootDir": "src/shared/api/generated"
+  },
+  "include": ["src/shared/api/generated/**/*.ts"],
+  "exclude": []
+}
