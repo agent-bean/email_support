@@ -20,7 +20,7 @@ backend-setup:
 
 backend-check:
 	cd apps/backend && uv lock --check
-	cd apps/backend && uv run --locked pytest -q tests/test_health.py tests/test_openapi.py
+	cd apps/backend && uv run --locked pytest -q tests
 	cd apps/backend && uv run --locked ruff check .
 	cd apps/backend && uv run --locked ruff format --check .
 	cd apps/backend && uv run --locked mypy --strict src scripts tests

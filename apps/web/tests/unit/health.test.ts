@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { fetchHealth } from './health';
+import { fetchHealth } from '../../src/shared/api/health';
 
 function jsonResponse(payload: unknown, status = 200): Response {
   const body = JSON.stringify(payload);

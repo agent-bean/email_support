@@ -1,7 +1,7 @@
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { App } from './App';
+import { App } from '../../src/app/App';
 
 function jsonResponse(payload: unknown): Response {
   const body = JSON.stringify(payload);

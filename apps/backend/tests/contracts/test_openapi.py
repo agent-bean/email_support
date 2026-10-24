@@ -21,7 +21,7 @@ def test_openapi_describes_health_response() -> None:
 
 
 def test_offline_openapi_export_is_byte_stable() -> None:
-    backend_dir = Path(__file__).resolve().parents[1]
+    backend_dir = Path(__file__).resolve().parents[2]
     script = backend_dir / "scripts" / "export-openapi.py"
     snapshot = backend_dir / "openapi.json"
 
