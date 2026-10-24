@@ -8,4 +8,4 @@
 
 ## Related issue
 
-<!-- Reference the owning issue and link it through Development. -->
+<!-- Set Type on the owning Issue (GitHub does not support Issue Type on PRs). At PR creation, assign the configured developer account, request the configured tech lead, and copy all labels/milestone from the Issue. Link exactly one Issue through native Development when ready for review. Keep Project Auto-close issue enabled and repository auto-close for merged linked PRs disabled; do not use Fixes/Closes/Resolves. See docs/08-github-project-workflow.md. -->
