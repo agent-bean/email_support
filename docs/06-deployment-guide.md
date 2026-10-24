@@ -8,6 +8,14 @@ Databases, metrics, and trace storage remain private to the deployment network. 
 
 Set and measure resource limits, database caches, worker concurrency, research budgets, trace retention, and disk growth against actual workloads.
 
+## Ship and deploy
+
+Merge reviewed issue branches into `main` after the required checks pass. Merging code does not deploy it.
+
+Deploy production explicitly from a validated `main` revision or release tag. GitHub Actions builds the backend and web images, publishes them to GHCR, and deploys recorded image digests through Docker Compose. The API and worker share the backend image. Do not rebuild source on the VPS or deploy automatically on every merge.
+
+Use a protected production environment for deployment credentials and approval. A deployment must serialize against other deployments, back up PostgreSQL before schema changes, apply compatible migrations, check readiness, and record the deployed revision and image digests. On failure, stop promotion and use the verified rollback procedure; restoring application images alone cannot reverse incompatible data changes.
+
 ## Operational prerequisites
 
 - Use explicit configuration validation and separate production/test credentials and data.
