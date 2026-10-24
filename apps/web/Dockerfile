@@ -1,4 +1,4 @@
-FROM node:24.22.1-bookworm-slim
+FROM node:24.22.1-trixie-slim
 
 WORKDIR /app
 RUN npm install --global npm@12.2.1 \
