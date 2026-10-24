@@ -1,0 +1,26 @@
+name: Feature
+description: Add a user-facing capability.
+type: Feature
+projects: ["agent-bean/15"]
+body:
+  - type: textarea
+    id: outcome
+    attributes:
+      label: User outcome
+      description: Describe who needs this capability and the resulting behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope and constraints
+      description: Identify the workflow, affected contracts, and material exclusions.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: List observable outcomes, including relevant failure behavior.
+    validations:
+      required: true

@@ -1,0 +1,25 @@
+name: Bug
+description: Report behavior that violates an existing contract.
+type: Bug
+labels: ["bug"]
+projects: ["agent-bean/15"]
+body:
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and actual behavior
+      description: Include the affected contract or user journey.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Give steps and relevant version or environment information.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Link relevant logs, tests, or traces without credentials or personal data.
