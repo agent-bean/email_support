@@ -1,6 +1,6 @@
 ---
 title: "Phase 2: Native Project automation"
-status: todo
+status: done
 ---
 
 # Phase 2: Native Project automation
@@ -15,7 +15,7 @@ Configure Project #15's native pull-request workflows so future linked PR events
 - A review requesting changes moves it to `In progress`.
 - A merged PR moves it to `Verify`; it does not close the Issue.
 - PR metadata is set at creation: assignee `javis-27`, reviewer `biendo27`, labels and milestone copied from the owning Issue.
-- Keep Auto-close issue disabled and do not use closing keywords in PR bodies.
+- Keep the Project `Auto-close issue` workflow and repository `Auto-close issues with merged linked pull requests` setting disabled. Do not rely on omitting closing keywords to prevent merge closure.
 - Do not change existing Issues or PRs.
 
 ## Files and Project settings
@@ -31,21 +31,23 @@ Configure Project #15's native pull-request workflows so future linked PR events
 1. Set the native `Pull request linked to issue` workflow to `Review` and enable it.
 2. Set `Code changes requested` to `In progress` and enable it.
 3. Enable `Pull request merged` with its existing `Verify` target.
-4. Keep `Auto-close issue` disabled; add the workflow guide, index link, and PR template instructions for linking, metadata, and re-review.
+4. Keep both auto-close controls disabled: the Project `Auto-close issue` workflow and repository `Auto-close issues with merged linked pull requests` setting.
+5. Add the workflow guide, index link, and PR template instructions for linking, metadata, re-review, and owner acceptance.
 
 ## Validation
 
 - Verify each saved Project workflow visibly shows the required enabled state and target.
+- Verify both Project and repository auto-close controls are disabled.
 - Confirm Project #15 still contains one principal Issue item per task and no PR items were added.
 - Review the PR template and workflow guide against Project #15 README and acceptance rules.
 
 ## Risk and rollback
 
-- The native linked-PR workflow acts only when a PR is natively linked to an Issue. AI must link a PR only when ready for review; a draft stays unlinked until then.
+- The native linked-PR workflow acts only when a PR is natively linked to an Issue. AI must link a PR only when ready for review; a draft stays unlinked until then. If the repository auto-close setting is enabled, merging a linked PR can close the Issue independently of Project automation.
 - If a native workflow behaves unexpectedly, disable only that workflow and restore statuses through the phase-1 command after inspecting the affected Issue.
 
 ## Success Criteria
 
-- Native linking to a ready PR sets `Review`; requested changes set `In progress`; merge sets `Verify` and leaves the Issue open.
+- Native linking to a ready PR sets `Review`; requested changes set `In progress`; merge sets `Verify` and leaves the Issue open while both auto-close controls stay disabled.
 - After fixing requested changes, AI returns the Issue to `Review` when it requests review again.
 - No GitHub App or repository secret is needed.

@@ -9,6 +9,7 @@ These documents record product, architecture, and engineering requirements; exec
 - [05 — Interface guidelines](05-design-guidelines.md): review, approval, evidence, and failure presentation.
 - [06 — Deployment direction](06-deployment-guide.md): target operating environment and release prerequisites.
 - [07 — Implementation roadmap](07-project-roadmap.md): issue-based delivery sequence within v1.0.0.
+- [08 — GitHub Project workflow](08-github-project-workflow.md): Issue status transitions, AI procedure, native PR links, and PR metadata.
 
 ## Documentation ownership
 

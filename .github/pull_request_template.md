@@ -8,4 +8,4 @@
 
 ## Related issue
 
-<!-- Reference the owning issue and link it through Development. -->
+<!-- At creation, assign javis-27, request biendo27, and copy all labels/milestone from the owning Issue. Link exactly one Issue through native Development when ready for review. Keep both GitHub auto-close settings disabled; do not use Fixes/Closes/Resolves. See docs/08-github-project-workflow.md. -->
