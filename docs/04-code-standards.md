@@ -41,6 +41,8 @@ Test application behavior, business rules, and integration contracts at the smal
 - For LLM behavior, citations, and prompt-injection handling, use a human-reviewed corpus of authorized, redacted material. Do not treat an LLM judge as a deterministic security gate.
 - Keep development and test data, databases, and credentials separate. Concurrency tests should target a specific application invariant with deterministic synchronization.
 - Continuous integration should cover tests, lint, type checks, web build, and generated OpenAPI drift. Mark checks as required only after the corresponding workflow has run and GitHub exposes the checks.
+- Use `make generate` to intentionally refresh OpenAPI and generated web artifacts. The [drift check](../scripts/check-api-drift.sh) rejects dirty generated paths before writing, then rejects changes after generation; CI runs it from a clean checkout.
+- The [CI workflow](../.github/workflows/ci.yml) runs on pull requests and pushes to `main`, uses read-only repository permissions, pins actions by full commit SHA, and keeps the browser smoke separate from unit tests.
 
 ## Review checklist
 
@@ -56,4 +58,4 @@ Test application behavior, business rules, and integration contracts at the smal
 
 Work from an issue branch; open a pull request targeting `main` and link the issue. Use Task, Feature, or Bug issue types, area labels for ownership, and the release milestone. Use sub-issues to group scope and dependency relationships to express ordering. Use the [pull request template](../.github/pull_request_template.md) for documentation and code changes.
 
-The [main ruleset](../.github/rulesets/main.json) owns baseline merge protection; the [review ruleset](../.github/rulesets/review.json) owns review requirements. Keep the admin review exception separate so it cannot bypass baseline protection or required CI checks. A new reviewable push invalidates prior approval.
+The [main ruleset](../.github/rulesets/main.json) owns baseline merge protection and required CI checks; the [review ruleset](../.github/rulesets/review.json) owns review requirements. Add CI contexts only after GitHub has emitted them on a successful pull request. Keep the admin review exception separate so it cannot bypass baseline protection or required CI checks. A new reviewable push invalidates prior approval.

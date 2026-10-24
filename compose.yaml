@@ -1,0 +1,37 @@
+services:
+  api:
+    build:
+      context: ./apps/backend
+    ports:
+      - "127.0.0.1:8000:8000"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=2)
+      interval: 2s
+      timeout: 3s
+      retries: 20
+      start_period: 3s
+  web:
+    build:
+      context: ./apps/web
+    environment:
+      API_PROXY_TARGET: http://api:8000
+      WEB_HOST: 0.0.0.0
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:5173:5173"
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:5173', { signal: AbortSignal.timeout(2000) }).then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 2s
+      timeout: 3s
+      retries: 20
+      start_period: 3s

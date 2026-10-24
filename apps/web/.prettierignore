@@ -1,0 +1,5 @@
+dist/
+src/shared/api/generated/
+coverage/
+test-results/
+playwright-report/
