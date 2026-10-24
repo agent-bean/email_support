@@ -14,6 +14,19 @@
     { "type": "non_fast_forward" },
     { "type": "required_linear_history" },
     {
+      "type": "required_status_checks",
+      "parameters": {
+        "strict_required_status_checks_policy": true,
+        "do_not_enforce_on_create": false,
+        "required_status_checks": [
+          { "context": "Backend", "integration_id": 15368 },
+          { "context": "Web", "integration_id": 15368 },
+          { "context": "API contracts", "integration_id": 15368 },
+          { "context": "Smoke", "integration_id": 15368 }
+        ]
+      }
+    },
+    {
       "type": "pull_request",
       "parameters": {
         "allowed_merge_methods": ["squash"],
