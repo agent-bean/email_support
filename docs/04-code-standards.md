@@ -54,4 +54,6 @@ Test application behavior, business rules, and integration contracts at the smal
 
 ## Contributions
 
-Work from an issue branch; open a pull request targeting `main` and link the issue. Use Task, Feature, or Bug issue types, area labels for ownership, and the release milestone. Use sub-issues to group scope and dependency relationships to express ordering. Use the [pull request template](pull_request_template.md) for documentation and code changes.
+Work from an issue branch; open a pull request targeting `main` and link the issue. Use Task, Feature, or Bug issue types, area labels for ownership, and the release milestone. Use sub-issues to group scope and dependency relationships to express ordering. Use the [pull request template](../.github/pull_request_template.md) for documentation and code changes.
+
+The [main ruleset](../.github/rulesets/main.json) owns baseline merge protection; the [review ruleset](../.github/rulesets/review.json) owns review requirements. Keep the admin review exception separate so it cannot bypass baseline protection or required CI checks. A new reviewable push invalidates prior approval.

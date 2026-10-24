@@ -8,4 +8,4 @@
 
 ## Related issue
 
-<!-- Use Closes #N only when merging satisfies acceptance; otherwise use Refs #N. -->
+<!-- Reference the owning issue and link it through Development. -->
