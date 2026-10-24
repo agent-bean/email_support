@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+# Ignore local environment files while keeping the sample template.
+.[e]nv
+.[e]nv.*
+!.[e]nv.example
+node_modules/
+dist/
+coverage/
+test-results/
+playwright-report/
+.vite/
