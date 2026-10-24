@@ -1,7 +1,10 @@
 import { getHealth as getGeneratedHealth } from '@api-generated';
+import { zHealthResponse } from '@api-generated/zod.gen';
 import type { HealthResponse } from '@api-generated';
+import * as z from 'zod';
 
 const REQUEST_DEADLINE_MS = 5_000;
+const strictHealthResponse = z.strictObject(zHealthResponse.shape);
 
 export async function fetchHealth(
   callerSignal: AbortSignal,
@@ -29,6 +32,7 @@ export async function fetchHealth(
       baseUrl: window.location.origin,
       signal: requestController.signal,
       throwOnError: true,
+      responseValidator: (data) => strictHealthResponse.parseAsync(data),
     });
     return data;
   } finally {

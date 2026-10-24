@@ -56,7 +56,7 @@ describe('fetchHealth', () => {
     expect(request.method).toBe('GET');
   });
 
-  it.each([{}, { status: 'degraded' }])(
+  it.each([{}, { status: 'degraded' }, { status: 'ok', extra: true }])(
     'rejects malformed response payloads: %j',
     async (payload) => {
       vi.stubGlobal(
