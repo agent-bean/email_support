@@ -6,7 +6,8 @@ This page is a navigation guide for future contributors and coding agents. For t
 
 Backend paths below are relative to `apps/backend/`; web paths are relative to `apps/web/`.
 
-- `src/email_support/main.py` is the planned HTTP application composition point; begin HTTP work at `api/` and move domain decisions into `services/`.
+- `src/email_support/main.py` composes the current FastAPI application. The implemented `/api/health` route is in `src/email_support/api/health.py`, with its Pydantic `StrEnum` contract in `src/email_support/models/health.py`.
+- `scripts/export-openapi.py` writes the offline OpenAPI contract to `openapi.json`; `tests/test_health.py` and `tests/test_openapi.py` cover the health and exported contract.
 - `src/email_support/worker.py` is the planned worker composition point; background company briefing work belongs under `workflows/company_briefing/`.
 - Shared product contracts belong in `models/`. PostgreSQL ORM mappings and queries belong under `storage/postgres/`; do not use ORM rows as API or workflow contracts.
 
@@ -26,6 +27,10 @@ Use the architecture page for dependency direction and cross-boundary decisions.
 
 ## Web entry points
 
-The planned web application starts at `src/app/` for routing and providers. Product-specific code is grouped by feature (`access`, `connections`, `research`, `briefings`, `companies`, and `knowledge`). A feature may contain `api/`, `model/`, `hooks/`, or `ui/` only where those responsibilities exist. Cross-feature contracts and generated API access belong under `src/shared/api/`; reusable presentation components belong under `src/shared/ui/`.
+`src/main.tsx` mounts the current web app. `src/app/App.tsx` renders the health query's loading, healthy, and error states. `src/shared/api/health.ts` calls the generated SDK with caller cancellation and a bounded deadline. `openapi-ts.config.ts` owns generation into `src/shared/api/generated/`; do not hand-edit that directory. Vitest tests are limited to `src/`, while `tests/health-smoke.spec.ts` is the Playwright browser smoke test.
+
+`vite.config.ts` owns the same-origin `/api` proxy and local web port. Root `compose.yaml` runs only the API and web services for local development; its published ports bind to loopback.
+
+Product-specific code is planned to group by feature (`access`, `connections`, `research`, `briefings`, `companies`, and `knowledge`). A feature may contain `api/`, `model/`, `hooks/`, or `ui/` only where those responsibilities exist. Cross-feature contracts and generated API access belong under `src/shared/api/`; reusable presentation components belong under `src/shared/ui/`.
 
 Keep feature internals private to their feature. The architecture page records the intended web dependency boundaries and server-state ownership.

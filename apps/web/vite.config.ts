@@ -13,7 +13,7 @@ export default defineConfig({
     },
   },
   server: {
-    host: '127.0.0.1',
+    host: env.WEB_HOST ?? '127.0.0.1',
     port: 5173,
     strictPort: true,
     proxy: {

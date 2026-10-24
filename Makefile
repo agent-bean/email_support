@@ -1,10 +1,19 @@
-.PHONY: setup check generate backend-setup backend-check backend-generate web-setup web-check web-generate dev-api dev-web
+.PHONY: setup check generate check-api-drift up down backend-setup backend-check backend-generate web-setup web-check web-generate dev-api dev-web
 
 setup: backend-setup web-setup
 
 check: backend-check web-check
 
 generate: backend-generate web-generate
+
+check-api-drift:
+	./scripts/check-api-drift.sh
+
+up:
+	docker compose up --detach --build --wait --wait-timeout 60
+
+down:
+	docker compose down --remove-orphans
 
 backend-setup:
 	cd apps/backend && uv sync --locked

@@ -22,6 +22,12 @@
       "@api-generated/*": ["./node_modules/.cache/generated-api/*"]
     }
   },
-  "include": ["src", "vite.config.ts", "openapi-ts.config.ts"],
+  "include": [
+    "src",
+    "vite.config.ts",
+    "openapi-ts.config.ts",
+    "playwright.config.ts",
+    "tests"
+  ],
   "exclude": ["src/shared/api/generated"]
 }

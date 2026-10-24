@@ -11,11 +11,12 @@
   "scripts": {
     "build": "npm run compile:generated && vite build",
     "compile:generated": "tsc --project tsconfig.generated.json",
-    "dev": "npm run compile:generated && vite --host 127.0.0.1 --port 5173 --strictPort",
+    "dev": "npm run compile:generated && vite --port 5173 --strictPort",
     "format:check": "prettier --check . --ignore-unknown",
     "generate:api": "openapi-ts",
     "lint": "npm run compile:generated && eslint .",
     "test": "npm run compile:generated && vitest run",
+    "test:smoke": "playwright test",
     "typecheck": "npm run compile:generated && tsc --noEmit"
   },
   "dependencies": {
