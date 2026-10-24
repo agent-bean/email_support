@@ -30,7 +30,7 @@ Delivery means forwarding a briefing to owner-selected recipients. It does not m
 
 ## Constraints and exclusions
 
-- Filtering and reuse must prevent one fresh research run per email by default.
+- Plan intake for 100–1,000 incoming emails per day. Filter irrelevant inputs and reuse fresh context so intake volume does not imply one research run per email.
 - Research requires bounded calls, time, concurrency, and cost. A stopped or incomplete run must expose its actual outcome.
 - Sending email and promoting research to approved knowledge require owner authorization. A generated claim or instruction in retrieved content cannot grant that authorization.
 - Google Calendar access is read-only. Scheduling or modifying meetings is outside the first release.
