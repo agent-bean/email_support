@@ -5,6 +5,7 @@
 - Work only on the owner-selected issue and authorized scope. Do not start the next issue without the owner's selection.
 - Ask the owner before changing scope or accepted architecture decisions.
 - Obtain explicit owner authorization for final acceptance, issue closure, PR merge, production deployment, and release. Passing checks or merging a PR does not establish acceptance.
+- After explicit acceptance, reconcile the owning Issue's verified checkboxes and evidence, Project status and closure, and any pending owner-action note on its PR. Do not leave accepted work in `Review` or leave verified criteria unchecked. Follow [docs/08-github-project-workflow.md](docs/08-github-project-workflow.md); if acceptance follows an explicitly authorized merge, perform the same closeout then.
 
 ## Project conventions
 
@@ -16,7 +17,7 @@
 
 - Keep Issue and PR text concise: include only the goal, material constraints, completion criteria, and verification evidence. Do not repeat metadata already stored in GitHub fields or include personal identifiers unless essential.
 - Write each Issue acceptance criterion as an unchecked checkbox (`- [ ]`) and include only observable outcomes needed to decide completion.
-- Follow `.github/pull_request_template.md` for PR descriptions. Do not copy the full Issue or add process logs, identity names, or unrelated implementation detail.
+- Follow `.github/pull_request_template.md` for PR descriptions. Keep to its sections and omit copied Issue criteria, delegation or review history, ship metadata, owner-action checklists, identity names, and unrelated detail.
 
 ## Verification
 

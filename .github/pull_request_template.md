@@ -1,11 +1,11 @@
 ## Change
 
-<!-- Briefly describe the change and any material trade-off. Do not copy the Issue or its full acceptance criteria. -->
+<!-- Briefly describe the change and any material trade-off. Do not copy the Issue, its acceptance criteria, or plan history. -->
 
 ## Validation
 
-<!-- List checks actually run and material gaps. Use checkboxes only when tracking discrete validation results. -->
+<!-- List only checks actually run and material gaps. Use checkboxes only for discrete validation results. Omit delegation/review history, ship metadata, and owner-action checklists. -->
 
 ## Related issue
 
-<!-- Link one owning Issue through native Development; avoid closing keywords. Keep Type and PR metadata in GitHub fields. See docs/08-github-project-workflow.md. -->
+<!-- Link one owning Issue through native Development; avoid closing keywords. Keep Type and PR metadata in GitHub fields. Track owner acceptance on the Issue and Project. See docs/08-github-project-workflow.md. -->
