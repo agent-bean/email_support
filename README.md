@@ -4,7 +4,7 @@ A single-owner assistant for preparing sourced company briefings from business e
 
 ## Current status
 
-The repository has a credential-free FastAPI health endpoint, a minimal web client with a generated and runtime-validated API contract, a two-service local Compose stack, and pull request/main CI. Authentication, provider integrations, storage, the worker, and production deployment are not implemented.
+The repository has a credential-free FastAPI health endpoint, typed PostgreSQL persistence for canonical records, approvals, knowledge, and projection metadata, a minimal web client with a generated and runtime-validated API contract, a two-service local Compose stack, and pull request/main CI. The API still serves only health and does not connect to PostgreSQL. Authentication, provider integrations, the worker, and production deployment are not implemented.
 
 ## Local development
 
@@ -17,11 +17,21 @@ make generate
 make check-api-drift
 ```
 
+`make check` and `make check-api-drift` do not require PostgreSQL. `make generate` intentionally rewrites the committed OpenAPI and web SDK artifacts; `make check-api-drift` checks those paths before generation and reports committed drift afterward.
+
 Run the backend and web dev servers in separate terminals with `make dev-api` and `make dev-web`, then open <http://127.0.0.1:5173>. To use the local container stack instead, run `make up`; stop it with `make down`.
 
 The browser smoke test uses Chromium. Install it from `apps/web/` with `npx playwright install chromium`, start the local stack with `make up`, run `npm --prefix apps/web run test:smoke`, and finish with `make down`.
 
-`make generate` intentionally rewrites the committed OpenAPI and web SDK artifacts. `make check-api-drift` checks those paths before generation and reports committed drift afterward.
+## PostgreSQL persistence verification
+
+Run the real-database migrations, storage, backup, and restore checks with Docker Compose:
+
+```sh
+make database-check
+```
+
+The test service binds to `127.0.0.1:55432`. `make database-up` starts it for manual development; `make database-down` verifies and cleans owned test targets before stopping it. Local test data and private credentials remain under the ignored `.test-database/` directory. Failed runs stop the owned service and retain recovery files there; successful checks remove only that run's archives. Backend CI uses its own job-scoped PostgreSQL service and discards it with the job. These test routes do not configure production database access or backups.
 
 ## Planned capabilities
 
@@ -31,7 +41,7 @@ The browser smoke test uses Chromium. Install it from `apps/web/` with `npx play
 - Retrieve approved knowledge through relationship queries and semantic search.
 - Add PDF/Word export and attachment ingestion as separate increments.
 
-The planned stack uses FastAPI, LangGraph, and a Python worker for the backend; React, TypeScript, and Vite for the web app; and PostgreSQL, Neo4j, and Qdrant for storage and retrieval.
+The broader application plan adds LangGraph and a Python worker, plus Neo4j and Qdrant for graph and semantic projections.
 
 ## Documentation
 

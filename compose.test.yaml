@@ -1,0 +1,26 @@
+services:
+  postgres:
+    image: postgres:18.6-bookworm@sha256:bbf83594798e144bff365a9c191c5d779f181fb3135902064ab8ff11918020fc
+    user: "${EMAIL_SUPPORT_TEST_UID:?set by scripts/check-database.sh}:${EMAIL_SUPPORT_TEST_GID:?set by scripts/check-database.sh}"
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: ${EMAIL_SUPPORT_TEST_POSTGRES_PASSWORD:?set by scripts/check-database.sh}
+      POSTGRES_USER: email_support_test_admin
+    ports:
+      - "127.0.0.1:${EMAIL_SUPPORT_TEST_PORT:-55432}:5432"
+    volumes:
+      - "${EMAIL_SUPPORT_TEST_DATA_DIR:?set by scripts/check-database.sh}:/var/lib/postgresql"
+    labels:
+      com.email_support.test_database: "true"
+    healthcheck:
+      test:
+        - CMD
+        - pg_isready
+        - --username
+        - email_support_test_admin
+        - --dbname
+        - postgres
+      interval: 2s
+      timeout: 3s
+      retries: 30
+      start_period: 5s

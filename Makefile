@@ -1,4 +1,4 @@
-.PHONY: setup check generate check-api-drift up down backend-setup backend-check backend-generate web-setup web-check web-generate dev-api dev-web
+.PHONY: setup check generate check-api-drift up down database-up database-check database-down backend-setup backend-check backend-database-check backend-generate web-setup web-check web-generate dev-api dev-web
 
 setup: backend-setup web-setup
 
@@ -15,15 +15,28 @@ up:
 down:
 	docker compose down --remove-orphans
 
+database-up:
+	./scripts/check-database.sh up
+
+database-check:
+	./scripts/check-database.sh local tests/database
+
+database-down:
+	./scripts/check-database.sh down
+
 backend-setup:
 	cd apps/backend && uv sync --locked
 
 backend-check:
 	cd apps/backend && uv lock --check
-	cd apps/backend && uv run --locked pytest -q tests
+	cd apps/backend && uv run --locked pytest -q tests/unit tests/integration tests/contracts
 	cd apps/backend && uv run --locked ruff check .
 	cd apps/backend && uv run --locked ruff format --check .
-	cd apps/backend && uv run --locked mypy --strict src scripts tests
+	cd apps/backend && uv run --locked mypy --strict src scripts tests migrations
+	@if [ "$${CI:-}" = "true" ]; then $(MAKE) backend-database-check; fi
+
+backend-database-check:
+	@if [ "$${CI:-}" = "true" ]; then ./scripts/check-database.sh ci tests/database; else ./scripts/check-database.sh local tests/database; fi
 
 backend-generate:
 	cd apps/backend && uv run --locked python scripts/export-openapi.py

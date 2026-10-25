@@ -16,6 +16,10 @@ Deploy production explicitly from a validated `main` revision or release tag. Gi
 
 Use a protected production environment for deployment credentials and approval. A deployment must serialize against other deployments, back up PostgreSQL before schema changes, apply compatible migrations, check readiness, and record the deployed revision and image digests. On failure, stop promotion and use the verified rollback procedure; restoring application images alone cannot reverse incompatible data changes.
 
+## Local canonical persistence verification
+
+`make check` and `make check-api-drift` remain database-free. Maintainers can run the PostgreSQL migration, storage, backup, and restore suite with `make database-check`; `make database-up` and `make database-down` manage the reusable local test service. The local service binds to `127.0.0.1:55432` and keeps data and private credentials under the ignored `.test-database/` directory. A successful check removes its run's archives after cleanup verification. A failed run stops only the verified local service and retains local state and recovery files for investigation. Backend CI uses a job-scoped PostgreSQL service that is discarded with the job. These are development checks, not production backup storage, credentials, or a production restore procedure.
+
 ## Operational prerequisites
 
 - Use explicit configuration validation and separate production/test credentials and data.

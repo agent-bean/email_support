@@ -12,8 +12,25 @@ permissions:
 jobs:
   backend:
     name: Backend
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      EMAIL_SUPPORT_TEST_POSTGRES_PASSWORD: ci-test-${{ github.repository_id }}-${{ github.run_id }}-${{ github.run_attempt }}
+    services:
+      postgres:
+        image: postgres:18.6-bookworm@sha256:bbf83594798e144bff365a9c191c5d779f181fb3135902064ab8ff11918020fc
+        env:
+          POSTGRES_DB: postgres
+          POSTGRES_PASSWORD: ci-test-${{ github.repository_id }}-${{ github.run_id }}-${{ github.run_attempt }}
+          POSTGRES_USER: email_support_test_admin
+        ports:
+          - 55432:5432
+        options: >-
+          --health-cmd "pg_isready --username email_support_test_admin --dbname postgres"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 30
+          --health-start-period 5s
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
@@ -26,10 +43,12 @@ jobs:
           cache-dependency-glob: apps/backend/uv.lock
       - run: make backend-setup
       - run: make backend-check
+        env:
+          EMAIL_SUPPORT_TEST_CONTAINER_ID: ${{ job.services.postgres.id }}
 
   web:
     name: Web
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -48,7 +67,7 @@ jobs:
 
   api-contracts:
     name: API contracts
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -71,7 +90,7 @@ jobs:
 
   smoke:
     name: Smoke
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

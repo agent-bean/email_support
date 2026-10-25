@@ -7,9 +7,11 @@ This page is a navigation guide for future contributors and coding agents. For t
 Backend paths below are relative to `apps/backend/`; web paths are relative to `apps/web/`.
 
 - `src/email_support/main.py` composes the current FastAPI application. The implemented `/api/health` route is in `src/email_support/api/health.py`, with its Pydantic `StrEnum` contract in `src/email_support/models/health.py`.
-- `scripts/export-openapi.py` writes the offline OpenAPI contract to `openapi.json`; `tests/unit/` covers health-model validation, `tests/integration/` covers the HTTP endpoint, and `tests/contracts/` covers the exported OpenAPI contract.
+- `src/email_support/models/persistence/` groups typed canonical contracts by core, decisions and projections, with a stable package facade. The PostgreSQL adapter is grouped under `src/email_support/storage/postgres/persistence/`: async session setup, caller-owned storage operations, and scope-grouped SQLAlchemy mappings under `tables/`. The API does not yet connect to this storage.
+- `migrations/versions/` contains the additive canonical-core and approval/knowledge revisions. `tests/database/` verifies migrations and storage against PostgreSQL; the guarded runner is [`scripts/check-database.sh`](../scripts/check-database.sh) and its backup/restore helpers are in `scripts/test_database.py`.
+- `scripts/export-openapi.py` writes the offline OpenAPI contract to `openapi.json`; `tests/unit/` groups model, persistence-contract, and database-guard tests by scope; `tests/integration/` covers the HTTP endpoint, and `tests/contracts/` covers the exported OpenAPI contract.
 - `src/email_support/worker.py` is the planned worker composition point; background company briefing work belongs under `workflows/company_briefing/`.
-- Shared product contracts belong in `models/`. PostgreSQL ORM mappings and queries belong under `storage/postgres/`; do not use ORM rows as API or workflow contracts.
+- Shared product and persistence contracts belong in `models/`. PostgreSQL ORM mappings and queries belong under `storage/postgres/`; do not use ORM rows as API or workflow contracts.
 
 The intended backend boundaries are:
 
