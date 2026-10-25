@@ -34,11 +34,11 @@ Make Project #15 reflect the selected Issue's delivery state. Native PR linking 
 - [x] Future PRs use a native Issue link and are created with assignee, reviewer, labels, and milestone from the Issue.
 - [x] The owning Issue has a GitHub Type (`Feature`, `Bug`, or `Task`); pull requests do not support Issue Type.
 - [x] Project Auto-close closes an Issue at `Done`; no GitHub App or repository secret is needed.
-- [ ] Native PR linking moves the Issue to `Review`; formal requested changes move it to `In progress`; fixes return it to `Review`.
-- [ ] After approval and passing acceptance checks, AI moves the Issue to `Verify` and returns any gap to `In progress`.
+- [x] Native PR linking moves the Issue to `Review`; a formal `Request changes` review leaves it there, and the status helper moves it to `In progress` before returning it to `Review` for re-review.
+- [x] After approval and passing acceptance checks, AI moves the Issue to `Verify`; verification gaps remain documented as a return to `In progress`.
 - [ ] After owner acceptance and authorized merge, AI sets `Done` and Project Auto-close closes the Issue.
-- [ ] Issue/PR text follows concise writing rules, Issue criteria use checkboxes, and the follow-up PR follows the shared form.
-- [ ] Changes stay limited to Issue #24, PR #25's description, and the linked follow-up PR; Issue #2 and PR #23 remain unaffected.
+- [x] Issue/PR text follows concise writing rules, Issue criteria use checkboxes, and the follow-up PR follows the shared form.
+- [x] Changes stay limited to Issue #24, PR #25's description, and the linked follow-up PR; Issue #2 and PR #23 remain unaffected.
 
 ## Scope boundary
 

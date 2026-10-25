@@ -53,6 +53,6 @@ Keep Project #15 at one Issue item per task. Use its native linked-PR and auto-c
 
 ## Success Criteria
 
-- Native linking sets the Issue to `Review`; a formal `Request changes` review is reflected as `In progress`; fixes return it to `Review`.
-- AI sets `Verify` only after approval and passing acceptance checks, returns gaps to `In progress`, and sets `Done` only after owner-authorized merge; Project Auto-close then closes the Issue.
+- Native linking sets the Issue to `Review`; a formal `Request changes` review leaves it there, so AI uses the helper to set `In progress` and returns it to `Review` when ready for re-review.
+- After approval and passing acceptance checks, AI sets `Verify`; verification gaps return to `In progress`. After owner-authorized merge, AI sets `Done` and Project Auto-close closes the Issue.
 - Issue/PR writing follows the concise shared rules, and no GitHub App or repository secret is needed.
