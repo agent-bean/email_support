@@ -1,0 +1,52 @@
+# Issue #3 storage contract research
+
+Research conducted: 2026-10-25 (Asia/Bangkok)
+
+## Recommendation
+
+Use SQLAlchemy 2 typed declarative mappings (`Mapped[...]`, `mapped_column`) with PostgreSQL through Psycopg 3's async dialect (`postgresql+psycopg://` plus `create_async_engine`) and Alembic migrations. This fits the existing async FastAPI backend and strict typing standards while keeping the selected PostgreSQL/Alembic direction. SQLAlchemy documents Psycopg as one driver supporting both sync and async; `create_async_engine` selects the async implementation. Keep mappings as persistence contracts and convert to Pydantic application contracts at storage service boundaries. [SQLAlchemy Psycopg dialect](https://docs.sqlalchemy.org/en/20/dialects/postgresql.html#psycopg), [typed declarative mappings](https://docs.sqlalchemy.org/en/20/orm/declarative_tables.html#orm-annotated-declarative-automated-mapping-with-type-annotations). Current backend dependencies do not yet include SQLAlchemy, a PostgreSQL driver, or Alembic. [pyproject.toml](../../apps/backend/pyproject.toml#L5-L22)
+
+## Concrete choices and failure checks
+
+| Concern | Recommendation | Testable failure mode |
+| --- | --- | --- |
+| Typed persistence | Use SQLAlchemy 2 `DeclarativeBase` and `Mapped` annotations; set nullability explicitly when it carries domain meaning. Keep Pydantic request/domain contracts separate from ORM entities. | A storage read/write round trip yields the public contract; ORM instances are not returned from public service/API boundaries. |
+| Driver and session | Use Psycopg 3 async with `AsyncEngine`/`async_sessionmaker`. One `AsyncSession` per task/unit of work; pass it explicitly, do not share across concurrent tasks. Use an explicit transaction context for each atomic operation and close/dispose resources. | Two concurrent tasks use separate sessions; injected exception before commit leaves no partial rows; a fresh connection sees committed state. |
+| Transaction ownership | Storage operation owns a short transaction covering only related DB work. Commit approval and its action record atomically. End the transaction before future LLM/provider/network calls. Avoid implicit long-lived request/session transactions. | Failure between approval and action insertion rolls both back. A separately opened session observes neither row. |
+| Time | Store instants as PostgreSQL `timestamp with time zone` (`timestamptz`), validate/normalize aware UTC datetimes at application boundaries, and use UTC for generated values. PostgreSQL stores instants normalized to UTC but renders them in the session timezone, so tests should compare instants/offset-aware values rather than formatted text. | Round-trip an aware non-UTC input and compare to its UTC instant; reject naive datetime input; changing DB session timezone does not change the instant. |
+| Immutable briefing versions | Store each version as a separate append-only row with stable ID, parent briefing ID, monotonically assigned version number, content, and provenance. Add uniqueness on `(briefing_id, version_number)`. Enforce immutability at the database boundary (a narrowly scoped trigger rejecting UPDATE/DELETE) if the acceptance criterion means protection from any SQL writer; otherwise application-only append operations do not prove immutable storage. | UPDATE and DELETE of a persisted version fail; inserting a later version succeeds; duplicate version number fails. |
+| Approval/version/action binding | Make approval reference the exact immutable version, action kind, and recipient-set snapshot. To ensure the version belongs to the same briefing, use a composite FK from `(briefing_id, briefing_version_id)` to a unique pair on briefing versions. Make action reference the approval and carry matching binding columns under a composite FK/unique key, or store the binding once on the approval and use only an FK to that approval. Prefer one canonical binding to avoid duplicated mutable facts; use composite FK only where a cross-parent mismatch must be made structurally impossible. PostgreSQL FKs require a unique/primary referenced key. | Attempt an approval pointing to a version of another briefing; attempt action with a mismatched approval/version/action/recipient snapshot; both fail at DB constraint level. |
+| Uniqueness and concurrency | Put provider-scoped external IDs and actual domain idempotency keys in database unique constraints. Treat a pre-insert existence query as advisory, not a concurrency guarantee. PostgreSQL can raise unique violations under concurrent inserts; catch and map expected conflicts at the storage boundary. Use row locks/conditional updates only for a concrete mutable invariant in this issue; do not add job leases, serializable isolation, or speculative indexes. | Deterministically synchronize two transactions inserting the same provider key; exactly one row persists and the other receives a named conflict. |
+| Migrations | Generate Alembic revisions as candidates, then inspect and edit them. Test against a real, isolated PostgreSQL test database: migrate empty DB to head; create representative records; apply subsequent revision(s); verify records and constraints remain. Back up target DB before any migration verification as issue direction requires. | Empty upgrade fails on invalid DDL; preservation test detects dropped/rewritten data; migration head metadata comparison detects uncommitted schema drift. |
+
+SQLAlchemy describes `AsyncSession` as mutable transaction state and prescribes one session per task; explicit local context managers make lifecycle visible. PostgreSQL `timestamptz` is stored as an instant and rendered according to the current timezone. [SQLAlchemy session concurrency](https://docs.sqlalchemy.org/en/20/orm/session_basics.html#is-the-session-thread-safe-is-asyncsession-safe-to-share-in-concurrent-tasks), [SQLAlchemy asyncio](https://docs.sqlalchemy.org/en/20/orm/extensions/asyncio.html), [PostgreSQL date/time types](https://www.postgresql.org/docs/current/datatype-datetime.html).
+
+PostgreSQL documents uniqueness and foreign keys as database constraints, and its serializable mode can still report unique violations; correctness should rely on declared constraints and complete transaction handling rather than a check-then-insert pattern. Alembic autogenerate creates candidate migrations and explicitly requires human review. [PostgreSQL constraints](https://www.postgresql.org/docs/current/ddl-constraints.html), [PostgreSQL transaction isolation](https://www.postgresql.org/docs/current/transaction-iso.html), [Alembic autogenerate](https://alembic.sqlalchemy.org/en/latest/autogenerate.html).
+
+## Scope boundary
+
+This recommendation addresses schema integrity and storage operations only. Persisting an owner ID, approval decision, recipient snapshot, or action binding does not authenticate the owner, establish that a human actually approved, authorize a worker, claim a job, execute delivery, or provide idempotency for external effects. Those behaviors belong to later authorization/worker/delivery work and are explicitly out of Issue #3 scope. Architecture requires human approval and exact-binding rechecks later; the brainstorm excludes jobs, synchronization, delivery, and checkpoint execution. [Architecture](../../docs/02-system-architecture.md#L27-L37), [Issue #3 direction](brainstorm-261025-1529-issue-3-canonical-persistence.md#L7-L26).
+
+## Risks and remaining decisions
+
+Psycopg 3 is the simpler fit because one dialect supports both sync and async; selecting a different driver is possible but adds no evidenced requirement here. A DB trigger gives stronger immutability than app convention but adds migration/trigger testing cost; use it only if “immutable” must survive arbitrary database writers, then test that exact invariant. Keep transaction retry policy narrowly tied to observed SQLSTATEs and a whole operation; no broad retry framework is warranted. The plan should settle the schema's actual provider identity keys and whether immutable-version enforcement includes privileged/raw SQL writers. Do not use PostgreSQL UTC display formatting as proof of UTC storage.
+
+## Local evidence
+
+- Architecture assigns PostgreSQL canonical records, versioned briefings, approval/action storage, and projections; it also requires short-lived transaction boundaries and later approval binding checks. [docs/02-system-architecture.md](../../docs/02-system-architecture.md#L27-L53)
+- Standards require typed contracts, aware UTC values, one unit-of-work session, real-PostgreSQL persistence tests, and deterministic concurrency tests. [docs/04-code-standards.md](../../docs/04-code-standards.md#L5-L13) [docs/04-code-standards.md](../../docs/04-code-standards.md#L23-L42)
+- Owner-selected tools, acceptance evidence, and non-goals are recorded in the Issue #3 brainstorm. [brainstorm report](brainstorm-261025-1529-issue-3-canonical-persistence.md#L7-L39)
+
+## Unresolved questions
+
+- Should immutability be protected against raw SQL/privileged writers with a trigger, or is append-only application behavior the accepted boundary?
+- Which exact provider-scoped external keys are required by the selected Issue #3 schema?
+
+## Sources
+
+- SQLAlchemy 2.0: [PostgreSQL Psycopg dialect](https://docs.sqlalchemy.org/en/20/dialects/postgresql.html#psycopg), [typed declarative mappings](https://docs.sqlalchemy.org/en/20/orm/declarative_tables.html#orm-annotated-declarative-automated-mapping-with-type-annotations), [session concurrency](https://docs.sqlalchemy.org/en/20/orm/session_basics.html#is-the-session-thread-safe-is-asyncsession-safe-to-share-in-concurrent-tasks), [asyncio](https://docs.sqlalchemy.org/en/20/orm/extensions/asyncio.html).
+- PostgreSQL current docs: [date/time types](https://www.postgresql.org/docs/current/datatype-datetime.html), [constraints](https://www.postgresql.org/docs/current/ddl-constraints.html), [transaction isolation](https://www.postgresql.org/docs/current/transaction-iso.html).
+- Alembic: [autogenerate and manual review](https://alembic.sqlalchemy.org/en/latest/autogenerate.html), [cookbook](https://alembic.sqlalchemy.org/en/latest/cookbook.html).
+
+Status: DONE
+Summary: Researched concrete async SQLAlchemy 2, Psycopg 3, PostgreSQL constraint/time, and Alembic choices for Issue #3 planning. Recommendations include observable failure tests and preserve the boundary between stored records and future authorization/worker behavior.

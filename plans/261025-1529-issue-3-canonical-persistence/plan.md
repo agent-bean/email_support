@@ -1,0 +1,68 @@
+---
+title: "Issue 3: canonical PostgreSQL persistence"
+description: "Add typed canonical storage, integrity constraints, additive migrations, and guarded real-database verification."
+status: pending
+priority: P1
+effort: 24h
+issue: 3
+branch: docs/issue-3-persistence-plan
+tags: [backend, database, feature]
+blockedBy: []
+blocks: []
+created: 2026-10-25
+---
+
+# Canonical persistence
+
+Issue [#3](https://github.com/agent-bean/email_support/issues/3) remains Ready. SQLAlchemy + Alembic is selected; the owner accepted the corrected plan on 2026-10-25. Implementation has not begun. Flags: `--tdd --hard --yagni`.
+
+## Outcome and boundary
+
+Persist all requested canonical families with typed storage operations, stable IDs, provider-scoped uniqueness, provenance, UTC timestamps, immutable briefing history, exact historical approval bindings, and transaction rollback. Prove empty installation, real cross-revision preservation, reconnect durability, and restore using PostgreSQL.
+
+Use async SQLAlchemy 2 + Psycopg 3, Alembic, and separate Pydantic contracts. Callers own sessions and transactions; helpers flush without committing. No generic repository framework, API/UI, authentication, provider connections, worker/jobs, checkpoints, delivery, or Neo4j/Qdrant execution. Account fields only namespace external IDs.
+
+File inventories and command paths are relative to the repository root; Markdown links resolve relative to their document.
+
+## Phases and dependencies
+
+| Phase | Execution detail | Depends on | Status | Effort |
+| --- | --- | --- | --- | --- |
+| 1 | [Core schema, safe database harness](phase-01-start.md) | Owner plan acceptance (satisfied) | Pending | 10h |
+| 2 | [Complete storage and invariants](phase-02-typed-storage-and-invariants.md) | Phase 1 checks | Pending | 10h |
+| 3 | [CI and maintainer verification](phase-03-local-ci-and-verification.md) | Phase 2 checks | Pending | 4h |
+
+One executor owns each phase sequentially. Shared files transfer ownership only after the predecessor finishes. Two real additive revisions separate core inputs/evidence/briefings from approvals/knowledge/projection metadata.
+
+## Acceptance evidence
+
+- [ ] Every requested family has concrete contracts, columns, foreign keys and meaningful persistence tests.
+- [ ] Duplicate provider keys, orphan references, cross-briefing approvals, replacement knowledge text and ordinary SQL changes/TRUNCATE of immutable history fail; coordinated two-session tests prove locking.
+- [ ] Caller rollback removes all partial writes, including approval + action; a new connection reads committed records.
+- [ ] Both production Alembic revisions install empty and preserve seeded first-revision records on upgrade.
+- [ ] Fresh guarded scenario targets isolate migration/storage/restore paths; backups precede mutations and cleanup. Failed backup stops verified owned processes while retaining recovery data.
+- [ ] Projection metadata records only exact canonical source/embedding provenance; invalidated knowledge is excluded immediately.
+- [ ] Database checks are mandatory in Backend CI; credential-free health, export and `make check` remain available locally.
+- [ ] Existing lint/type/build/contract checks pass with no generated API drift.
+
+## Evidence and review gates
+
+[Accepted direction](../reports/brainstorm-261025-1529-issue-3-canonical-persistence.md), [scout](../reports/scout-261025-1529-issue-3-persistence.md), [storage research](../reports/researcher-261025-1529-issue-3-storage-contracts.md), [database research](../reports/researcher-261025-1529-issue-3-database-verification.md). Research suggestions to defer preservation or use asyncpg are superseded by this plan's two real revisions and Psycopg 3 selection.
+
+Only source inspection and plan authoring have run. Dependencies, containers, migrations and application checks have not been executed.
+
+## Red Team Review
+
+Three independent reviewers produced six distinct findings: three High and three Medium. Owner approved all six on 2026-10-25; all are applied across the phases. See the [decisions and verification record](../reports/validation-261025-1529-issue-3-persistence.md). TRUNCATE guards, coordinated concurrency tests, immutable selected-text binding, coherent projection states, fresh targets and recovery-safe cleanup are required implementation outcomes.
+
+## Validation Log
+
+Session 1, 2026-10-25: owner answered “Apply all six (Recommended)” to the recorded review question. Corrections are propagated to schema, operations, tests and lifecycle requirements. Phase checklists and the local plan index provide tracking; no applicable live task-management tool was available. Plan acceptance and implementation permission are separate from correction approval.
+
+### Whole-plan consistency sweep
+
+All four plan files reread against the six approved deltas; superseded serial-only, arbitrary knowledge-content, mismatched projection-version and unconditional cleanup claims removed. Structural/link checks and pending-task parsing are recorded in the validation report. No unresolved design contradiction remains; application behavior awaits implementation checks.
+
+## Readiness
+
+Session 2, 2026-10-25: owner accepted the plan (“tôi thấy plan này ổn rồi”) and requested relative paths. File inventories and the cook handoff now use repository-relative paths. No unresolved design question remains; ready for cook when requested. All implementation tasks remain pending.
