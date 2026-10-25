@@ -17,7 +17,7 @@
 
 - Keep Issue and PR text concise: include only the goal, material constraints, completion criteria, and verification evidence. Do not repeat metadata already stored in GitHub fields or include personal identifiers unless essential.
 - Write each Issue acceptance criterion as an unchecked checkbox (`- [ ]`) and include only observable outcomes needed to decide completion.
-- Follow `.github/pull_request_template.md` for PR descriptions. Keep to its sections and omit copied Issue criteria, delegation or review history, ship metadata, owner-action checklists, identity names, and unrelated detail.
+- Keep PR bodies concise and within [.github/pull_request_template.md](.github/pull_request_template.md); omit copied criteria and process, shipping, identity, or owner-action details.
 
 ## Verification
 

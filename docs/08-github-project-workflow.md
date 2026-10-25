@@ -16,7 +16,7 @@ flowchart TD
     Verify -->|Criteria pass; report evidence| Acceptance{Owner accepts and merge is authorized?}
     Acceptance -->|Either gate pending; keep Verify| Verify
     Acceptance -->|Gap found or rejected| InProgress
-    Acceptance -->|Both granted; merge succeeds; set status| Done
+    Acceptance -->|Both gates granted; PR merged; set status| Done
     Done -->|Project Auto-close issue workflow| Closed
 ```
 
@@ -40,13 +40,12 @@ The command changes only the Status field of exactly one matching Issue item in 
 
 - When the owner asks AI to brainstorm the next task or names a task, identify its Issue and move it to `Ready`; ask only if the Issue match or scope is ambiguous.
 - Move the selected Issue to `In progress` when implementation begins. Keep it there while implementing fixes or filling verification gaps.
-- Create/link a PR only when it is ready for review. Keep a draft PR unlinked until it is ready; linking a ready PR runs the native workflow that moves its Issue to `Review`.
-- When a formal review requests changes, check the Issue status and use the command above to move it to `In progress` if the PR-item workflow did not update it. After fixes are ready, request review again and move the Issue to `Review`.
-- After formal review approval, move the Issue to `Verify` and check every acceptance criterion against the implementation and required verification. If one is missing or a check fails, move the Issue to `In progress` and continue.
-- When verification passes, report evidence and keep the Issue in `Verify` while awaiting explicit owner acceptance and merge authorization. A failed acceptance returns it to `In progress`.
-- Keep acceptance and merge authorization separate; neither review approval, passing checks, nor merge implies acceptance. Normally, receive both before merging. If the owner explicitly authorizes merge before acceptance, keep the Issue in `Verify` and open until acceptance arrives.
-- At owner acceptance, check each verified Issue criterion and add concise PR or CI evidence links. Mark any completed owner-action item on the PR complete or remove it so accepted work has no stale TODO. After merge and acceptance, use the command above to move the Issue to `Done`, then verify the Project's `Auto-close issue` workflow closed it. If any criterion remains unverified, leave the Issue open and do not set `Done`.
-- Keep PR descriptions within the template's `Change`, `Validation`, and `Related issue` sections. Do not add delegation or review history, ship metadata, copied Issue criteria, or owner-action checklists; track acceptance in the Issue and Project.
+- Create/link a PR only when it is ready for review. Keep drafts unlinked; native linking moves the Issue to `Review`. For a follow-up PR on an accepted, closed Issue, restore `Done` after linking and keep it through review and merge; reopen only if its accepted scope needs new verification.
+- For active, unaccepted work, move the Issue to `In progress` on a formal change request and back to `Review` after fixes if automation did not.
+- After formal review approval, move unaccepted work to `Verify` and check every acceptance criterion. If a criterion is missing or a check fails, move it to `In progress` and continue.
+- When verification passes, report evidence and keep the Issue in `Verify` until owner acceptance and merge authorization. Review, green CI, and merge do not imply acceptance; rejection returns the Issue to `In progress`. If merge is authorized first, keep it in `Verify` and open until acceptance.
+- At acceptance, check verified criteria/evidence and clear stale PR actions. Set `Done` only after acceptance and merge, then verify auto-close; leave the Issue open if criteria remain unverified.
+- Keep PR bodies concise and within the three sections in `.github/pull_request_template.md`; track acceptance on the Issue and Project.
 - For blocked work, keep the current status, add the `blocked` label, and record the dependency and next action on the Issue.
 
 ## Pull request creation
