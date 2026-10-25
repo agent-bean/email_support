@@ -12,6 +12,12 @@
 - Follow the [system architecture](docs/02-system-architecture.md) for dependency boundaries and the [code standards](docs/04-code-standards.md) for contracts, testing, and contributions.
 - Use the [deployment direction](docs/06-deployment-guide.md) when working on shipping or production operations.
 
+## Issue and PR writing
+
+- Keep Issue and PR text concise: include only the goal, material constraints, completion criteria, and verification evidence. Do not repeat metadata already stored in GitHub fields or include personal identifiers unless essential.
+- Write each Issue acceptance criterion as an unchecked checkbox (`- [ ]`) and include only observable outcomes needed to decide completion.
+- Follow `.github/pull_request_template.md` for PR descriptions. Do not copy the full Issue or add process logs, identity names, or unrelated implementation detail.
+
 ## Verification
 
 - Resolve setup and verification commands from existing scripts, manifests, and workflows; do not invent commands or present planned tooling as available.

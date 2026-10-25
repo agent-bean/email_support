@@ -1,11 +1,11 @@
 ## Change
 
-<!-- Explain the problem, resulting behavior, and any material trade-off. -->
+<!-- Briefly describe the change and any material trade-off. Do not copy the Issue or its full acceptance criteria. -->
 
 ## Validation
 
-<!-- State which checks ran and what remains unverified. -->
+<!-- List checks actually run and material gaps. Use checkboxes only when tracking discrete validation results. -->
 
 ## Related issue
 
-<!-- Set Type on the owning Issue (GitHub does not support Issue Type on PRs). At PR creation, assign the configured developer account, request the configured tech lead, and copy all labels/milestone from the Issue. Link exactly one Issue through native Development when ready for review. Keep Project Auto-close issue enabled and repository auto-close for merged linked PRs disabled; do not use Fixes/Closes/Resolves. See docs/08-github-project-workflow.md. -->
+<!-- Link one owning Issue through native Development; avoid closing keywords. Keep Type and PR metadata in GitHub fields. See docs/08-github-project-workflow.md. -->
