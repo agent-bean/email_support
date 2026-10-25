@@ -49,7 +49,7 @@ One executor owns each phase sequentially. Shared files transfer ownership only 
 
 [Accepted direction](../reports/brainstorm-261025-1529-issue-3-canonical-persistence.md), [scout](../reports/scout-261025-1529-issue-3-persistence.md), [storage research](../reports/researcher-261025-1529-issue-3-storage-contracts.md), [database research](../reports/researcher-261025-1529-issue-3-database-verification.md). Research suggestions to defer preservation or use asyncpg are superseded by this plan's two real revisions and Psycopg 3 selection.
 
-Implementation and local verification evidence are recorded in the phase files. At the time this state was recorded, PR #29 was open at head `bf70387877242b81197d694ef5cb5af3c2d2781b`, with Backend, Web, API contracts and Smoke checks passed. The review-fix changes were local and hosted CI for them had not run yet; owner acceptance remained pending.
+Implementation and local verification evidence are recorded in the phase files. At the time of review, PR #29's original head `bf70387877242b81197d694ef5cb5af3c2d2781b` had all four checks passed. Review fixes were committed as `de1dd44f7eabbde6b96ec3f3ba9d61bc4d45daf6`; Backend, Web, API contracts and Smoke passed on that revision in GitHub Actions run [40190386860](https://github.com/agent-bean/email_support/actions/runs/40190386860). Owner acceptance remains pending.
 
 ## Red Team Review
 
@@ -65,4 +65,4 @@ All four plan files reread against the six approved deltas; superseded serial-on
 
 ## Readiness
 
-Session 2, 2026-10-25: owner accepted the plan (“tôi thấy plan này ổn rồi”) and requested relative paths. File inventories and the cook handoff now use repository-relative paths. Session 3 implemented the accepted scope and completed local checks. At that point hosted CI had not run, no PR existed, and Issue #3 had not been changed. At the time of this state update, PR #29 was open, all four checks passed at its original head, and Issue #3 was in Review. Review fixes had passed local checks; hosted CI for the updated revision and owner acceptance were pending.
+Session 2, 2026-10-25: owner accepted the plan (“tôi thấy plan này ổn rồi”) and requested relative paths. File inventories and the cook handoff now use repository-relative paths. Session 3 implemented the accepted scope and completed local checks. At that point hosted CI had not run, no PR existed, and Issue #3 had not been changed. At the time of this state update, PR #29 was open, all four checks passed at its original head, and Issue #3 was in Review. Review fixes were then committed and locally verified; hosted CI passed for `de1dd44` and owner acceptance remains pending.
