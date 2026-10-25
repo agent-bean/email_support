@@ -1,6 +1,6 @@
 ---
 title: "Phase 2: Project status workflow"
-status: in_progress
+status: done
 ---
 
 # Phase 2: Project status workflow
@@ -44,7 +44,7 @@ Keep Project #15 at one Issue item per task. Use its native linked-PR and auto-c
 - Confirm Issue #24 is concise, has checkbox acceptance criteria, and contains no personal identifiers.
 - Validate issue-form YAML and confirm the PR body follows the shared headings, reports only actual changes/checks, and uses checkboxes only for discrete validation results.
 - Verify the follow-up PR is natively linked to Issue #24, has the configured metadata, and moves the Project Issue from `Review` to `In progress` after a formal `Request changes` review. Use the helper only if the native workflow did not change the Issue.
-- After fixes are ready, return the Issue to `Review`; after approval and verification, leave it in `Verify` pending owner acceptance.
+- After fixes are ready, return the Issue to `Review`; after approval and verification, leave it in `Verify` pending owner acceptance. After owner acceptance and authorized merge, set the Issue to `Done` and verify Project Auto-close closes it.
 
 ## Risk and rollback
 
