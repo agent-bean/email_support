@@ -8,4 +8,4 @@
 
 ## Related issue
 
-<!-- Link exactly one owning Issue through native Development; do not use closing keywords. Type and PR metadata belong in GitHub fields, not copied into this body. See docs/08-github-project-workflow.md. -->
+<!-- Link one owning Issue through native Development; avoid closing keywords. Keep Type and PR metadata in GitHub fields. See docs/08-github-project-workflow.md. -->

@@ -6,7 +6,7 @@ Email Support Project #15 keeps one execution item per task: the Issue. Pull req
 
 ```mermaid
 flowchart TD
-    Backlog -->|Owner selects a task; AI sets Ready| Ready
+    Backlog -->|Owner asks for next task or names one; AI sets Ready| Ready
     Ready -->|AI starts implementation| InProgress[In progress]
     InProgress -->|Ready PR is natively linked| Review
     Review -->|Formal review requests changes; AI ensures status| InProgress
@@ -19,7 +19,7 @@ flowchart TD
     Done -->|Project Auto-close issue workflow| Closed
 ```
 
-Project #15 keeps the Issue as the only item. Its enabled `Pull request linked to issue` workflow sets the linked Issue to `Review`. The `Code changes requested`, `Code review approved`, and `Pull request merged` workflows update the matching PR item's Status; because PRs are not Project items, AI uses the status command below to keep the Issue accurate after requested changes, approval and verification, and owner-authorized merge. After status changes to `Done`, the enabled `Auto-close issue` workflow closes the Issue. GitHub documents these built-in workflows [here](https://docs.github.com/en/issues/planning-and-tracking-with-projects/automating-your-project/using-the-built-in-automations).
+The enabled `Pull request linked to issue` workflow moves the Issue to `Review`. The `Code changes requested`, `Code review approved`, and `Pull request merged` workflows update PR items; since this Project keeps only Issues, AI checks the Issue and uses the helper after a change request, approval and verification, or owner-authorized merge. `Auto-close issue` closes the Issue when its Status reaches `Done`. See [GitHub's built-in workflow guide](https://docs.github.com/en/issues/planning-and-tracking-with-projects/automating-your-project/using-the-built-in-automations).
 
 Keep the repository setting **Settings → Issues → Auto-close issues with merged linked pull requests** disabled. This is separate from the Project workflow: it closes a linked Issue directly on PR merge, regardless of Project Status. Here, the Project's `Auto-close issue` workflow closes the Issue only when its Status changes to `Done`. See [GitHub's setting documentation](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/managing-repository-settings/managing-auto-closing-issues).
 
@@ -37,7 +37,7 @@ The command changes only the Status field of exactly one matching Issue item in 
 
 ## AI operating rules
 
-- When the owner asks AI to choose/brainstorm the next task or names a specific task, identify its Issue. Move that Issue to `Ready` when the owner selects it; ask if the Issue match or scope is ambiguous.
+- When the owner asks AI to brainstorm the next task or names a task, identify its Issue and move it to `Ready`; ask only if the Issue match or scope is ambiguous.
 - Move the selected Issue to `In progress` when implementation begins. Keep it there while implementing fixes or filling verification gaps.
 - Create/link a PR only when it is ready for review. Keep a draft PR unlinked until it is ready; linking a ready PR runs the native workflow that moves its Issue to `Review`.
 - When a formal review requests changes, check the Issue status and use the command above to move it to `In progress` if the PR-item workflow did not update it. After fixes are ready, request review again and move the Issue to `Review`.
@@ -59,5 +59,3 @@ gh pr create \
 ```
 
 Repeat `--label` once per label on the Issue. Link exactly one owning Issue through the PR's native **Development** relationship when the PR is ready for review. Do not use `Fixes`, `Closes`, or `Resolves` in the PR body; the Project Status transition controls Issue closure. A plain `Refs #N` mention does not create the native relationship.
-
-The native `Pull request merged` workflow sets `Done` on the PR item. Since this Project intentionally keeps only the Issue item, AI must update the Issue's Status after the authorized merge.
