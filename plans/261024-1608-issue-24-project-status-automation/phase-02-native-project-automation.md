@@ -1,56 +1,58 @@
 ---
-title: "Phase 2: Native Project automation"
+title: "Phase 2: Project status workflow"
 status: in_progress
 ---
 
-# Phase 2: Native Project automation
+# Phase 2: Project status workflow
 
 ## Overview
 
-Configure Project #15's native pull-request workflows so future linked PR events update the one owning Issue. Use AI status updates for selection, implementation, and re-review after requested changes.
+Keep Project #15 at one Issue item per task. Use its native linked-PR and auto-close workflows; use the safe status helper for transitions that PR-item workflows do not apply to the Issue.
 
 ## Requirements
 
-- A ready PR linked to its owning Issue moves that Issue to `Review`.
-- A review requesting changes moves it to `In progress`.
-- AI moves a reviewed PR to `Verify` only after all acceptance checks pass; a verification gap returns the Issue to `In progress`.
-- A merged, owner-accepted PR moves the Issue to `Done`; the Project `Auto-close issue` workflow closes the Issue.
-- The owning Issue has a GitHub Type (`Feature`, `Bug`, or `Task`). Pull requests do not support Issue Type.
-- PR metadata is set at creation: assign the configured developer account, request review from the configured tech lead, and copy labels and milestone from the owning Issue.
-- Enable the Project `Auto-close issue` workflow to close Issues when Status changes to `Done`; keep the repository `Auto-close issues with merged linked pull requests` setting disabled.
-- Do not change existing Issues or PRs.
+- The enabled `Pull request linked to issue` workflow moves the linked Issue to `Review`.
+- After a formal review requests changes, AI confirms the Issue status and moves it to `In progress` if the PR-item workflow did not update it; after fixes are ready, AI returns it to `Review`.
+- After approval and passing acceptance checks, AI moves the Issue to `Verify`; any verification gap returns it to `In progress`.
+- After owner-authorized merge, AI moves the Issue to `Done`; Project `Auto-close issue` closes it.
+- The owning Issue has a GitHub Type (`Feature`, `Bug`, or `Task`); PR metadata is set at creation from the Issue.
+- Keep repository auto-close for merged linked PRs disabled.
+- Keep Issue/PR descriptions concise, without personal identifiers or duplicated GitHub metadata; Issue acceptance criteria use checkboxes and PR descriptions follow the shared form.
+- Update only Issue #24, PR #25's description, and the authorized follow-up PR; leave Issue #2 and PR #23 unchanged.
 
 ## Files and Project settings
 
-- `docs/08-github-project-workflow.md`
-- `docs/00-index.md`
+- `AGENTS.md`
+- `.github/ISSUE_TEMPLATE/`
 - `.github/pull_request_template.md`
-- Project #15 workflows: `Pull request linked to issue`, `Code changes requested`, and `Pull request merged`
+- `docs/08-github-project-workflow.md`
+- Issue #24 and PR #25 descriptions
+- Project #15 linked-PR, review, merge, and auto-close workflows
 - This phase plan and `plan.md`
 
 ## Implementation Steps
 
-1. Set the native `Pull request linked to issue` workflow to `Review` and enable it.
-2. Set `Code changes requested` to `In progress` and enable it.
-3. Set `Pull request merged` to `Done` and enable it. AI sets `Verify` before merge after acceptance checks pass.
-4. Enable Project `Auto-close issue` for the `Done` status. Keep repository `Auto-close issues with merged linked pull requests` disabled so Issue closure follows the Project Status transition.
-5. Add the workflow guide, index link, and PR template instructions for Issue Type, linking, metadata, re-review, pre-merge verification, and owner acceptance.
+1. Verify the live Project workflows and repository auto-close setting; change neither setting in this phase.
+2. Document that native PR linking moves the Issue to `Review`; AI checks and corrects Issue status for requested changes, verification, and post-merge completion because review/merge workflows update PR items.
+3. Add concise Issue/PR writing rules, checkbox guidance and starters for Issue criteria, and a shared PR form without copied acceptance criteria.
+4. Reopen Issue #24, link the ready follow-up PR natively, and verify the formal `Request changes` transition.
 
 ## Validation
 
-- Verify each saved Project workflow visibly shows the required enabled state and target.
-- Verify Project `Auto-close issue` is enabled for Status `Done` and repository auto-close for merged linked PRs remains disabled.
-- Confirm Project #15 still contains one principal Issue item per task and no PR items were added.
-- Review the PR template and workflow guide against Project #15 README and acceptance rules.
-- Verify Issue #24 is typed `Feature`; verify native linking moves it to `Review`.
+- Verify `Pull request linked to issue` moves a linked Issue to `Review`, `Auto-close issue` closes it at `Done`, and repository auto-close for merged linked PRs remains disabled.
+- Confirm Project #15 contains one Issue item for #24 and no separate PR item.
+- Confirm Issue #24 is concise, has checkbox acceptance criteria, and contains no personal identifiers.
+- Validate issue-form YAML and confirm the PR body follows the shared headings, reports only actual changes/checks, and uses checkboxes only for discrete validation results.
+- Verify the follow-up PR is natively linked to Issue #24, has the configured metadata, and moves the Project Issue from `Review` to `In progress` after a formal `Request changes` review. Use the helper only if the native workflow did not change the Issue.
+- After fixes are ready, return the Issue to `Review`; after approval and verification, leave it in `Verify` pending owner acceptance.
 
 ## Risk and rollback
 
-- The native linked-PR workflow acts only when a PR is natively linked to an Issue. AI must link a PR only when ready for review; a draft stays unlinked until then. The native merge workflow sets `Done` regardless of current Status, so the Project auto-close workflow will close the Issue after merge. AI and the owner must enforce Verify and acceptance before merging; the repository auto-close setting remains disabled.
-- If a native workflow behaves unexpectedly, disable only that workflow and restore statuses through the phase-1 command after inspecting the affected Issue.
+- PR review/merge workflows may update PR items, while this Project intentionally keeps only the Issue. Check the Issue's actual status after each event and use the helper where needed. Project Auto-close closes it after AI sets `Done`; repository auto-close stays disabled.
+- If a status transition is unexpected, inspect the review and Project item, then use the helper to restore the expected Issue status. No Project configuration changes are planned.
 
 ## Success Criteria
 
-- Native linking to a ready PR sets `Review`; requested changes set `In progress`; AI verifies before merge; merge sets `Done` and Project auto-close closes the Issue while repository auto-close stays disabled.
-- After fixing requested changes, AI returns the Issue to `Review` when it requests review again.
-- No GitHub App or repository secret is needed.
+- Native linking sets the Issue to `Review`; a formal `Request changes` review is reflected as `In progress`; fixes return it to `Review`.
+- AI sets `Verify` only after approval and passing acceptance checks, returns gaps to `In progress`, and sets `Done` only after owner-authorized merge; Project Auto-close then closes the Issue.
+- Issue/PR writing follows the concise shared rules, and no GitHub App or repository secret is needed.

@@ -14,13 +14,14 @@ body:
     id: scope
     attributes:
       label: Scope and constraints
-      description: Identify the workflow, affected contracts, and material exclusions.
+      description: Include only material workflow, contract, and exclusion details; omit information already stored in GitHub fields.
     validations:
       required: true
   - type: textarea
     id: acceptance
     attributes:
       label: Acceptance criteria
-      description: List observable outcomes, including relevant failure behavior.
+      description: Write only observable outcomes needed for completion, one unchecked checkbox per outcome.
+      value: "- [ ] "
     validations:
       required: true

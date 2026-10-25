@@ -23,3 +23,11 @@ body:
     attributes:
       label: Evidence
       description: Link relevant logs, tests, or traces without credentials or personal data.
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Write only observable fix outcomes, one unchecked checkbox per outcome.
+      value: "- [ ] "
+    validations:
+      required: true
