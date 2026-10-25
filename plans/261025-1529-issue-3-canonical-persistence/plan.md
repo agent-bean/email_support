@@ -1,7 +1,7 @@
 ---
 title: "Issue 3: canonical PostgreSQL persistence"
 description: "Add typed canonical storage, integrity constraints, additive migrations, and guarded real-database verification."
-status: in-progress
+status: completed
 priority: P1
 effort: 24h
 issue: 3
@@ -36,14 +36,14 @@ One executor owns each phase sequentially. Shared files transfer ownership only 
 
 ## Acceptance evidence
 
-- [ ] Every requested family has concrete contracts, columns, foreign keys and meaningful persistence tests.
-- [ ] Duplicate provider keys, orphan references, cross-briefing approvals, replacement knowledge text and ordinary SQL changes/TRUNCATE of immutable history fail; coordinated two-session tests prove locking.
-- [ ] Caller rollback removes all partial writes, including approval + action; a new connection reads committed records.
-- [ ] Both production Alembic revisions install empty and preserve seeded first-revision records on upgrade.
-- [ ] Fresh guarded scenario targets isolate migration/storage/restore paths; backups precede mutations and cleanup. Failed backup stops verified owned processes while retaining recovery data.
-- [ ] Projection metadata records only exact canonical source/embedding provenance; invalidated knowledge is excluded immediately.
-- [ ] Database checks are mandatory in Backend CI; credential-free health, export and `make check` remain available locally.
-- [ ] Existing lint/type/build/contract checks pass with no generated API drift.
+- [x] Every requested family has concrete contracts, columns, foreign keys and meaningful persistence tests.
+- [x] Duplicate provider keys, orphan references, cross-briefing approvals, replacement knowledge text and ordinary SQL changes/TRUNCATE of immutable history fail; coordinated two-session tests prove locking.
+- [x] Caller rollback removes all partial writes, including approval + action; a new connection reads committed records.
+- [x] Both production Alembic revisions install empty and preserve seeded first-revision records on upgrade.
+- [x] Fresh guarded scenario targets isolate migration/storage/restore paths; backups precede mutations and cleanup. Failed backup stops verified owned processes while retaining recovery data.
+- [x] Projection metadata records only exact canonical source/embedding provenance; invalidated knowledge is excluded immediately.
+- [x] Database checks are mandatory in Backend CI; credential-free health, export and `make check` remain available locally.
+- [x] Existing lint/type/build/contract checks pass with no generated API drift.
 
 ## Evidence and review gates
 
@@ -66,3 +66,5 @@ All four plan files reread against the six approved deltas; superseded serial-on
 ## Readiness
 
 Session 2, 2026-10-25: owner accepted the plan (“tôi thấy plan này ổn rồi”) and requested relative paths. File inventories and the cook handoff now use repository-relative paths. Session 3 implemented the accepted scope and completed local checks. At that point hosted CI had not run, no PR existed, and Issue #3 had not been changed. At the time of this state update, PR #29 was open, all four checks passed at its original head, and Issue #3 was in Review. Review fixes were then committed and locally verified; hosted CI passed for `de1dd44` and owner acceptance remains pending.
+
+Final ship checks at `b244169`: `make check` passed (26 backend and 14 web tests, lint, formatting, strict mypy, typecheck and production build); `make check-api-drift` passed; and `make database-check` passed all 33 real-PostgreSQL tests. Hosted CI run [40193443289](https://github.com/agent-bean/email_support/actions/runs/40193443289) passed Backend, Web, API contracts and Smoke on the same revision. The docs review found no documentation changes necessary. Issue #3 remains in Review pending owner verification.
