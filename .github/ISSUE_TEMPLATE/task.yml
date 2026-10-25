@@ -14,13 +14,14 @@ body:
     id: scope
     attributes:
       label: Scope
-      description: Identify affected modules, contracts, and material boundaries.
+      description: Include only affected modules, contracts, and material boundaries; omit information already stored in GitHub fields.
     validations:
       required: true
   - type: textarea
     id: acceptance
     attributes:
       label: Acceptance criteria
-      description: List observable outcomes and the checks that prove them.
+      description: Write only observable outcomes needed for completion, one unchecked checkbox per outcome.
+      value: "- [ ] "
     validations:
       required: true

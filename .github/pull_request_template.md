@@ -1,11 +1,11 @@
 ## Change
 
-<!-- Explain the problem, resulting behavior, and any material trade-off. -->
+<!-- Briefly describe the change and any material trade-off. Do not copy the Issue or its full acceptance criteria. -->
 
 ## Validation
 
-<!-- State which checks ran and what remains unverified. -->
+<!-- List checks actually run and material gaps. Use checkboxes only when tracking discrete validation results. -->
 
 ## Related issue
 
-<!-- Reference the owning issue and link it through Development. -->
+<!-- Link one owning Issue through native Development; avoid closing keywords. Keep Type and PR metadata in GitHub fields. See docs/08-github-project-workflow.md. -->
