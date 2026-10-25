@@ -23,7 +23,7 @@ from email_support.models.persistence import (
     ProviderAccountRecord,
     TimedMeetingTime,
 )
-from email_support.storage.postgres.core import (
+from email_support.storage.postgres.persistence.core import (
     PersistenceConflict,
     create_briefing,
     create_briefing_version,

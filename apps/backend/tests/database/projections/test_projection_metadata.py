@@ -12,13 +12,13 @@ from email_support.models.persistence import (
     ProjectionKind,
     ProjectionMetadataCreate,
 )
-from email_support.storage.postgres.decisions import (
+from email_support.storage.postgres.persistence.decisions import (
     create_knowledge,
     invalidate_knowledge,
     list_eligible_knowledge,
     record_approval_and_action,
 )
-from email_support.storage.postgres.projections import (
+from email_support.storage.postgres.persistence.projections import (
     get_projection_metadata,
     set_projection_metadata,
 )

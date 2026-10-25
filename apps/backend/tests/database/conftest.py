@@ -17,13 +17,13 @@ from email_support.models.persistence import (
     EvidenceCreate,
     EvidenceKind,
 )
-from email_support.storage.postgres.core import (
+from email_support.storage.postgres.persistence.core import (
     create_briefing,
     create_briefing_version,
     create_company,
     create_evidence,
 )
-from email_support.storage.postgres.database import (
+from email_support.storage.postgres.persistence.database import (
     create_database_engine,
     create_session_factory,
     dispose_database_engine,

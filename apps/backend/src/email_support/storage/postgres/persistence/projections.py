@@ -11,8 +11,8 @@ from email_support.models.persistence import (
     ProjectionMetadataCreate,
     ProjectionMetadataRecord,
 )
-from email_support.storage.postgres.core import PersistenceNotFound
-from email_support.storage.postgres.tables import ProjectionMetadataRow
+from email_support.storage.postgres.persistence.core import PersistenceNotFound
+from email_support.storage.postgres.persistence.tables import ProjectionMetadataRow
 
 
 def _projection_record(row: ProjectionMetadataRow) -> ProjectionMetadataRecord:

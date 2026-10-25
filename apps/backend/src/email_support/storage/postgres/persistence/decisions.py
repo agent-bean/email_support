@@ -18,11 +18,11 @@ from email_support.models.persistence import (
     PreferenceCreate,
     PreferenceRecord,
 )
-from email_support.storage.postgres.core import (
+from email_support.storage.postgres.persistence.core import (
     PersistenceConflict,
     PersistenceNotFound,
 )
-from email_support.storage.postgres.tables import (
+from email_support.storage.postgres.persistence.tables import (
     ActionRow,
     ApprovalRow,
     BriefingRow,

@@ -1,7 +1,7 @@
 ---
 phase: 1
 title: "Core schema and guarded database harness"
-status: todo
+status: done
 priority: P1
 effort: 10h
 dependencies: []
@@ -11,7 +11,7 @@ dependencies: []
 
 ## Goal and evidence
 
-Create the first real migration, typed core storage, and safe local PostgreSQL verification. Owner plan acceptance is satisfied; implementation and verification evidence are recorded below. At planning time, `apps/backend/src/email_support/main.py:7-8` composed health only and `apps/backend/pyproject.toml:10-22` lacked persistence dependencies. `docs/03-codebase-summary.md:12` places ORM code under storage and application contracts under models. `docs/04-code-standards.md:26,40-42` requires scoped sessions, real PostgreSQL and isolated data.
+Create the first real migration, typed core storage, and safe local PostgreSQL verification. Owner plan acceptance is satisfied; implementation and verification evidence are recorded below. At planning time, `apps/backend/src/email_support/main.py:7-8` composed health only and `apps/backend/pyproject.toml:10-22` lacked persistence dependencies. `docs/03-codebase-summary.md:10,14` documents the ORM and application-contract boundaries. `docs/04-code-standards.md:26,40-42` requires scoped sessions, real PostgreSQL and isolated data.
 
 ## File ownership
 
@@ -27,12 +27,12 @@ This executor owns every listed file. No parallel edits.
 - Create `apps/backend/alembic.ini` and `apps/backend/migrations/env.py`: metadata and async Psycopg migration environment, no embedded DSN.
 - Create `apps/backend/migrations/script.py.mako` and `apps/backend/migrations/versions/create_canonical_core.py`: reviewed substantive revision.
 - Create `apps/backend/src/email_support/storage/__init__.py` and `apps/backend/src/email_support/storage/postgres/__init__.py`: package boundaries.
-- Create `apps/backend/src/email_support/storage/postgres/database.py`: explicit engine/session factory and disposal.
-- Create `apps/backend/src/email_support/storage/postgres/tables.py`: typed mappings and named constraints.
-- Create `apps/backend/src/email_support/storage/postgres/core.py`: concrete core write/read functions.
-- Create `apps/backend/src/email_support/models/persistence.py`: validated inputs/results and finite enums.
-- Create `apps/backend/tests/unit/test_persistence_contracts.py` and `apps/backend/tests/unit/test_database_guard.py`.
-- Create `apps/backend/tests/database/conftest.py`, `apps/backend/tests/database/test_core_storage.py`, and `apps/backend/tests/database/test_migrations.py`.
+- Create `apps/backend/src/email_support/storage/postgres/persistence/__init__.py` and `database.py`: package boundary plus explicit engine/session factory and disposal.
+- Create `apps/backend/src/email_support/storage/postgres/persistence/tables/base.py` and `core.py`: shared declarative base, typed mappings and named constraints.
+- Create `apps/backend/src/email_support/storage/postgres/persistence/core.py`: concrete core write/read functions.
+- Create `apps/backend/src/email_support/models/persistence/common.py` and `core.py`: shared validators, validated core inputs/results and finite enums.
+- Create `apps/backend/tests/unit/persistence/core/test_core_persistence_contracts.py` and `apps/backend/tests/unit/database/test_database_guard.py`.
+- Create `apps/backend/tests/database/conftest.py`, `apps/backend/tests/database/core/test_core_storage.py`, and `apps/backend/tests/database/migrations/test_migrations.py`.
 
 ## Concrete schema: initial revision
 
@@ -96,7 +96,7 @@ Generated target names have a fixed test prefix plus run/scenario counters and a
 
 ## Tests After and commands
 
-Existing commands: `make backend-check`, `make check`, `make check-api-drift`; their current backend pytest caller is `Makefile:23`. Implemented phase-1 targets: `make database-up`, `make database-check`, `make database-down`; `database-check` invokes the runner, which runs guarded migration/test scenarios serially. Focused command: `./scripts/check-database.sh local tests/database/test_core_storage.py`; test paths are relative to `apps/backend` inside the runner.
+Existing commands: `make backend-check`, `make check`, `make check-api-drift`; their current backend pytest caller is `Makefile:23`. Implemented phase-1 targets: `make database-up`, `make database-check`, `make database-down`; `database-check` invokes the runner, which runs guarded migration/test scenarios serially. Focused command: `./scripts/check-database.sh local tests/database/core/test_core_storage.py`; test paths are relative to `apps/backend` inside the runner.
 
 Make's ordinary backend check explicitly runs `tests/unit tests/integration tests/contracts`; add `backend-database-check` to run all `tests/database`. In CI, `backend-check` must require and run the DB suite; without its service/config it fails. Outside CI the database suite is selected with the dedicated target; direct `pytest tests/database` without config fails with setup error. Finish pure tests, focused DB tests, Ruff, strict mypy and existing credential-free checks. Include new Python migration modules in strict mypy verification alongside the existing src/scripts/tests paths. Dispose engines and stop only owned services in finally/trap paths, preserving recovery material on failed backup/identity checks.
 

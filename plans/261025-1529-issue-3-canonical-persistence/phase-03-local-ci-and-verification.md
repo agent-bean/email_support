@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "CI and maintainer verification"
-status: todo
+status: done
 priority: P1
 effort: 4h
 dependencies: [2]
@@ -28,7 +28,7 @@ Do not change generated API files, web code, main Compose, rulesets, or unrelate
 
 ## Tests Before (red)
 
-1. Verify phase-1 guard tests cover CI missing URL/service, identity mismatch and failed backups; extend those existing tests only if the CI adapter adds a meaningful untested branch (then explicitly transfer ownership of `apps/backend/tests/unit/test_database_guard.py`).
+1. Verify phase-1 guard tests cover CI missing URL/service, identity mismatch and failed backups; extend those existing tests only if the CI adapter adds a meaningful untested branch (then explicitly transfer ownership of `apps/backend/tests/unit/database/test_database_guard.py`).
 2. Exercise Backend command with `CI=true` and no test service/config: it must fail, not silently pass by excluding database tests. Exercise database-free command with test URL unset and ensure health/OpenAPI still pass.
 3. Compare workflow command ownership against every current caller: `Makefile:5` and `.github/workflows/ci.yml:28` call backend-check; `Makefile:3` and `.github/workflows/ci.yml:69` call setup. Do not alter setup to connect/migrate automatically.
 4. Inject failed final backup and failed target verification. Assert nonzero exit, closed sessions/stopped verified owned service, released port, and retained backing data/private archives. Prove clean scenarios receive different fresh targets and committed immutable records do not leak to the next scenario.

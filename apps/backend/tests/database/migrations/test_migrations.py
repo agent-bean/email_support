@@ -7,7 +7,7 @@ from sqlalchemy import inspect, text
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
-from email_support.storage.postgres.core import (
+from email_support.storage.postgres.persistence.core import (
     get_briefing_version,
     get_company,
     get_contact,
@@ -16,7 +16,7 @@ from email_support.storage.postgres.core import (
     get_meeting,
     get_provider_account,
 )
-from email_support.storage.postgres.database import (
+from email_support.storage.postgres.persistence.database import (
     create_database_engine,
     dispose_database_engine,
 )

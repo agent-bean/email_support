@@ -16,13 +16,13 @@ from email_support.models.persistence import (
     EvidenceKind,
     KnowledgeCreate,
 )
-from email_support.storage.postgres.core import (
+from email_support.storage.postgres.persistence.core import (
     PersistenceConflict,
     create_briefing,
     create_briefing_version,
     create_evidence,
 )
-from email_support.storage.postgres.decisions import (
+from email_support.storage.postgres.persistence.decisions import (
     create_knowledge,
     get_knowledge,
     invalidate_knowledge,

@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: "Complete typed storage and canonical invariants"
-status: todo
+status: done
 priority: P1
 effort: 10h
 dependencies: [1]
@@ -15,19 +15,21 @@ After phase 1, add approvals/actions, approved knowledge/preferences and project
 
 Sequential owner takes over these phase-1 files (modify):
 
-- `apps/backend/src/email_support/models/persistence.py`
-- `apps/backend/src/email_support/storage/postgres/tables.py`
-- `apps/backend/tests/unit/test_persistence_contracts.py`
-- `apps/backend/tests/database/test_migrations.py`
+- `apps/backend/src/email_support/models/persistence/` (shared, core, decisions and projection contracts with a stable package facade)
+- `apps/backend/src/email_support/storage/postgres/persistence/tables/` (base and scope-grouped mappings with a stable package facade)
+- `apps/backend/tests/unit/persistence/core/test_core_persistence_contracts.py`
+- `apps/backend/tests/unit/persistence/decisions/test_decision_persistence_contracts.py`
+- `apps/backend/tests/unit/persistence/projections/test_projection_persistence_contracts.py`
+- `apps/backend/tests/database/migrations/test_migrations.py`
 
 Create:
 
 - `apps/backend/migrations/versions/create_approval_knowledge_storage.py`
-- `apps/backend/src/email_support/storage/postgres/decisions.py`: concrete approval/action and knowledge/preferences operations.
-- `apps/backend/src/email_support/storage/postgres/projections.py`: metadata read/write only.
-- `apps/backend/tests/database/test_decision_storage.py`
-- `apps/backend/tests/database/test_knowledge_storage.py`
-- `apps/backend/tests/database/test_projection_metadata.py`
+- `apps/backend/src/email_support/storage/postgres/persistence/decisions.py`: concrete approval/action and knowledge/preferences operations.
+- `apps/backend/src/email_support/storage/postgres/persistence/projections.py`: metadata read/write only.
+- `apps/backend/tests/database/decisions/test_decision_storage.py`
+- `apps/backend/tests/database/knowledge/test_knowledge_storage.py`
+- `apps/backend/tests/database/projections/test_projection_metadata.py`
 
 ## Concrete schema: second revision
 
@@ -82,7 +84,7 @@ Provide typed reads of approval/action binding; create/read/list eligible knowle
 | Migration/recovery | Initial-to-head preservation, empty-to-head install, Alembic head/schema comparison, dump restore into guarded scratch target. |
 | Existing HTTP/contracts | Health remains DB-free; export remains byte-stable; no new API surface. |
 
-Implemented focused runner: `./scripts/check-database.sh local tests/database/test_decision_storage.py`; full runner: `make database-check`. Both use phase-1 fresh targets and backups before each scenario/setup phase, migration, seed and cleanup; never upgrade a shared head database backwards to obtain the historical seed state. Restore exercise backs up its separate target before restore, checks restored revision/rows/constraints, then backs up before disposal. On failed cleanup guard/backup, stop only verified owned resources and retain recovery data. Suite scheduling stays serial; two-session tests within a scenario use bounded explicit synchronization, never sleeps or pytest worker parallelism.
+Implemented focused runner: `./scripts/check-database.sh local tests/database/decisions/test_decision_storage.py`; full runner: `make database-check`. Both use phase-1 fresh targets and backups before each scenario/setup phase, migration, seed and cleanup; never upgrade a shared head database backwards to obtain the historical seed state. Restore exercise backs up its separate target before restore, checks restored revision/rows/constraints, then backs up before disposal. On failed cleanup guard/backup, stop only verified owned resources and retain recovery data. Suite scheduling stays serial; two-session tests within a scenario use bounded explicit synchronization, never sleeps or pytest worker parallelism.
 
 Run all database tests plus existing backend unit/health/contracts, strict mypy and Ruff. `alembic check` through the guarded runner checks metadata drift but does not prove trigger definitions; explicit catalog/behavior tests cover them.
 

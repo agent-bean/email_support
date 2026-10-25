@@ -27,7 +27,7 @@ from email_support.models.persistence import (
     ProviderAccountRecord,
     TimedMeetingTime,
 )
-from email_support.storage.postgres.tables import (
+from email_support.storage.postgres.persistence.tables import (
     BriefingRow,
     BriefingVersionEvidenceRow,
     BriefingVersionRow,

@@ -11,11 +11,11 @@ from email_support.models.persistence import (
     BriefingVersionCreate,
     PreferenceCreate,
 )
-from email_support.storage.postgres.core import (
+from email_support.storage.postgres.persistence.core import (
     PersistenceConflict,
     create_briefing_version,
 )
-from email_support.storage.postgres.decisions import (
+from email_support.storage.postgres.persistence.decisions import (
     get_action,
     get_approval,
     get_preference,
