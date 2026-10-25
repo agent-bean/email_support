@@ -1,4 +1,5 @@
 import asyncio
+import json
 from datetime import UTC, datetime
 from uuid import uuid4
 
@@ -137,6 +138,21 @@ async def test_additive_upgrade_preserves_seeded_first_revision_records(
     briefing_id = uuid4()
     version_id = uuid4()
     received_at = datetime(2026, 10, 25, 10, tzinfo=UTC)
+    row_snapshot_query = text(
+        "SELECT 'provider_accounts'::text, to_jsonb(source) "
+        "FROM provider_accounts AS source UNION ALL "
+        "SELECT 'companies', to_jsonb(source) FROM companies AS source UNION ALL "
+        "SELECT 'briefings', to_jsonb(source) FROM briefings AS source UNION ALL "
+        "SELECT 'contacts', to_jsonb(source) FROM contacts AS source UNION ALL "
+        "SELECT 'mail_messages', to_jsonb(source) "
+        "FROM mail_messages AS source UNION ALL "
+        "SELECT 'meetings', to_jsonb(source) FROM meetings AS source UNION ALL "
+        "SELECT 'evidence', to_jsonb(source) FROM evidence AS source UNION ALL "
+        "SELECT 'briefing_versions', to_jsonb(source) "
+        "FROM briefing_versions AS source UNION ALL "
+        "SELECT 'briefing_version_evidence', to_jsonb(source) "
+        "FROM briefing_version_evidence AS source"
+    )
     try:
         await asyncio.to_thread(run_migrations, database_url, "a31f5e702c84")
         await asyncio.to_thread(
@@ -251,6 +267,12 @@ async def test_additive_upgrade_preserves_seeded_first_revision_records(
                     text("UPDATE briefing_versions SET sealed = true WHERE id = :id"),
                     {"id": version_id},
                 )
+                before_rows = sorted(
+                    (table_name, json.dumps(row_data, sort_keys=True))
+                    for table_name, row_data in (
+                        await connection.execute(row_snapshot_query)
+                    )
+                )
         finally:
             await dispose_database_engine(seed_engine)
 
@@ -271,6 +293,12 @@ async def test_additive_upgrade_preserves_seeded_first_revision_records(
                     text("SELECT email FROM contacts WHERE id = :id"),
                     {"id": contact_id},
                 )
+                after_rows = sorted(
+                    (table_name, json.dumps(row_data, sort_keys=True))
+                    for table_name, row_data in (
+                        await connection.execute(row_snapshot_query)
+                    )
+                )
             sessions = async_sessionmaker(
                 bind=upgraded_engine,
                 class_=AsyncSession,
@@ -289,6 +317,7 @@ async def test_additive_upgrade_preserves_seeded_first_revision_records(
 
         assert revision == "da3c8e14f627"
         assert preserved_email == "Owner@Example.com"
+        assert after_rows == before_rows
         assert account.id == account_id
         assert company.id == company_id and company.domain is None
         assert contact.id == contact_id and contact.display_name is None
