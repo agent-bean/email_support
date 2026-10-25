@@ -25,10 +25,11 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.CheckConstraint(
-            "length(btrim(provider)) > 0", name="ck_provider_accounts_provider_nonblank"
+            "length(regexp_replace(provider, '[[:space:]]', '', 'g')) > 0",
+            name="ck_provider_accounts_provider_nonblank",
         ),
         sa.CheckConstraint(
-            "length(btrim(external_account_id)) > 0",
+            "length(regexp_replace(external_account_id, '[[:space:]]', '', 'g')) > 0",
             name="ck_provider_accounts_external_id_nonblank",
         ),
         sa.PrimaryKeyConstraint("id", name="pk_provider_accounts"),
@@ -48,10 +49,12 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.CheckConstraint(
-            "length(btrim(name)) > 0", name="ck_companies_name_nonblank"
+            "length(regexp_replace(name, '[[:space:]]', '', 'g')) > 0",
+            name="ck_companies_name_nonblank",
         ),
         sa.CheckConstraint(
-            "domain IS NULL OR length(btrim(domain)) > 0",
+            "domain IS NULL OR "
+            "length(regexp_replace(domain, '[[:space:]]', '', 'g')) > 0",
             name="ck_companies_domain_nonblank",
         ),
         sa.PrimaryKeyConstraint("id", name="pk_companies"),
@@ -87,7 +90,8 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.CheckConstraint(
-            "length(btrim(email)) > 0", name="ck_contacts_email_nonblank"
+            "length(regexp_replace(email, '[[:space:]]', '', 'g')) > 0",
+            name="ck_contacts_email_nonblank",
         ),
         sa.ForeignKeyConstraint(
             ["company_id"],
@@ -129,11 +133,12 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.CheckConstraint(
-            "length(btrim(external_message_id)) > 0",
+            "length(regexp_replace(external_message_id, '[[:space:]]', '', 'g')) > 0",
             name="ck_mail_messages_external_id_nonblank",
         ),
         sa.CheckConstraint(
-            "length(btrim(sender_email)) > 0", name="ck_mail_messages_sender_nonblank"
+            "length(regexp_replace(sender_email, '[[:space:]]', '', 'g')) > 0",
+            name="ck_mail_messages_sender_nonblank",
         ),
         sa.CheckConstraint(
             "recipient_emails IS NULL OR (jsonb_typeof(recipient_emails) = 'array' "
@@ -191,8 +196,9 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.CheckConstraint(
-            "length(btrim(external_calendar_id)) > 0 AND "
-            "length(btrim(external_event_id)) > 0",
+            "length(regexp_replace(external_calendar_id, '[[:space:]]', '', 'g')) > 0 "
+            "AND "
+            "length(regexp_replace(external_event_id, '[[:space:]]', '', 'g')) > 0",
             name="ck_meetings_external_keys_nonblank",
         ),
         sa.CheckConstraint(
@@ -254,7 +260,8 @@ def upgrade() -> None:
             name="ck_evidence_source_matches_kind",
         ),
         sa.CheckConstraint(
-            "length(btrim(source_text)) > 0", name="ck_evidence_source_text_nonblank"
+            "length(regexp_replace(source_text, '[[:space:]]', '', 'g')) > 0",
+            name="ck_evidence_source_text_nonblank",
         ),
         sa.ForeignKeyConstraint(
             ["mail_message_id"],
@@ -289,7 +296,8 @@ def upgrade() -> None:
             "version_number > 0", name="ck_briefing_versions_positive_number"
         ),
         sa.CheckConstraint(
-            "length(btrim(markdown)) > 0", name="ck_briefing_versions_markdown_nonblank"
+            "length(regexp_replace(markdown, '[[:space:]]', '', 'g')) > 0",
+            name="ck_briefing_versions_markdown_nonblank",
         ),
         sa.ForeignKeyConstraint(
             ["briefing_id"],

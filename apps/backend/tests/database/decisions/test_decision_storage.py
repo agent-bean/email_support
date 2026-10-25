@@ -239,20 +239,22 @@ async def test_direct_sql_rejects_noncanonical_approval_arrays(
                 )
         assert getattr(error.value.orig, "sqlstate", None) == "P0001"
 
-    with pytest.raises(DBAPIError) as error:
-        async with database_sessions() as session, session.begin():
-            await session.execute(
-                text(
-                    "INSERT INTO approvals "
-                    "(id, briefing_id, briefing_version_id, action_kind, "
-                    "recipient_emails, selected_knowledge) VALUES "
-                    "(:id, :briefing_id, :version_id, 'save_knowledge', "
-                    "'[]'::jsonb, '[\"   \"]'::jsonb)"
-                ),
-                {
-                    "id": uuid4(),
-                    "briefing_id": canonical_source.briefing.id,
-                    "version_id": canonical_source.version.id,
-                },
-            )
-    assert getattr(error.value.orig, "sqlstate", None) == "P0001"
+    for selected in ('["   "]', '["\\t\\n"]'):
+        with pytest.raises(DBAPIError) as error:
+            async with database_sessions() as session, session.begin():
+                await session.execute(
+                    text(
+                        "INSERT INTO approvals "
+                        "(id, briefing_id, briefing_version_id, action_kind, "
+                        "recipient_emails, selected_knowledge) VALUES "
+                        "(:id, :briefing_id, :version_id, 'save_knowledge', "
+                        "'[]'::jsonb, CAST(:selected AS jsonb))"
+                    ),
+                    {
+                        "id": uuid4(),
+                        "briefing_id": canonical_source.briefing.id,
+                        "version_id": canonical_source.version.id,
+                        "selected": selected,
+                    },
+                )
+        assert getattr(error.value.orig, "sqlstate", None) == "P0001"

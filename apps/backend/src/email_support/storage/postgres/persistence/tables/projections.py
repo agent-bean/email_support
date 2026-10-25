@@ -45,7 +45,8 @@ class ProjectionMetadataRow(Base):
             "(projection_kind = 'qdrant' AND "
             "((projected_version_id IS NULL AND embedding_version IS NULL) OR "
             "(projected_version_id IS NOT NULL AND embedding_version IS NOT NULL "
-            "AND length(btrim(embedding_version)) > 0)))",
+            "AND length(regexp_replace(embedding_version, "
+            "'[[:space:]]', '', 'g')) > 0)))",
             name="ck_projection_metadata_embedding_state",
         ),
     )

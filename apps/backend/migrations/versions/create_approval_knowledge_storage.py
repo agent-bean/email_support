@@ -141,7 +141,8 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.CheckConstraint(
-            "length(btrim(key)) > 0", name="ck_preferences_key_nonblank"
+            "length(regexp_replace(key, '[[:space:]]', '', 'g')) > 0",
+            name="ck_preferences_key_nonblank",
         ),
         sa.PrimaryKeyConstraint("id", name="pk_preferences"),
         sa.UniqueConstraint("key", name="uq_preferences_key"),
@@ -173,7 +174,8 @@ def upgrade() -> None:
             "(projection_kind = 'qdrant' AND "
             "((projected_version_id IS NULL AND embedding_version IS NULL) OR "
             "(projected_version_id IS NOT NULL AND embedding_version IS NOT NULL "
-            "AND length(btrim(embedding_version)) > 0)))",
+            "AND length(regexp_replace(embedding_version, "
+            "'[[:space:]]', '', 'g')) > 0)))",
             name="ck_projection_metadata_embedding_state",
         ),
         sa.ForeignKeyConstraint(
@@ -211,7 +213,8 @@ def upgrade() -> None:
                 SELECT 1
                   FROM jsonb_array_elements(NEW.selected_knowledge) AS item(value)
                 WHERE jsonb_typeof(item.value) IS DISTINCT FROM 'string'
-                   OR length(btrim(item.value #>> '{}')) = 0
+                   OR length(regexp_replace(item.value #>> '{}',
+                                             '[[:space:]]', '', 'g')) = 0
             ) THEN
                 RAISE EXCEPTION 'selected knowledge entries must be nonblank strings'
                     USING ERRCODE = 'P0001';

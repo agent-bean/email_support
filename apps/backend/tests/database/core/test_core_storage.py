@@ -443,6 +443,61 @@ async def test_contact_uniqueness_preserves_local_part_case(
 
 
 @pytest.mark.asyncio
+async def test_raw_sql_rejects_whitespace_only_required_text(
+    database_sessions: async_sessionmaker[AsyncSession],
+) -> None:
+    with pytest.raises(IntegrityError):
+        async with database_sessions() as session, session.begin():
+            await session.execute(
+                text(
+                    "INSERT INTO provider_accounts "
+                    "(id, provider, external_account_id) "
+                    "VALUES (:id, :provider, 'account')"
+                ),
+                {"id": uuid4(), "provider": "\t\n"},
+            )
+
+
+@pytest.mark.asyncio
+async def test_briefing_version_citation_order_is_stable_after_read(
+    database_sessions: async_sessionmaker[AsyncSession],
+) -> None:
+    async with database_sessions() as session, session.begin():
+        evidence = [
+            await create_evidence(
+                session,
+                EvidenceCreate(
+                    kind=EvidenceKind.WEB,
+                    mail_message_id=None,
+                    meeting_id=None,
+                    source_url=_http_url(f"https://example.com/source-{index}"),
+                    source_text=f"Evidence {index}",
+                    retrieved_at=datetime.now(UTC),
+                ),
+            )
+            for index in range(2)
+        ]
+        briefing = await create_briefing(session, BriefingCreate(company_id=None))
+        evidence_ids = sorted((item.id for item in evidence), reverse=True)
+        created = await create_briefing_version(
+            session,
+            BriefingVersionCreate(
+                briefing_id=briefing.id,
+                markdown="# Cited briefing",
+                evidence_ids=evidence_ids,
+            ),
+        )
+
+    async with database_sessions() as session:
+        stored = await get_briefing_version(
+            session, briefing.id, created.version_number
+        )
+
+    assert created.evidence_ids == sorted(evidence_ids)
+    assert stored == created
+
+
+@pytest.mark.asyncio
 async def test_raw_sql_cannot_store_a_mixed_meeting_time_shape(
     database_sessions: async_sessionmaker[AsyncSession],
 ) -> None:

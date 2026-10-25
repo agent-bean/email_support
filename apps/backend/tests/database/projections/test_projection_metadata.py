@@ -174,6 +174,24 @@ async def test_projection_rejects_invalid_versions_and_embedding_states(
                 )
         assert getattr(error.value.orig, "sqlstate", None) == "23514"
 
+    with pytest.raises(DBAPIError) as blank_embedding_error:
+        async with database_sessions() as session, session.begin():
+            await session.execute(
+                text(
+                    "INSERT INTO projection_metadata "
+                    "(id, projection_kind, knowledge_id, source_version_id, "
+                    "projected_version_id, embedding_version) "
+                    "VALUES (gen_random_uuid(), 'qdrant', :knowledge_id, "
+                    ":source, :source, :embedding)"
+                ),
+                {
+                    "knowledge_id": knowledge.id,
+                    "source": canonical_source.version.id,
+                    "embedding": "\t\n",
+                },
+            )
+    assert getattr(blank_embedding_error.value.orig, "sqlstate", None) == "23514"
+
     with pytest.raises(DBAPIError) as error:
         async with database_sessions() as session, session.begin():
             await session.execute(

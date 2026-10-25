@@ -365,7 +365,7 @@ async def create_briefing_version(
         markdown=row.markdown,
         sealed=row.sealed,
         created_at=row.created_at,
-        evidence_ids=list(value.evidence_ids),
+        evidence_ids=sorted(value.evidence_ids),
     )
 
 

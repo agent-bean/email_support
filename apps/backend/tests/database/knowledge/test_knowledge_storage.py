@@ -3,9 +3,9 @@ from uuid import uuid4
 
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
-from sqlalchemy import text
+from sqlalchemy import event, text
 from sqlalchemy.exc import DBAPIError
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from email_support.models.persistence import (
     ActionKind,
@@ -81,6 +81,57 @@ async def test_knowledge_reads_exact_approved_entry_and_invalidation_is_immediat
     assert eligible_after == []
     assert stored_after.content == stored.content
     assert stored_after.invalidated_at is not None
+
+
+@pytest.mark.asyncio
+async def test_list_eligible_knowledge_fetches_citations_in_one_query(
+    database_engine: AsyncEngine,
+    database_sessions: async_sessionmaker[AsyncSession],
+    canonical_source: CanonicalSource,
+) -> None:
+    async with database_sessions() as session, session.begin():
+        for index in range(3):
+            approval, _ = await record_approval_and_action(
+                session,
+                ApprovalCreate(
+                    briefing_id=canonical_source.briefing.id,
+                    briefing_version_id=canonical_source.version.id,
+                    action_kind=ActionKind.SAVE_KNOWLEDGE,
+                    recipient_emails=[],
+                    selected_knowledge=[f"Approved entry {index}"],
+                ),
+            )
+            await create_knowledge(
+                session,
+                KnowledgeCreate(
+                    approval_id=approval.id,
+                    selection_index=0,
+                    evidence_ids=[canonical_source.evidence.id],
+                ),
+            )
+
+    evidence_queries: list[str] = []
+
+    def count_evidence_queries(*args: object) -> None:
+        statement = args[2]
+        if isinstance(statement, str) and "knowledge_evidence" in statement.lower():
+            evidence_queries.append(statement)
+
+    event.listen(
+        database_engine.sync_engine, "before_cursor_execute", count_evidence_queries
+    )
+    try:
+        async with database_sessions() as session:
+            records = await list_eligible_knowledge(session)
+    finally:
+        event.remove(
+            database_engine.sync_engine,
+            "before_cursor_execute",
+            count_evidence_queries,
+        )
+
+    assert len(records) == 3
+    assert len(evidence_queries) == 1
 
 
 @pytest.mark.asyncio

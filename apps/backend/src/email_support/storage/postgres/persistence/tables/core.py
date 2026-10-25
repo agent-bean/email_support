@@ -31,10 +31,11 @@ class ProviderAccountRow(Base):
             "provider", "external_account_id", name="uq_provider_accounts_external"
         ),
         CheckConstraint(
-            "length(btrim(provider)) > 0", name="ck_provider_accounts_provider_nonblank"
+            "length(regexp_replace(provider, '[[:space:]]', '', 'g')) > 0",
+            name="ck_provider_accounts_provider_nonblank",
         ),
         CheckConstraint(
-            "length(btrim(external_account_id)) > 0",
+            "length(regexp_replace(external_account_id, '[[:space:]]', '', 'g')) > 0",
             name="ck_provider_accounts_external_id_nonblank",
         ),
     )
@@ -52,9 +53,13 @@ class ProviderAccountRow(Base):
 class CompanyRow(Base):
     __tablename__ = "companies"
     __table_args__ = (
-        CheckConstraint("length(btrim(name)) > 0", name="ck_companies_name_nonblank"),
         CheckConstraint(
-            "domain IS NULL OR length(btrim(domain)) > 0",
+            "length(regexp_replace(name, '[[:space:]]', '', 'g')) > 0",
+            name="ck_companies_name_nonblank",
+        ),
+        CheckConstraint(
+            "domain IS NULL OR "
+            "length(regexp_replace(domain, '[[:space:]]', '', 'g')) > 0",
             name="ck_companies_domain_nonblank",
         ),
     )
@@ -72,7 +77,10 @@ class CompanyRow(Base):
 class ContactRow(Base):
     __tablename__ = "contacts"
     __table_args__ = (
-        CheckConstraint("length(btrim(email)) > 0", name="ck_contacts_email_nonblank"),
+        CheckConstraint(
+            "length(regexp_replace(email, '[[:space:]]', '', 'g')) > 0",
+            name="ck_contacts_email_nonblank",
+        ),
         Index(
             "uq_contacts_email_domain_lower",
             text(
@@ -107,11 +115,12 @@ class MailMessageRow(Base):
             name="uq_mail_messages_account_external",
         ),
         CheckConstraint(
-            "length(btrim(external_message_id)) > 0",
+            "length(regexp_replace(external_message_id, '[[:space:]]', '', 'g')) > 0",
             name="ck_mail_messages_external_id_nonblank",
         ),
         CheckConstraint(
-            "length(btrim(sender_email)) > 0", name="ck_mail_messages_sender_nonblank"
+            "length(regexp_replace(sender_email, '[[:space:]]', '', 'g')) > 0",
+            name="ck_mail_messages_sender_nonblank",
         ),
         CheckConstraint(
             "recipient_emails IS NULL OR (jsonb_typeof(recipient_emails) = 'array' "
@@ -173,8 +182,9 @@ class MeetingRow(Base):
             name="uq_meetings_account_calendar_event",
         ),
         CheckConstraint(
-            "length(btrim(external_calendar_id)) > 0 AND "
-            "length(btrim(external_event_id)) > 0",
+            "length(regexp_replace(external_calendar_id, '[[:space:]]', '', 'g')) > 0 "
+            "AND "
+            "length(regexp_replace(external_event_id, '[[:space:]]', '', 'g')) > 0",
             name="ck_meetings_external_keys_nonblank",
         ),
         CheckConstraint(
@@ -243,7 +253,8 @@ class EvidenceRow(Base):
             name="ck_evidence_source_matches_kind",
         ),
         CheckConstraint(
-            "length(btrim(source_text)) > 0", name="ck_evidence_source_text_nonblank"
+            "length(regexp_replace(source_text, '[[:space:]]', '', 'g')) > 0",
+            name="ck_evidence_source_text_nonblank",
         ),
     )
 
@@ -302,7 +313,8 @@ class BriefingVersionRow(Base):
             "version_number > 0", name="ck_briefing_versions_positive_number"
         ),
         CheckConstraint(
-            "length(btrim(markdown)) > 0", name="ck_briefing_versions_markdown_nonblank"
+            "length(regexp_replace(markdown, '[[:space:]]', '', 'g')) > 0",
+            name="ck_briefing_versions_markdown_nonblank",
         ),
     )
 

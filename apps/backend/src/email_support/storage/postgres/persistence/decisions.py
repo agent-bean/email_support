@@ -1,6 +1,7 @@
 """Typed approval, knowledge and explicit preference operations."""
 
 from datetime import UTC, datetime
+from itertools import groupby
 from uuid import UUID
 
 from sqlalchemy import func, select
@@ -188,19 +189,35 @@ async def list_eligible_knowledge(
     session: AsyncSession, company_id: UUID | None = None
 ) -> list[KnowledgeRecord]:
     statement = (
-        select(KnowledgeRow, ApprovalRow)
+        select(KnowledgeRow, ApprovalRow, KnowledgeEvidenceRow.evidence_id)
         .join(ApprovalRow, ApprovalRow.id == KnowledgeRow.approval_id)
+        .outerjoin(
+            KnowledgeEvidenceRow,
+            KnowledgeEvidenceRow.knowledge_id == KnowledgeRow.id,
+        )
         .where(KnowledgeRow.sealed.is_(True), KnowledgeRow.invalidated_at.is_(None))
-        .order_by(KnowledgeRow.created_at, KnowledgeRow.id)
+        .order_by(
+            KnowledgeRow.created_at,
+            KnowledgeRow.id,
+            KnowledgeEvidenceRow.evidence_id,
+        )
     )
     if company_id is not None:
         statement = statement.where(KnowledgeRow.company_id == company_id)
 
+    knowledge_rows = (await session.execute(statement)).all()
     records: list[KnowledgeRecord] = []
-    for row, approval in (await session.execute(statement)).all():
-        records.append(
-            _knowledge_record(row, approval, await _evidence_ids(session, row.id))
-        )
+    for _knowledge_id, grouped_rows in groupby(
+        knowledge_rows, key=lambda result: result[0].id
+    ):
+        group = list(grouped_rows)
+        row, approval, _evidence_id = group[0]
+        evidence_ids = [
+            evidence_id
+            for _row, _approval, evidence_id in group
+            if evidence_id is not None
+        ]
+        records.append(_knowledge_record(row, approval, evidence_ids))
     return records
 
 

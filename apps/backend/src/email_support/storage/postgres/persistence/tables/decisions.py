@@ -148,7 +148,10 @@ class PreferenceRow(Base):
     __tablename__ = "preferences"
     __table_args__ = (
         UniqueConstraint("key", name="uq_preferences_key"),
-        CheckConstraint("length(btrim(key)) > 0", name="ck_preferences_key_nonblank"),
+        CheckConstraint(
+            "length(regexp_replace(key, '[[:space:]]', '', 'g')) > 0",
+            name="ck_preferences_key_nonblank",
+        ),
     )
 
     id: Mapped[UUID] = mapped_column(
