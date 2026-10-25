@@ -1,7 +1,7 @@
 ---
 title: "issue-24-project-status-automation"
 description: "Keep Issue status accurate with native PR linking, an AI-operated helper, and Project auto-close."
-status: in_progress
+status: completed
 priority: P1
 effort: ""
 tags: [github, workflow]
@@ -25,7 +25,7 @@ Make Project #15 reflect the selected Issue's delivery state. Native PR linking 
 | # | Phase | Status |
 |---|-------|--------|
 | 1 | [Phase 1: Project status command](./phase-01-start.md) | Done |
-| 2 | [Phase 2: Project status workflow](./phase-02-native-project-automation.md) | In progress |
+| 2 | [Phase 2: Project status workflow](./phase-02-native-project-automation.md) | Done |
 
 ## Success Criteria
 
@@ -36,7 +36,7 @@ Make Project #15 reflect the selected Issue's delivery state. Native PR linking 
 - [x] Project Auto-close closes an Issue at `Done`; no GitHub App or repository secret is needed.
 - [x] Native PR linking moves the Issue to `Review`; a formal `Request changes` review leaves it there, and the status helper moves it to `In progress` before returning it to `Review` for re-review.
 - [x] After approval and passing acceptance checks, AI moves the Issue to `Verify`; verification gaps remain documented as a return to `In progress`.
-- [ ] After owner acceptance and authorized merge, AI sets `Done` and Project Auto-close closes the Issue.
+- [x] After owner acceptance and authorized merge, AI sets the existing Issue item to `Done` and Project Auto-close closes Issue #24 ([PR #26](https://github.com/agent-bean/email_support/pull/26); [post-merge CI](https://github.com/agent-bean/email_support/actions/runs/40173548882)).
 - [x] Issue/PR text follows concise writing rules, Issue criteria use checkboxes, and the follow-up PR follows the shared form.
 - [x] Changes stay limited to Issue #24, PR #25's description, and the linked follow-up PR; Issue #2 and PR #23 remain unaffected.
 
