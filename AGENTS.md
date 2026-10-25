@@ -5,7 +5,7 @@
 - Work only on the owner-selected issue and authorized scope. Do not start the next issue without the owner's selection.
 - Ask the owner before changing scope or accepted architecture decisions.
 - Obtain explicit owner authorization for final acceptance, issue closure, PR merge, production deployment, and release. Passing checks or merging a PR does not establish acceptance.
-- After explicit acceptance, reconcile the owning Issue's verified checkboxes and evidence, Project status and closure, and any pending owner-action note on its PR. Do not leave accepted work in `Review` or leave verified criteria unchecked. Follow [docs/08-github-project-workflow.md](docs/08-github-project-workflow.md); if acceptance follows an explicitly authorized merge, perform the same closeout then.
+- After owner acceptance, check verified Issue criteria, set Project status, and clear stale PR actions per [the GitHub workflow](docs/08-github-project-workflow.md); accepted work must not remain in `Review`.
 
 ## Project conventions
 
