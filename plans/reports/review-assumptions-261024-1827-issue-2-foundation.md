@@ -1,6 +1,6 @@
 # Assumption Destroyer review: issue #2 foundation plan
 
-Review-only; flags `--yagni --hard --tdd`. Roles: Fact Checker + Contract Verifier. Work context: `/home/emanon/Data/Projects/AI/email_support`. Reviewed all four plan files and the requested repository/scout sources against HEAD `5f81f43622d36cf574246a4b7d3a57c190a0542b`. No application installation, generation, tests, lint, builds, containers, or hosted CI were run. No plan files changed.
+Review-only; flags `--yagni --hard --tdd`. Roles: Fact Checker + Contract Verifier. Work context: repository root. Reviewed all four plan files and the requested repository/scout sources against HEAD `5f81f43622d36cf574246a4b7d3a57c190a0542b`. No application installation, generation, tests, lint, builds, containers, or hosted CI were run. No plan files changed.
 
 Applied the installed `ak-scout` and `ak-code-review` protocols. Scout evidence was read before review; additional local scouting confirmed the documentation-only baseline. A narrow memory registry lookup had no relevant hits and supplied no conclusions. Runtime tool discovery exposed agent dispatchers, but no usable live team-task claiming surface.
 
