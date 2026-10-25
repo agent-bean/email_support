@@ -11,9 +11,9 @@ dependencies: []
 
 ## Goal and evidence
 
-Create the first real migration, typed core storage, and safe local PostgreSQL verification. Owner plan acceptance is satisfied; implementation awaits the cook request. Current `apps/backend/src/email_support/main.py:7-8` composes health only; `apps/backend/pyproject.toml:10-22` lacks persistence dependencies. `docs/03-codebase-summary.md:12` places ORM code under storage and application contracts under models. `docs/04-code-standards.md:26,40-42` requires scoped sessions, real PostgreSQL and isolated data.
+Create the first real migration, typed core storage, and safe local PostgreSQL verification. Owner plan acceptance is satisfied; implementation and verification evidence are recorded below. At planning time, `apps/backend/src/email_support/main.py:7-8` composed health only and `apps/backend/pyproject.toml:10-22` lacked persistence dependencies. `docs/03-codebase-summary.md:12` places ORM code under storage and application contracts under models. `docs/04-code-standards.md:26,40-42` requires scoped sessions, real PostgreSQL and isolated data.
 
-## File ownership (all proposed unless marked modify)
+## File ownership
 
 This executor owns every listed file. No parallel edits.
 
@@ -96,19 +96,23 @@ Generated target names have a fixed test prefix plus run/scenario counters and a
 
 ## Tests After and commands
 
-Existing commands: `make backend-check`, `make check`, `make check-api-drift`; their current backend pytest caller is `Makefile:23`. Proposed phase-1 targets: `make database-up`, `make database-check`, `make database-down`; `database-check` invokes the runner, which runs guarded migration/test scenarios serially. Proposed focused command: `./scripts/check-database.sh local tests/database/test_core_storage.py`; full path is relative to `apps/backend` inside the runner.
+Existing commands: `make backend-check`, `make check`, `make check-api-drift`; their current backend pytest caller is `Makefile:23`. Implemented phase-1 targets: `make database-up`, `make database-check`, `make database-down`; `database-check` invokes the runner, which runs guarded migration/test scenarios serially. Focused command: `./scripts/check-database.sh local tests/database/test_core_storage.py`; test paths are relative to `apps/backend` inside the runner.
 
 Make's ordinary backend check explicitly runs `tests/unit tests/integration tests/contracts`; add `backend-database-check` to run all `tests/database`. In CI, `backend-check` must require and run the DB suite; without its service/config it fails. Outside CI the database suite is selected with the dedicated target; direct `pytest tests/database` without config fails with setup error. Finish pure tests, focused DB tests, Ruff, strict mypy and existing credential-free checks. Include new Python migration modules in strict mypy verification alongside the existing src/scripts/tests paths. Dispose engines and stop only owned services in finally/trap paths, preserving recovery material on failed backup/identity checks.
 
 ## Risks, rollback and success
 
-Execution checklist (all pending):
+Execution checklist:
 
-- [ ] Write failing contract, guard, initial-migration and core-storage tests.
-- [ ] Implement the guarded local database lifecycle and reviewed initial migration.
-- [ ] Implement typed core persistence and immutable provenance.
-- [ ] Pass focused and regression checks; stop owned processes and record actual evidence.
+- [x] Write failing contract, guard, initial-migration and core-storage tests.
+- [x] Implement the guarded local database lifecycle and reviewed initial migration.
+- [x] Implement typed core persistence and immutable provenance.
+- [x] Pass focused and regression checks; stop owned processes and record actual evidence.
 
 High impact / medium likelihood: wrong target or failed backups; exact identity allowlist plus fail-closed archives and guard negative tests mitigate it. Medium/medium: trigger ordering or async fixture lifetime; raw-SQL tests, simple function-scoped sessions and disposal expose failures. Low/high: dependency drift; lock compatible patches and record actual PostgreSQL image.
 
 No existing storage users/data require migration. Roll back application files before adoption; retain validated dump before any schema reversal, restore to a separately guarded disposable target, never downgrade/delete an adopted database casually. Success: all initial schema/core/guard tests pass, no app startup DB dependency, and owned processes are gone. Later phases depend on these results.
+
+## Execution evidence (2026-10-25)
+
+The final `make database-check` run passed all 30 real-PostgreSQL tests, including empty migration, core storage, immutable history, rollback, independent-connection reads, backup/restore, and guarded cleanup. The final `make check` also passed backend and web suites plus lint, formatting, strict typing, and build checks. The runner stopped and removed its owned service and network; port 55432 was free afterward.

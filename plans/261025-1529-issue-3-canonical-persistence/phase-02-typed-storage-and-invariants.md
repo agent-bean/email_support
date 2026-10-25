@@ -82,19 +82,23 @@ Provide typed reads of approval/action binding; create/read/list eligible knowle
 | Migration/recovery | Initial-to-head preservation, empty-to-head install, Alembic head/schema comparison, dump restore into guarded scratch target. |
 | Existing HTTP/contracts | Health remains DB-free; export remains byte-stable; no new API surface. |
 
-Proposed focused runner: `./scripts/check-database.sh local tests/database/test_decision_storage.py`; proposed full runner: `make database-check`. Both use phase-1 fresh targets and backups before each scenario/setup phase, migration, seed and cleanup; never upgrade a shared head database backwards to obtain the historical seed state. Restore exercise backs up its separate target before restore, checks restored revision/rows/constraints, then backs up before disposal. On failed cleanup guard/backup, stop only verified owned resources and retain recovery data. Suite scheduling stays serial; two-session tests within a scenario use bounded explicit synchronization, never sleeps or pytest worker parallelism.
+Implemented focused runner: `./scripts/check-database.sh local tests/database/test_decision_storage.py`; full runner: `make database-check`. Both use phase-1 fresh targets and backups before each scenario/setup phase, migration, seed and cleanup; never upgrade a shared head database backwards to obtain the historical seed state. Restore exercise backs up its separate target before restore, checks restored revision/rows/constraints, then backs up before disposal. On failed cleanup guard/backup, stop only verified owned resources and retain recovery data. Suite scheduling stays serial; two-session tests within a scenario use bounded explicit synchronization, never sleeps or pytest worker parallelism.
 
-Run all database tests plus existing backend unit/health/contracts, strict mypy and Ruff. `alembic check` through the guarded runner checks metadata drift but does not prove trigger definitions; explicit catalog/behavior tests cover them. All new commands remain proposed until implemented.
+Run all database tests plus existing backend unit/health/contracts, strict mypy and Ruff. `alembic check` through the guarded runner checks metadata drift but does not prove trigger definitions; explicit catalog/behavior tests cover them.
 
 ## Risks, rollback and success
 
-Execution checklist (all pending):
+Execution checklist:
 
-- [ ] Write failing binding, knowledge, preference, projection and upgrade-preservation tests.
-- [ ] Implement the substantive additive migration and typed operations.
-- [ ] Prove caller-owned rollback, cross-connection durability and guarded restore.
-- [ ] Pass focused and regression checks and record actual evidence.
+- [x] Write failing binding, knowledge, preference, projection and upgrade-preservation tests.
+- [x] Implement the substantive additive migration and typed operations.
+- [x] Prove caller-owned rollback, cross-connection durability and guarded restore.
+- [x] Pass focused and regression checks and record actual evidence.
 
 Medium likelihood / high impact: weaker raw-SQL bindings or citation history; negative SQL tests and database constraints mitigate. Medium/medium: false preservation proof; first-revision-valid seed plus production upgrades and typed post-upgrade reads expose loss. Low/high: backup restore wrong target; separate exact identity guard and dump-before-restore prevent it.
 
-Second revision is additive; existing core consumers remain compatible. Before reverting, back up and stop adopting new-family writes. Code rollback can retain additive tables. Restore a validated backup into an isolated target for data recovery; never casually downgrade away approvals or knowledge. Success: all requested families persist, both migrations preserve core records, exact snapshots survive later edits, and rollback/restore evidence passes. Phase 3 is blocked until these checks pass.
+Second revision is additive; existing core consumers remain compatible. Before reverting, back up and stop adopting new-family writes. Code rollback can retain additive tables. Restore a validated backup into an isolated target for data recovery; never casually downgrade away approvals or knowledge. Success: all requested families persist, both migrations preserve core records, exact snapshots survive later edits, and rollback/restore evidence passes.
+
+## Execution evidence (2026-10-25)
+
+`make database-check` passed all 30 PostgreSQL tests, including the empty install, seeded first-revision upgrade preservation, restore verification, typed reads after reconnect, rollback, action/approval atomicity, knowledge eligibility, and exact projection provenance. Coordinated two-session tests proved duplicate-key conflict behavior, consecutive briefing version allocation, and rejection of late citations after a parent is sealed. Citation construction and sealing of a new, uncommitted parent remain one atomic transaction; the database cannot expose that parent to a competing session before commit. The final `make check` passed 26 backend tests, 14 web tests, Ruff, formatting, strict mypy, TypeScript checks, lint, and build.

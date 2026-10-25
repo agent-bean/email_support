@@ -46,7 +46,7 @@ Do not change generated API files, web code, main Compose, rulesets, or unrelate
 
 ## Tests After and verification commands
 
-Existing commands to preserve: `make setup`, `make backend-check`, `make check`, `make check-api-drift`, `make up`, `make down`, `npm --prefix apps/web run test:smoke`. All database targets and runner commands below are proposed until implementation.
+Existing commands preserved: `make setup`, `make backend-check`, `make check`, `make check-api-drift`, `make up`, `make down`, `npm --prefix apps/web run test:smoke`. Database targets and runner commands below are implemented.
 
 1. Run contract/guard unit tests first, then `make database-up`, `make database-check`, `make database-down`; verify no owned test process/port remains after success or injected failure. Runner must back up before destructive teardown too; if it fails, retain storage/archives while stopping the verified owned service.
 2. Test empty-to-head and seeded initial-to-head migration on distinct fresh targets; assert head revision, schema parity, representative data and constraints. Run real restore verification into another guarded target. Include TRUNCATE rejection, deterministic two-session tests, exact selected-text binding and canonical projection eligibility in the complete database suite.
@@ -63,13 +63,22 @@ Runtime/public API contracts remain compatible, with no generated API change exp
 
 ## Success and handoff
 
-Execution checklist (all pending):
+Execution checklist:
 
-- [ ] Prove CI dispatch fails without required database configuration or service.
-- [ ] Integrate PostgreSQL into Backend CI while preserving database-free checks.
-- [ ] Verify cleanup success/failure behavior and update owning documentation.
-- [ ] Run final checks and report acceptance evidence without merging or closing the issue.
+- [x] Prove CI dispatch fails without required database configuration or service.
+- [x] Integrate PostgreSQL into Backend CI while preserving database-free checks.
+- [x] Verify cleanup success/failure behavior and update owning documentation.
+- [x] Run final checks and report acceptance evidence without merging or closing the issue.
 
 Acceptance means actual check evidence for all requested families, both migration paths, rollback, immutable provenance, restore and CI dispatch. Report commands/results and any verification gaps. Do not close Issue #3, move it to Done, merge, release or deploy without explicit owner authorization. Plan completion records never replace evergreen source authority.
 
-Unresolved technical questions: none after the owner-approved corrections. Whole-plan document verification and owner plan acceptance are complete; implementation awaits the cook request.
+Unresolved technical questions: none after the owner-approved corrections. Whole-plan document verification and owner plan acceptance are complete.
+
+## Execution evidence (2026-10-25)
+
+- `make check` passed: 26 backend tests, 14 web tests, Ruff, formatting, strict mypy, TypeScript checks, lint, and production build.
+- `make check-api-drift` passed with no generated API changes.
+- `make database-check` passed all 30 database tests and removed its owned local container/network; port 55432 was free.
+- Backend CI's missing-configuration path was exercised locally and failed closed. The positive CI adapter was exercised against a disposable PostgreSQL container using its exact 64-character container ID; all 30 tests passed. Workflow YAML and pinned image alignment were checked locally.
+- Cleanup success and injected backup/identity failures were verified. Failure paths stopped only the verified local service and retained recovery files. Old recovery archives remain in the ignored `.test-database/recovery/` directory; the final successful run removed its own archives.
+- GitHub Actions has not run for this branch because no push or pull request was authorized. Issue #3 remains Ready, and no PR was created.

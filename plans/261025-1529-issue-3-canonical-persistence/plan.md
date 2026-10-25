@@ -1,7 +1,7 @@
 ---
 title: "Issue 3: canonical PostgreSQL persistence"
 description: "Add typed canonical storage, integrity constraints, additive migrations, and guarded real-database verification."
-status: pending
+status: in-progress
 priority: P1
 effort: 24h
 issue: 3
@@ -14,7 +14,7 @@ created: 2026-10-25
 
 # Canonical persistence
 
-Issue [#3](https://github.com/agent-bean/email_support/issues/3) remains Ready. SQLAlchemy + Alembic is selected; the owner accepted the corrected plan on 2026-10-25. Implementation has not begun. Flags: `--tdd --hard --yagni`.
+Issue [#3](https://github.com/agent-bean/email_support/issues/3) remains Ready. SQLAlchemy + Alembic is selected; the owner accepted the corrected plan on 2026-10-25. Implementation is in progress on `feat/issue-3-canonical-persistence`. Cook flags: `--tdd --yagni`.
 
 ## Outcome and boundary
 
@@ -26,13 +26,13 @@ File inventories and command paths are relative to the repository root; Markdown
 
 ## Phases and dependencies
 
-| Phase | Execution detail | Depends on | Status | Effort |
-| --- | --- | --- | --- | --- |
-| 1 | [Core schema, safe database harness](phase-01-start.md) | Owner plan acceptance (satisfied) | Pending | 10h |
-| 2 | [Complete storage and invariants](phase-02-typed-storage-and-invariants.md) | Phase 1 checks | Pending | 10h |
-| 3 | [CI and maintainer verification](phase-03-local-ci-and-verification.md) | Phase 2 checks | Pending | 4h |
+| Phase | Execution detail | Depends on | Effort |
+| --- | --- | --- | --- |
+| 1 | [Core schema, safe database harness](phase-01-start.md) | Owner plan acceptance (satisfied) | 10h |
+| 2 | [Complete storage and invariants](phase-02-typed-storage-and-invariants.md) | Phase 1 checks | 10h |
+| 3 | [CI and maintainer verification](phase-03-local-ci-and-verification.md) | Phase 2 checks | 4h |
 
-One executor owns each phase sequentially. Shared files transfer ownership only after the predecessor finishes. Two real additive revisions separate core inputs/evidence/briefings from approvals/knowledge/projection metadata.
+One executor owns each phase sequentially. Shared files transfer ownership only after the predecessor finishes. Two real additive revisions separate core inputs/evidence/briefings from approvals/knowledge/projection metadata. Phase checklists and `ak plan status` own execution progress.
 
 ## Acceptance evidence
 
@@ -49,7 +49,7 @@ One executor owns each phase sequentially. Shared files transfer ownership only 
 
 [Accepted direction](../reports/brainstorm-261025-1529-issue-3-canonical-persistence.md), [scout](../reports/scout-261025-1529-issue-3-persistence.md), [storage research](../reports/researcher-261025-1529-issue-3-storage-contracts.md), [database research](../reports/researcher-261025-1529-issue-3-database-verification.md). Research suggestions to defer preservation or use asyncpg are superseded by this plan's two real revisions and Psycopg 3 selection.
 
-Only source inspection and plan authoring have run. Dependencies, containers, migrations and application checks have not been executed.
+Implementation and local verification evidence are recorded in the phase files. A GitHub Actions run for this branch and owner acceptance remain pending.
 
 ## Red Team Review
 
@@ -61,8 +61,8 @@ Session 1, 2026-10-25: owner answered “Apply all six (Recommended)” to the r
 
 ### Whole-plan consistency sweep
 
-All four plan files reread against the six approved deltas; superseded serial-only, arbitrary knowledge-content, mismatched projection-version and unconditional cleanup claims removed. Structural/link checks and pending-task parsing are recorded in the validation report. No unresolved design contradiction remains; application behavior awaits implementation checks.
+All four plan files reread against the six approved deltas; superseded serial-only, arbitrary knowledge-content, mismatched projection-version and unconditional cleanup claims removed. Structural/link checks and pending-task parsing are recorded in the validation report. No unresolved design contradiction remains; implementation checks are recorded in the phase files.
 
 ## Readiness
 
-Session 2, 2026-10-25: owner accepted the plan (“tôi thấy plan này ổn rồi”) and requested relative paths. File inventories and the cook handoff now use repository-relative paths. No unresolved design question remains; ready for cook when requested. All implementation tasks remain pending.
+Session 2, 2026-10-25: owner accepted the plan (“tôi thấy plan này ổn rồi”) and requested relative paths. File inventories and the cook handoff now use repository-relative paths. Session 3 implemented the accepted scope and completed local checks. Hosted CI evidence and owner acceptance remain pending; Issue #3 has not been changed.
