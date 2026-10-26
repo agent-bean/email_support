@@ -3,7 +3,16 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import CheckConstraint, DateTime, Index, LargeBinary, String, Uuid
+from sqlalchemy import (
+    BigInteger,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Index,
+    LargeBinary,
+    String,
+    Uuid,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import Base
@@ -15,10 +24,16 @@ class OAuthAttemptRow(Base):
         CheckConstraint(
             "(purpose = 'login_bootstrap' AND state_digest IS NULL "
             "AND csrf_digest IS NOT NULL AND nonce IS NULL "
-            "AND code_verifier IS NULL) OR "
+            "AND code_verifier IS NULL AND connection_id IS NULL "
+            "AND session_digest IS NULL AND generation IS NULL) OR "
             "(purpose = 'login' AND state_digest IS NOT NULL "
             "AND csrf_digest IS NULL AND nonce IS NOT NULL "
-            "AND code_verifier IS NOT NULL)",
+            "AND code_verifier IS NOT NULL AND connection_id IS NULL "
+            "AND session_digest IS NULL AND generation IS NULL) OR "
+            "(purpose = 'google_consent' AND state_digest IS NOT NULL "
+            "AND csrf_digest IS NULL AND nonce IS NOT NULL "
+            "AND code_verifier IS NOT NULL AND connection_id IS NOT NULL "
+            "AND session_digest IS NOT NULL AND generation >= 0)",
             name="ck_oauth_attempt_protocol_fields",
         ),
         Index("ix_oauth_attempts_expires_at", "expires_at"),
@@ -35,6 +50,16 @@ class OAuthAttemptRow(Base):
     nonce: Mapped[str | None] = mapped_column(String(128))
     code_verifier: Mapped[str | None] = mapped_column(String(128))
     return_target: Mapped[str] = mapped_column(String(8), nullable=False)
+    connection_id: Mapped[UUID | None] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey(
+            "google_connections.provider_account_id",
+            name="fk_oauth_attempts_google_connection",
+            ondelete="CASCADE",
+        ),
+    )
+    session_digest: Mapped[bytes | None] = mapped_column(LargeBinary(32))
+    generation: Mapped[int | None] = mapped_column(BigInteger)
 
 
 class OwnerSessionRow(Base):

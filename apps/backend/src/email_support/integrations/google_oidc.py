@@ -6,7 +6,8 @@ import base64
 import json
 import time
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import UTC, datetime, timedelta
 
 # Authlib currently ships without PEP 561 stubs; this adapter validates all values
 # crossing its OAuth boundary before they enter application state.
@@ -17,18 +18,35 @@ from joserfc import jwt
 from joserfc.errors import InvalidKeyIdError
 from joserfc.jwk import KeySet
 
+from email_support.models.google_connection import (
+    GoogleConnectionFailure,
+    GoogleConnectionGrant,
+    GoogleTokenBundle,
+)
+
 AUTHORIZATION_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth"
 TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token"
 JWKS_ENDPOINT = "https://www.googleapis.com/oauth2/v3/certs"
 ISSUERS = {"accounts.google.com", "https://accounts.google.com"}
+CONNECTION_SCOPES = (
+    "openid",
+    "email",
+    "https://www.googleapis.com/auth/gmail.readonly",
+    "https://www.googleapis.com/auth/gmail.send",
+    "https://www.googleapis.com/auth/calendar.events.readonly",
+    "https://www.googleapis.com/auth/calendar.calendarlist.readonly",
+)
 
 
 @dataclass(frozen=True, slots=True)
 class GoogleAuthorization:
     url: str
-    state: str
-    nonce: str
-    code_verifier: str
+    state: str = field(repr=False)
+    nonce: str = field(repr=False)
+    code_verifier: str = field(repr=False)
+
+    def __repr__(self) -> str:
+        return "GoogleAuthorization(url=..., state=..., nonce=..., code_verifier=...)"
 
 
 @dataclass(frozen=True, slots=True)
@@ -37,15 +55,33 @@ class GoogleIdentity:
     email: str | None
 
 
+@dataclass(frozen=True, slots=True)
+class ParsedConnectionToken:
+    token_bundle: GoogleTokenBundle = field(repr=False)
+    granted_scopes: frozenset[str]
+    id_token: str = field(repr=False)
+
+    def __repr__(self) -> str:
+        return (
+            "ParsedConnectionToken(token_bundle=..., granted_scopes=..., id_token=...)"
+        )
+
+
 _cached_keys: KeySet | None = None
 _cached_until = 0.0
 
 
-def _client(client_id: str, client_secret: str, callback_uri: str) -> AsyncOAuth2Client:
+def _client(
+    client_id: str,
+    client_secret: str,
+    callback_uri: str,
+    *,
+    scope: str = "openid email",
+) -> AsyncOAuth2Client:
     return AsyncOAuth2Client(
         client_id,
         client_secret,
-        scope="openid email",
+        scope=scope,
         redirect_uri=callback_uri,
         code_challenge_method="S256",
         timeout=Timeout(5.0),
@@ -68,6 +104,107 @@ def create_authorization(
         code_verifier=verifier,
     )
     return GoogleAuthorization(uri, state, nonce, verifier)
+
+
+def create_connection_authorization(
+    client_id: str, client_secret: str, callback_uri: str
+) -> GoogleAuthorization:
+    import secrets
+
+    verifier = secrets.token_urlsafe(64)[:96]
+    state = secrets.token_urlsafe(32)
+    nonce = secrets.token_urlsafe(32)
+    client = _client(
+        client_id,
+        client_secret,
+        callback_uri,
+        scope=" ".join(CONNECTION_SCOPES),
+    )
+    uri, _ = client.create_authorization_url(
+        AUTHORIZATION_ENDPOINT,
+        state=state,
+        nonce=nonce,
+        code_verifier=verifier,
+        access_type="offline",
+        include_granted_scopes="true",
+        prompt="consent",
+    )
+    return GoogleAuthorization(uri, state, nonce, verifier)
+
+
+def parse_connection_token_response(
+    value: Mapping[str, object], *, now: datetime | None = None
+) -> ParsedConnectionToken:
+    access_token = value.get("access_token")
+    refresh_token = value.get("refresh_token")
+    token_type = value.get("token_type", "Bearer")
+    expires_in = value.get("expires_in")
+    scope_value = value.get("scope")
+    id_token = value.get("id_token")
+    if (
+        not isinstance(access_token, str)
+        or not access_token
+        or (refresh_token is not None and not isinstance(refresh_token, str))
+        or (isinstance(refresh_token, str) and not refresh_token)
+        or not isinstance(token_type, str)
+        or token_type.lower() != "bearer"
+        or type(expires_in) is not int
+        or not 0 < expires_in <= 86_400
+        or not isinstance(scope_value, str)
+        or not isinstance(id_token, str)
+        or not id_token
+    ):
+        raise GoogleConnectionFailure("provider_unavailable")
+    scopes = scope_value.split()
+    if len(scopes) != len(set(scopes)):
+        raise GoogleConnectionFailure("provider_unavailable")
+    expiry_origin = datetime.now(UTC) if now is None else now
+    if expiry_origin.tzinfo is None:
+        raise GoogleConnectionFailure("provider_unavailable")
+    bundle = GoogleTokenBundle(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        access_expires_at=expiry_origin + timedelta(seconds=expires_in),
+    )
+    return ParsedConnectionToken(bundle, frozenset(scopes), id_token)
+
+
+async def exchange_connection_code(
+    code: str,
+    *,
+    client_id: str,
+    client_secret: str,
+    callback_uri: str,
+    code_verifier: str,
+    expected_nonce: str,
+) -> GoogleConnectionGrant:
+    try:
+        async with _client(
+            client_id,
+            client_secret,
+            callback_uri,
+            scope=" ".join(CONNECTION_SCOPES),
+        ) as client:
+            response = await client.fetch_token(
+                TOKEN_ENDPOINT,
+                code=code,
+                redirect_uri=callback_uri,
+                code_verifier=code_verifier,
+                timeout=Timeout(5.0),
+            )
+        if not isinstance(response, Mapping):
+            raise GoogleConnectionFailure("provider_unavailable")
+        parsed = parse_connection_token_response(response)
+        identity = await validate_id_token(
+            parsed.id_token,
+            client_id=client_id,
+            expected_nonce=expected_nonce,
+        )
+    except GoogleConnectionFailure:
+        raise
+    except Exception as error:
+        raise GoogleConnectionFailure("provider_unavailable") from error
+    return GoogleConnectionGrant(identity, parsed.token_bundle, parsed.granted_scopes)
 
 
 async def _load_keys(*, force: bool = False) -> KeySet:

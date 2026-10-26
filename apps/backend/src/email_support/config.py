@@ -2,7 +2,7 @@
 
 import os
 from dataclasses import dataclass
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlunparse
 
 
 @dataclass(frozen=True, slots=True)
@@ -13,10 +13,24 @@ class AuthSettings:
     google_client_secret: str
     callback_uri: str
     web_origin: str
+    google_token_encryption_key: str | None = None
 
     @property
     def secure_cookie(self) -> bool:
         return urlparse(self.web_origin).scheme == "https"
+
+    @property
+    def google_connection_callback_uri(self) -> str:
+        """Dedicated callback path derived from the configured public origin."""
+        parsed = urlparse(self.callback_uri)
+        return urlunparse(
+            parsed._replace(
+                path="/api/google/connection/callback",
+                params="",
+                query="",
+                fragment="",
+            )
+        )
 
 
 def load_auth_settings() -> AuthSettings | None:
@@ -66,4 +80,8 @@ def load_auth_settings() -> AuthSettings | None:
         raise ValueError("plain HTTP is allowed only for loopback origins")
     if callback.scheme == "http" and callback.hostname not in loopback_hosts:
         raise ValueError("plain HTTP callback is allowed only for loopback")
-    return AuthSettings(**values)
+    encryption_key = os.environ.get("EMAIL_SUPPORT_GOOGLE_TOKEN_ENCRYPTION_KEY", "")
+    return AuthSettings(
+        **values,
+        google_token_encryption_key=encryption_key.strip() or None,
+    )

@@ -30,18 +30,36 @@ EMAIL_SUPPORT_GOOGLE_CLIENT_ID
 EMAIL_SUPPORT_GOOGLE_CLIENT_SECRET
 EMAIL_SUPPORT_GOOGLE_CALLBACK_URI
 EMAIL_SUPPORT_WEB_ORIGIN
+# Optional for login-only runtime; required for Google connection consent.
+EMAIL_SUPPORT_GOOGLE_TOKEN_ENCRYPTION_KEY
 ```
 
-For loopback development, register `http://127.0.0.1:8000/api/auth/google/callback` as the OAuth callback and use `http://127.0.0.1:5173` as the web origin. The configured Google subject must be the intended owner. Do not commit the file or copy its values into logs or shell history.
+The encryption key is a Fernet key generated with `cryptography.fernet.Fernet.generate_key()`. Keep it in the private local configuration, separate from PostgreSQL. Login and the local owner runtime can run without this optional key; Google connection consent requires it. Keep the key stable while encrypted credentials exist. Losing or changing it makes those credentials unavailable and requires an explicit reconnect.
+
+For loopback development, register both callbacks on the same OAuth client: `http://127.0.0.1:8000/api/auth/google/callback` for owner login and `http://127.0.0.1:8000/api/google/connection/callback` for the separate Workspace grant. Use `http://127.0.0.1:5173` as the web origin. The configured Google subject must be the intended owner. Do not commit the file or copy its values into logs or shell history.
 
 ```sh
 chmod 600 .local-auth/owner.conf
 ./scripts/local-auth.sh up
 ./scripts/local-auth.sh migrate
+./scripts/local-auth.sh smoke
 ./scripts/local-auth.sh down
 ```
 
 `up` refuses occupied unrelated ports 5173/8000. `migrate` checks the owned database and current Alembic revision, skips backups when already at head, and otherwise saves and validates a custom-format PostgreSQL archive before changing schema. Runtime data and archives remain under ignored `.local-auth/`; `down` stops this Compose project and preserves both. The route is local development support, not production deployment or backup storage. Default `make up`, `make down`, health smoke, and CI remain credential-free.
+
+The opt-in `smoke` requires the encryption key, the owner to be signed in and connected, and an accessible secondary or shared calendar. Register both exact callbacks above, enable the Gmail and Calendar APIs, and satisfy Google's test-user/consent requirements first. The harness reads one Gmail message's metadata and at most one event from a secondary calendar, asks the owner to disconnect through the authenticated UI, checks local purge and blocked access, then checks whether Google rejects the old access token before its conservative expiry cutoff. It prints only result categories and the access-token expiry time. A missing calendar, transient response, timeout, or expiry cutoff leaves remote revocation pending; it never sends mail.
+
+For an external OAuth app in Testing, Google refresh grants expire after seven days when the app requests scopes beyond basic identity; this connection does. Verify current requirements in Google's [OAuth refresh-token documentation](https://developers.google.com/identity/protocols/oauth2#expiration). Google's [Gmail scope guide](https://developers.google.com/workspace/gmail/api/auth/scopes) classifies `gmail.readonly` as restricted and `gmail.send` as sensitive. Check the applicable verification requirements for the selected [Calendar scopes](https://developers.google.com/workspace/calendar/api/auth) before live use. `gmail.send` is requested for a separately authorized future capability; this smoke never sends.
+
+If a revoke is unresolved, first allow any prior revoke request to finish. For this local runtime, `resolve-revoke` stops its owned API, then requires the operator to confirm that the app grant has been removed in Google Account permissions and enter the exact pending operation ID:
+
+```sh
+./scripts/local-auth.sh resolve-revoke
+./scripts/local-auth.sh up
+```
+
+The command clears only that matching `in_progress` or `unknown` marker when the connection is disconnected and its encrypted bundle is already absent. It records the manually verified removal as confirmed; it does not replay a provider revoke or restore credentials. Do not use it until the old API process is stopped and grant removal is visible in the Google Account. If the command reports no matching row, stop and investigate instead of editing the database directly.
 
 ## Operational prerequisites
 

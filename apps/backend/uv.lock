@@ -169,6 +169,7 @@ source = { editable = "." }
 dependencies = [
     { name = "alembic" },
     { name = "authlib" },
+    { name = "cryptography" },
     { name = "email-validator" },
     { name = "fastapi" },
     { name = "httpx2" },
@@ -191,6 +192,7 @@ dev = [
 requires-dist = [
     { name = "alembic", specifier = ">=1.14,<2" },
     { name = "authlib", specifier = ">=1.9.1,<1.10" },
+    { name = "cryptography", specifier = ">=45,<51" },
     { name = "email-validator", specifier = ">=2.2,<3" },
     { name = "fastapi", specifier = ">=0.115,<1" },
     { name = "httpx2", specifier = ">=2.16,<3" },

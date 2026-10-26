@@ -10,23 +10,22 @@ PROJECT_ROOT = Path(__file__).resolve().parents[4]
 SCRIPT = PROJECT_ROOT / "scripts/local-auth.sh"
 
 
-def runtime_directory(tmp_path: Path, *, mode: int = 0o600) -> Path:
+def runtime_directory(
+    tmp_path: Path, *, mode: int = 0o600, google_token_key: str | None = None
+) -> Path:
     root = tmp_path / ".local-auth"
     root.mkdir(mode=0o700)
     config = root / "owner.conf"
-    config.write_text(
-        "\n".join(
-            (
-                "EMAIL_SUPPORT_OWNER_SUB=test-owner",
-                "EMAIL_SUPPORT_GOOGLE_CLIENT_ID=test-client",
-                "EMAIL_SUPPORT_GOOGLE_CLIENT_SECRET=test-secret-value",
-                "EMAIL_SUPPORT_GOOGLE_CALLBACK_URI=http://127.0.0.1:8000/api/auth/google/callback",
-                "EMAIL_SUPPORT_WEB_ORIGIN=http://127.0.0.1:5173",
-            )
-        )
-        + "\n",
-        encoding="utf-8",
-    )
+    values = [
+        "EMAIL_SUPPORT_OWNER_SUB=test-owner",
+        "EMAIL_SUPPORT_GOOGLE_CLIENT_ID=test-client",
+        "EMAIL_SUPPORT_GOOGLE_CLIENT_SECRET=test-secret-value",
+        "EMAIL_SUPPORT_GOOGLE_CALLBACK_URI=http://127.0.0.1:8000/api/auth/google/callback",
+        "EMAIL_SUPPORT_WEB_ORIGIN=http://127.0.0.1:5173",
+    ]
+    if google_token_key is not None:
+        values.append(f"EMAIL_SUPPORT_GOOGLE_TOKEN_ENCRYPTION_KEY={google_token_key}")
+    config.write_text("\n".join(values) + "\n", encoding="utf-8")
     config.chmod(mode)
     return root
 
@@ -48,7 +47,7 @@ if args and args[0] == 'inspect':
     if 'com.docker.compose.project' in template:
         print('wrong-project' if mode == 'foreign' else 'email-support-auth-local')
     elif 'com.docker.compose.service' in template:
-        print('auth-postgres')
+        print('api' if mode == 'smoke' else 'auth-postgres')
     elif 'com.email_support.local_auth' in template:
         print('true')
     else:
@@ -59,19 +58,30 @@ if args and args[0] == 'inspect':
         )
         print(os.path.join(os.getcwd(), data_dir))
 elif 'ps' in args and '--status' in args:
-    print('owned-container')
+    if mode.startswith('recovery') and args[-1] == 'api':
+        print('' if mode == 'recovery' else 'api-container')
+    else:
+        print('owned-container')
 elif 'heads' in args:
-    print('b17e9a4d2c61 (head)')
+    print('3c0f6a9b21e8 (head)')
 elif 'psql' in ' '.join(args):
     query = args[-1]
+    if mode == 'recovery' and 'SELECT revoke_operation_id' in query:
+        print('5e93b29f-ff68-40ea-98e8-6078c7010078')
+    elif mode == 'recovery' and 'UPDATE google_connections' in query:
+        print('5e93b29f-ff68-40ea-98e8-6078c7010078')
     if mode == 'query-failure' and 'to_regclass' in query:
         sys.exit(1)
-    if 'to_regclass' in query:
+    elif mode == 'recovery' and (
+        'SELECT revoke_operation_id' in query or 'UPDATE google_connections' in query
+    ):
+        pass
+    elif 'to_regclass' in query:
         print('t' if mode == 'head' else 'f')
     elif 'information_schema.tables' in query:
         print('0')
     else:
-        print('b17e9a4d2c61' if mode == 'head' else 'da3c8e14f627')
+        print('3c0f6a9b21e8' if mode == 'head' else 'da3c8e14f627')
 elif 'pg_dump' in ' '.join(args):
     sys.stdout.buffer.write(b'custom archive fixture')
 elif 'pg_restore' in args:
@@ -243,3 +253,193 @@ def test_up_refuses_an_unrelated_listener_on_the_documented_port(
         " up " in call for call in log.read_text(encoding="utf-8").splitlines()
     )
     assert "port 5173 is occupied" in result.stderr
+
+
+def test_smoke_requires_a_private_encryption_key_before_docker(tmp_path: Path) -> None:
+    runtime_directory(tmp_path)
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    _, log = fake_docker(bin_dir)
+    env = os.environ.copy()
+    env.update(
+        {"PATH": f"{bin_dir}{os.pathsep}{env['PATH']}", "FAKE_DOCKER_LOG": str(log)}
+    )
+
+    result = subprocess.run(
+        [str(SCRIPT), "smoke"],
+        cwd=tmp_path,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode != 0
+    assert "encryption key" in result.stderr
+    assert not log.exists()
+
+
+def test_smoke_runs_only_in_the_owned_api_container(tmp_path: Path) -> None:
+    runtime_directory(tmp_path, google_token_key="test-private-fernet-key")
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    _, log = fake_docker(bin_dir)
+    env = os.environ.copy()
+    env.update(
+        {
+            "PATH": f"{bin_dir}{os.pathsep}{env['PATH']}",
+            "FAKE_DOCKER_LOG": str(log),
+            "FAKE_DOCKER_MODE": "smoke",
+        }
+    )
+
+    result = subprocess.run(
+        [str(SCRIPT), "smoke"],
+        cwd=tmp_path,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+        input="",
+    )
+
+    assert result.returncode == 0, result.stderr
+    calls = log.read_text(encoding="utf-8").splitlines()
+    assert any("ps --status running --quiet api" in call for call in calls)
+    assert any("live-google-smoke.py" in call for call in calls)
+
+
+def test_resolve_revoke_requires_exact_operation_and_updates_only_purged_unknown(
+    tmp_path: Path,
+) -> None:
+    runtime_directory(tmp_path)
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    _, log = fake_docker(bin_dir)
+    env = os.environ.copy()
+    env.update(
+        {
+            "PATH": f"{bin_dir}{os.pathsep}{env['PATH']}",
+            "FAKE_DOCKER_LOG": str(log),
+            "FAKE_DOCKER_MODE": "recovery",
+        }
+    )
+
+    result = subprocess.run(
+        [str(SCRIPT), "resolve-revoke"],
+        cwd=tmp_path,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+        input="REMOVED\n5e93b29f-ff68-40ea-98e8-6078c7010078\n",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "revoke marker resolved" in result.stdout
+    calls = log.read_text(encoding="utf-8").splitlines()
+    update = next(call for call in calls if "UPDATE google_connections" in call)
+    assert "revoke_operation_id" in update
+    assert "revoke_state IN ('in_progress', 'unknown')" in update
+    assert "encrypted_token_bundle IS NULL" in update
+
+
+def test_resolve_revoke_stops_when_operator_does_not_confirm_cleanup(
+    tmp_path: Path,
+) -> None:
+    runtime_directory(tmp_path)
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    _, log = fake_docker(bin_dir)
+    env = os.environ.copy()
+    env.update(
+        {
+            "PATH": f"{bin_dir}{os.pathsep}{env['PATH']}",
+            "FAKE_DOCKER_LOG": str(log),
+            "FAKE_DOCKER_MODE": "recovery",
+        }
+    )
+
+    result = subprocess.run(
+        [str(SCRIPT), "resolve-revoke"],
+        cwd=tmp_path,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+        input="NO\n",
+    )
+
+    assert result.returncode != 0
+    assert "operator confirmation" in result.stderr
+    assert not any(
+        "UPDATE google_connections" in call
+        for call in log.read_text(encoding="utf-8").splitlines()
+    )
+
+
+def test_resolve_revoke_requires_the_exact_pending_operation_id(
+    tmp_path: Path,
+) -> None:
+    runtime_directory(tmp_path)
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    _, log = fake_docker(bin_dir)
+    env = os.environ.copy()
+    env.update(
+        {
+            "PATH": f"{bin_dir}{os.pathsep}{env['PATH']}",
+            "FAKE_DOCKER_LOG": str(log),
+            "FAKE_DOCKER_MODE": "recovery",
+        }
+    )
+
+    result = subprocess.run(
+        [str(SCRIPT), "resolve-revoke"],
+        cwd=tmp_path,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+        input="REMOVED\n00000000-0000-0000-0000-000000000000\n",
+    )
+
+    assert result.returncode != 0
+    assert "operation ID did not match" in result.stderr
+    assert not any(
+        "UPDATE google_connections" in call
+        for call in log.read_text(encoding="utf-8").splitlines()
+    )
+
+
+def test_resolve_revoke_waits_for_the_owner_api_to_stop(
+    tmp_path: Path,
+) -> None:
+    runtime_directory(tmp_path)
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    _, log = fake_docker(bin_dir)
+    env = os.environ.copy()
+    env.update(
+        {
+            "PATH": f"{bin_dir}{os.pathsep}{env['PATH']}",
+            "FAKE_DOCKER_LOG": str(log),
+            "FAKE_DOCKER_MODE": "recovery-running-api",
+        }
+    )
+
+    result = subprocess.run(
+        [str(SCRIPT), "resolve-revoke"],
+        cwd=tmp_path,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+        input="REMOVED\n",
+    )
+
+    assert result.returncode != 0
+    assert "could not stop the owner API" in result.stderr
+    calls = log.read_text(encoding="utf-8").splitlines()
+    assert any("stop --timeout 10 api" in call for call in calls)
+    assert not any("SELECT revoke_operation_id" in call for call in calls)
