@@ -17,7 +17,7 @@ The intended backend boundaries are:
 
 - `api/` — HTTP routes and request dependencies.
 - `workflows/company_briefing/` — graph, workflow state, and nodes.
-- `agents/` — role instructions, context, and tool allowlists.
+- `agents/` — the seven role definitions described in the architecture: typed inputs/results, instructions where needed, context, and allowed operations. Deterministic roles delegate to services; they do not gain artificial LLM loops.
 - `tools/` — typed functions exposed to models.
 - `services/` — business invariants, transaction coordination, approvals, delivery, synchronization, and knowledge operations.
 - `integrations/` — provider SDKs and protocols for Gmail, Google Calendar, Tavily, LLMs, and embeddings.
@@ -26,6 +26,12 @@ The intended backend boundaries are:
 - `core/` — configuration and telemetry.
 
 Use the architecture page for dependency direction and cross-boundary decisions. Do not create empty folders to match this map; add a boundary when implementation gives it a real owner.
+
+## Evaluation boundary
+
+The planned `apps/backend/evals/` owns versioned datasets, evaluators and a runner for agent quality. `datasets/` holds labelled scenarios and source provenance; `evaluators/` holds factual-support, retrieval and task-outcome scoring. Keep typed evaluation contracts here unless they are genuine product contracts. Evaluation invokes production workflows and tools rather than implementing a second assistant.
+
+`tests/` continues to own deterministic correctness, security and integration checks. Dataset validation and evaluator correctness belong in tests; quality measurements belong in evals. Live evaluation uses explicit credentials, controlled recipients and isolated data. These modules and their execution commands are not implemented yet; [evaluation design](09-evaluation.md) defines the target contract.
 
 ## Web entry points
 

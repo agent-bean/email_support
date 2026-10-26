@@ -6,19 +6,21 @@ Module navigation is owned by [03](03-codebase-summary.md); engineering constrai
 
 The React/TypeScript/Vite web app talks to a FastAPI backend. A separate Python worker runs scheduled synchronization, durable jobs, and LangGraph workflows. Both processes share application services and PostgreSQL; long-running research does not live inside an HTTP request.
 
-LangGraph coordinates explicit stages and review pauses. Specialist LLM roles handle email interpretation, web research, and briefing synthesis. Deterministic code handles database lookup, calendar access, memory persistence, authorization, and delivery. These are separate responsibilities without requiring a separate process or an LLM loop for each one.
+LangGraph coordinates seven named workflow roles in one backend. LLM reasoning is used for interpretation, research and synthesis where useful; deterministic code owns provider protocols, storage, permissions and human decisions. A role does not require a separate service or an extra LLM call. Each role has explicit typed inputs/results, allowed operations and a trace identity, so its contribution can be inspected and evaluated.
 
-| Responsibility | Owner and boundary |
+| Workflow role | Responsibility and execution boundary |
 | --- | --- |
-| Email interpretation | Email specialist extracts typed intent/contact/company candidates from untrusted message content. |
-| Company information | Resolution service and lookup tools retrieve identities and facts; ambiguity remains visible. |
-| Web research | Research specialist chooses from a bounded read-only tool allowlist and returns typed evidence references. |
-| Calendar context | Read-only Google Calendar integration normalizes meeting context for the workflow. |
-| Report generation | Briefing specialist synthesizes a typed report, rendered as Markdown with evidence references. |
-| Memory | Knowledge service stores approved material and explicit preferences; retrieval tools select relevant context. |
-| Human approval | Authenticated owner UI and approval service record an actual human decision; the LLM has no approval authority. |
+| Email Agent | Interpret relevant mail into intent/contact/company candidates; prepare email content and invoke approved delivery through the guarded application action path. No unrestricted sending tool is exposed to a model. |
+| Web Research Agent | Choose bounded read-only research tools and return source-backed evidence, retrieval times and gaps. |
+| Company Info Agent | Resolve identity and retrieve existing company/contact information; preserve ambiguity and owner corrections. Use deterministic queries, with validated model extraction only where needed. |
+| Calendar Agent | Find related upcoming meetings and trigger preparation through scheduling code; calendar access is read-only. |
+| Report Generation Agent | Synthesize evidence into an editable, cited sales briefing; render the selected version into supported formats. |
+| Memory Agent | Retrieve eligible prior knowledge and explicit preferences; retain research history and execute only authorized knowledge promotion through services. |
+| Human Approval Agent | Persist and present a pending decision, pause, and resume only on an authenticated human decision. This is a deterministic workflow role, not an LLM acting as an approver. |
 
-An agent defines instructions, context, tools, and a bounded execution policy. A tool is a typed callable exposed to a model. An integration implements a provider protocol. A service enforces application invariants. These concepts must remain distinguishable during review.
+Role definitions belong under `agents/`; graph routing and review pause/resume belong under `workflows/company_briefing/`. Roles call existing tools/services rather than duplicating their logic. A trace should explain performed work; do not invoke every role unnecessarily just to produce seven spans.
+
+An LLM-backed agent defines instructions, context, tools, and a bounded execution policy; a deterministic role defines typed operations and explicit control flow. A tool is a typed callable exposed to a model. An integration implements a provider protocol. A service enforces application invariants. These concepts must remain distinguishable during review.
 
 Backend dependencies flow from API routes to services, and from the worker through workflows to agents, tools, and services. Tools may call services or integrations; services may call storage and integrations. Provider/storage code must not import HTTP routes or workflow orchestration. Keep construction of resources at composition points instead of creating import cycles.
 
@@ -28,7 +30,7 @@ The web composition layer assembles feature screens. Features consume shared API
 
 Synchronization records normalized input and schedules research through PostgreSQL jobs. A worker claims work using an expiring lease. Unique input/job keys and conditional state changes prevent duplicate processing. A lost lease must prevent a stale worker from committing another worker's result.
 
-The research graph resolves identity, retrieves prior context, performs bounded research when necessary, and produces a versioned briefing. Multiple messages for the same company can share fresh context. Freshness and research budgets are explicit configuration, not hidden prompt instructions.
+The research graph resolves identity, retrieves prior context, performs bounded research when necessary, and produces a versioned briefing. A new company with no prior knowledge remains a valid input: use available evidence without inventing retrieval hits. Initial local workflow execution accepts explicit normalized inputs; scheduled Gmail/Calendar intake and graph/vector retrieval integrate into the same workflow as their implementations become available. Optional context absence must be distinguishable from a configured dependency failure. Multiple messages for the same company can share fresh context. Freshness and research budgets are explicit configuration, not hidden prompt instructions.
 
 Persist the briefing before pausing for review. The owner can return much later; an HTTP request is never held open while awaiting a decision. Use PostgreSQL-backed LangGraph checkpoints and stable workflow identifiers. Checkpoints support resume, not authorization.
 
@@ -66,7 +68,7 @@ Run state/checkpoints are short-term execution memory. Approved knowledge and ex
 
 Propagate trace/run/job identifiers across HTTP, worker, LLM, and tool calls. OpenTelemetry exports traces to Tempo; Prometheus and Grafana expose operational metrics and dashboards. Collect latency, retries, error categories, token/cost usage where reported, queue age, and projection freshness without retaining full mailbox content by default. Missing provider usage is unknown rather than zero.
 
-Quality evaluation is separate from tracing. Use a small human-reviewed corpus covering company resolution, retrieval relevance, source-supported claims, missing evidence, stale knowledge, injection attempts, and unauthorized actions. Evaluate retrieval and briefing quality separately. Deterministic tests enforce approval and delivery rules; an LLM judge cannot certify authorization or factual correctness by itself.
+Quality evaluation is separate from tracing. Use the [evaluation design](09-evaluation.md) for dataset provenance, human review, reproducible regression, live runs and role-level evidence. Start evaluation and correlated tool traces with the first agent behavior; dashboards and integrated release evaluation build on that evidence. Deterministic tests enforce approval and delivery rules; an LLM judge cannot certify authorization or factual correctness by itself.
 
 ## Important decisions
 
