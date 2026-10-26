@@ -57,8 +57,10 @@ async def test_empty_database_installs_through_real_alembic_revision(
         "knowledge_evidence",
         "preferences",
         "projection_metadata",
+        "oauth_attempts",
+        "owner_sessions",
     } <= tables
-    assert revision == "da3c8e14f627"
+    assert revision == "b17e9a4d2c61"
     await asyncio.to_thread(check_migration_drift, database_url)
 
 
@@ -117,7 +119,7 @@ async def test_guarded_restore_recovers_revision_and_committed_core_rows(
                 )
         assert getattr(duplicate_error.value.orig, "sqlstate", None) == "23505"
         assert restored_id == account_id
-        assert revision == "da3c8e14f627"
+        assert revision == "b17e9a4d2c61"
     finally:
         await dispose_database_engine(restored_engine)
         await asyncio.to_thread(database_lifecycle.drop_target, restored_database)
@@ -315,7 +317,7 @@ async def test_additive_upgrade_preserves_seeded_first_revision_records(
         finally:
             await dispose_database_engine(upgraded_engine)
 
-        assert revision == "da3c8e14f627"
+        assert revision == "b17e9a4d2c61"
         assert preserved_email == "Owner@Example.com"
         assert after_rows == before_rows
         assert account.id == account_id
@@ -331,5 +333,118 @@ async def test_additive_upgrade_preserves_seeded_first_revision_records(
         assert version.id == version_id
         assert version.markdown == "# Preserved\n\nContent"
         assert version.evidence_ids == [evidence_id]
+    finally:
+        await asyncio.to_thread(database_lifecycle.drop_target, database_name)
+
+
+@pytest.mark.asyncio
+async def test_owner_access_migration_preserves_existing_decision_and_knowledge_rows(
+    database_lifecycle: DatabaseLifecycle,
+) -> None:
+    database_name = database_lifecycle.create_target("access-upgrade-preservation")
+    database_url = database_lifecycle.target_url(database_name)
+    company_id, briefing_id, version_id = uuid4(), uuid4(), uuid4()
+    approval_id, knowledge_id, preference_id = uuid4(), uuid4(), uuid4()
+    snapshot_query = text(
+        "SELECT 'approvals'::text, to_jsonb(source) FROM approvals AS source "
+        "UNION ALL SELECT 'knowledge', to_jsonb(source) FROM knowledge AS source "
+        "UNION ALL SELECT 'preferences', to_jsonb(preferences) FROM preferences"
+    )
+    try:
+        await asyncio.to_thread(run_migrations, database_url, "da3c8e14f627")
+        await asyncio.to_thread(
+            database_lifecycle.backup_database,
+            database_name,
+            "before-access-preservation-seed",
+        )
+        engine = create_database_engine(database_url)
+        try:
+            async with engine.begin() as connection:
+                await connection.execute(
+                    text("INSERT INTO companies (id, name) VALUES (:id, 'Kept Co')"),
+                    {"id": company_id},
+                )
+                await connection.execute(
+                    text(
+                        "INSERT INTO briefings (id, company_id) "
+                        "VALUES (:id, :company_id)"
+                    ),
+                    {"id": briefing_id, "company_id": company_id},
+                )
+                await connection.execute(
+                    text(
+                        "INSERT INTO briefing_versions "
+                        "(id, briefing_id, version_number, markdown, sealed) "
+                        "VALUES (:id, :briefing_id, 1, 'Kept', true)"
+                    ),
+                    {"id": version_id, "briefing_id": briefing_id},
+                )
+                await connection.execute(
+                    text(
+                        "INSERT INTO approvals "
+                        "(id, briefing_id, briefing_version_id, action_kind, "
+                        "recipient_emails, selected_knowledge) VALUES "
+                        "(:id, :briefing_id, :version_id, 'save_knowledge', "
+                        "'[]'::jsonb, '[\"kept note\"]'::jsonb)"
+                    ),
+                    {
+                        "id": approval_id,
+                        "briefing_id": briefing_id,
+                        "version_id": version_id,
+                    },
+                )
+                await connection.execute(
+                    text(
+                        "INSERT INTO knowledge "
+                        "(id, company_id, approval_id, selection_index, "
+                        "briefing_version_id, sealed) VALUES "
+                        "(:id, :company_id, :approval_id, 0, :version_id, false)"
+                    ),
+                    {
+                        "id": knowledge_id,
+                        "company_id": company_id,
+                        "approval_id": approval_id,
+                        "version_id": version_id,
+                    },
+                )
+                await connection.execute(
+                    text("UPDATE knowledge SET sealed = true WHERE id = :id"),
+                    {"id": knowledge_id},
+                )
+                await connection.execute(
+                    text(
+                        "INSERT INTO preferences (id, key, value) "
+                        "VALUES (:id, 'reply_tone', '\"clear\"'::jsonb)"
+                    ),
+                    {"id": preference_id},
+                )
+                before_rows = sorted(
+                    (name, json.dumps(row, sort_keys=True))
+                    for name, row in await connection.execute(snapshot_query)
+                )
+        finally:
+            await dispose_database_engine(engine)
+
+        await asyncio.to_thread(
+            database_lifecycle.backup_database,
+            database_name,
+            "before-owner-access-upgrade",
+        )
+        await asyncio.to_thread(run_migrations, database_url)
+        upgraded_engine = create_database_engine(database_url)
+        try:
+            async with upgraded_engine.connect() as connection:
+                after_rows = sorted(
+                    (name, json.dumps(row, sort_keys=True))
+                    for name, row in await connection.execute(snapshot_query)
+                )
+                revision = await connection.scalar(
+                    text("SELECT version_num FROM alembic_version")
+                )
+        finally:
+            await dispose_database_engine(upgraded_engine)
+
+        assert after_rows == before_rows
+        assert revision == "b17e9a4d2c61"
     finally:
         await asyncio.to_thread(database_lifecycle.drop_target, database_name)

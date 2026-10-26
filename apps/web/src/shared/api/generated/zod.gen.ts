@@ -3,6 +3,25 @@
 import * as z from 'zod';
 
 /**
+ * AccessErrorCode
+ */
+export const zAccessErrorCode = z.enum([
+    'auth_unavailable',
+    'auth_required',
+    'csrf_rejected',
+    'login_rejected',
+    'login_restart'
+]);
+
+/**
+ * AccessError
+ */
+export const zAccessError = z.object({
+    code: zAccessErrorCode,
+    message: z.string()
+});
+
+/**
  * HealthStatus
  *
  * Closed health states returned by the API.
@@ -17,6 +36,75 @@ export const zHealthStatus = z.enum(['ok']);
 export const zHealthResponse = z.object({
     status: zHealthStatus
 });
+
+/**
+ * LoginResponse
+ */
+export const zLoginResponse = z.object({
+    authorization_url: z.url().min(1).max(2083)
+});
+
+/**
+ * OwnerSession
+ */
+export const zOwnerSession = z.object({
+    authenticated: z.boolean().optional().default(true),
+    csrf_token: z.string().min(32),
+    expires_at: z.iso.datetime()
+});
+
+/**
+ * PreauthResponse
+ */
+export const zPreauthResponse = z.object({
+    csrf_token: z.string().min(32)
+});
+
+/**
+ * ValidationError
+ */
+export const zValidationError = z.object({
+    ctx: z.record(z.string(), z.unknown()).optional(),
+    input: z.unknown().optional(),
+    loc: z.array(z.union([z.string(), z.int()])),
+    msg: z.string(),
+    type: z.string()
+});
+
+/**
+ * HTTPValidationError
+ */
+export const zHttpValidationError = z.object({
+    detail: z.array(zValidationError).optional()
+});
+
+export const zStartGoogleLoginHeaders = z.object({
+    'X-CSRF-Token': z.string().nullish()
+});
+
+/**
+ * Successful Response
+ */
+export const zStartGoogleLoginResponse = zLoginResponse;
+
+export const zLogoutOwnerHeaders = z.object({
+    'X-CSRF-Token': z.string().nullish()
+});
+
+/**
+ * Successful Response
+ */
+export const zLogoutOwnerResponse = z.void();
+
+/**
+ * Successful Response
+ */
+export const zGetAccessPreauthResponse = zPreauthResponse;
+
+/**
+ * Successful Response
+ */
+export const zGetOwnerSessionResponse = zOwnerSession;
 
 /**
  * Successful Response

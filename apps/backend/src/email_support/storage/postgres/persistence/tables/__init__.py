@@ -1,5 +1,6 @@
 """Public PostgreSQL mappings grouped by canonical data scope."""
 
+from .access import OAuthAttemptRow, OwnerSessionRow
 from .base import Base
 from .core import (
     BriefingRow,
@@ -34,6 +35,8 @@ __all__ = [
     "KnowledgeEvidenceRow",
     "KnowledgeRow",
     "MailMessageRow",
+    "OAuthAttemptRow",
+    "OwnerSessionRow",
     "MeetingRow",
     "PreferenceRow",
     "ProjectionMetadataRow",

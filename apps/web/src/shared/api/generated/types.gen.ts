@@ -5,6 +5,32 @@ export type ClientOptions = {
 };
 
 /**
+ * AccessError
+ */
+export type AccessError = {
+    code: AccessErrorCode;
+    /**
+     * Message
+     */
+    message: string;
+};
+
+/**
+ * AccessErrorCode
+ */
+export type AccessErrorCode = 'auth_unavailable' | 'auth_required' | 'csrf_rejected' | 'login_rejected' | 'login_restart';
+
+/**
+ * HTTPValidationError
+ */
+export type HttpValidationError = {
+    /**
+     * Detail
+     */
+    detail?: Array<ValidationError>;
+};
+
+/**
  * HealthResponse
  *
  * Credential-free liveness response.
@@ -19,6 +45,204 @@ export type HealthResponse = {
  * Closed health states returned by the API.
  */
 export type HealthStatus = 'ok';
+
+/**
+ * LoginResponse
+ */
+export type LoginResponse = {
+    /**
+     * Authorization Url
+     */
+    authorization_url: string;
+};
+
+/**
+ * OwnerSession
+ */
+export type OwnerSession = {
+    /**
+     * Authenticated
+     */
+    authenticated?: boolean;
+    /**
+     * Csrf Token
+     */
+    csrf_token: string;
+    /**
+     * Expires At
+     */
+    expires_at: string;
+};
+
+/**
+ * PreauthResponse
+ */
+export type PreauthResponse = {
+    /**
+     * Csrf Token
+     */
+    csrf_token: string;
+};
+
+/**
+ * ValidationError
+ */
+export type ValidationError = {
+    /**
+     * Context
+     */
+    ctx?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Input
+     */
+    input?: unknown;
+    /**
+     * Location
+     */
+    loc: Array<string | number>;
+    /**
+     * Message
+     */
+    msg: string;
+    /**
+     * Error Type
+     */
+    type: string;
+};
+
+export type StartGoogleLoginData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Csrf-Token
+         */
+        'X-CSRF-Token'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/auth/google/login';
+};
+
+export type StartGoogleLoginErrors = {
+    /**
+     * Bad Request
+     */
+    400: AccessError;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+    /**
+     * Service Unavailable
+     */
+    503: AccessError;
+};
+
+export type StartGoogleLoginError = StartGoogleLoginErrors[keyof StartGoogleLoginErrors];
+
+export type StartGoogleLoginResponses = {
+    /**
+     * Successful Response
+     */
+    200: LoginResponse;
+};
+
+export type StartGoogleLoginResponse = StartGoogleLoginResponses[keyof StartGoogleLoginResponses];
+
+export type LogoutOwnerData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Csrf-Token
+         */
+        'X-CSRF-Token'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/auth/logout';
+};
+
+export type LogoutOwnerErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AccessError;
+    /**
+     * Forbidden
+     */
+    403: AccessError;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type LogoutOwnerError = LogoutOwnerErrors[keyof LogoutOwnerErrors];
+
+export type LogoutOwnerResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type LogoutOwnerResponse = LogoutOwnerResponses[keyof LogoutOwnerResponses];
+
+export type GetAccessPreauthData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/auth/preauth';
+};
+
+export type GetAccessPreauthErrors = {
+    /**
+     * Service Unavailable
+     */
+    503: AccessError;
+};
+
+export type GetAccessPreauthError = GetAccessPreauthErrors[keyof GetAccessPreauthErrors];
+
+export type GetAccessPreauthResponses = {
+    /**
+     * Successful Response
+     */
+    200: PreauthResponse;
+};
+
+export type GetAccessPreauthResponse = GetAccessPreauthResponses[keyof GetAccessPreauthResponses];
+
+export type GetOwnerSessionData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/auth/session';
+};
+
+export type GetOwnerSessionErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AccessError;
+    /**
+     * Service Unavailable
+     */
+    503: AccessError;
+};
+
+export type GetOwnerSessionError = GetOwnerSessionErrors[keyof GetOwnerSessionErrors];
+
+export type GetOwnerSessionResponses = {
+    /**
+     * Successful Response
+     */
+    200: OwnerSession;
+};
+
+export type GetOwnerSessionResponse = GetOwnerSessionResponses[keyof GetOwnerSessionResponses];
 
 export type GetHealthData = {
     body?: never;

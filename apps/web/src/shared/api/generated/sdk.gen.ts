@@ -2,8 +2,8 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { GetHealthData, GetHealthResponses } from './types.gen';
-import { zGetHealthResponse } from './zod.gen';
+import type { GetAccessPreauthData, GetAccessPreauthErrors, GetAccessPreauthResponses, GetHealthData, GetHealthResponses, GetOwnerSessionData, GetOwnerSessionErrors, GetOwnerSessionResponses, LogoutOwnerData, LogoutOwnerErrors, LogoutOwnerResponses, StartGoogleLoginData, StartGoogleLoginErrors, StartGoogleLoginResponses } from './types.gen';
+import { zGetAccessPreauthResponse, zGetHealthResponse, zGetOwnerSessionResponse, zLogoutOwnerResponse, zStartGoogleLoginResponse } from './zod.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -18,6 +18,52 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
      */
     meta?: keyof ClientMeta extends never ? Record<string, unknown> : ClientMeta;
 };
+
+/**
+ * Start Google Login
+ */
+export const startGoogleLogin = <ThrowOnError extends boolean = false>(options?: Options<StartGoogleLoginData, ThrowOnError>): RequestResult<StartGoogleLoginResponses, StartGoogleLoginErrors, ThrowOnError> => (options?.client ?? client).post<StartGoogleLoginResponses, StartGoogleLoginErrors, ThrowOnError>({
+    responseValidator: async (data) => await zStartGoogleLoginResponse.parseAsync(data),
+    url: '/api/auth/google/login',
+    ...options
+});
+
+/**
+ * Logout
+ */
+export const logoutOwner = <ThrowOnError extends boolean = false>(options?: Options<LogoutOwnerData, ThrowOnError>): RequestResult<LogoutOwnerResponses, LogoutOwnerErrors, ThrowOnError> => (options?.client ?? client).post<LogoutOwnerResponses, LogoutOwnerErrors, ThrowOnError>({
+    responseValidator: async (data) => await zLogoutOwnerResponse.parseAsync(data),
+    security: [{
+            in: 'cookie',
+            name: '__Host-owner_session',
+            type: 'apiKey'
+        }],
+    url: '/api/auth/logout',
+    ...options
+});
+
+/**
+ * Preauth
+ */
+export const getAccessPreauth = <ThrowOnError extends boolean = false>(options?: Options<GetAccessPreauthData, ThrowOnError>): RequestResult<GetAccessPreauthResponses, GetAccessPreauthErrors, ThrowOnError> => (options?.client ?? client).get<GetAccessPreauthResponses, GetAccessPreauthErrors, ThrowOnError>({
+    responseValidator: async (data) => await zGetAccessPreauthResponse.parseAsync(data),
+    url: '/api/auth/preauth',
+    ...options
+});
+
+/**
+ * Get Session
+ */
+export const getOwnerSession = <ThrowOnError extends boolean = false>(options?: Options<GetOwnerSessionData, ThrowOnError>): RequestResult<GetOwnerSessionResponses, GetOwnerSessionErrors, ThrowOnError> => (options?.client ?? client).get<GetOwnerSessionResponses, GetOwnerSessionErrors, ThrowOnError>({
+    responseValidator: async (data) => await zGetOwnerSessionResponse.parseAsync(data),
+    security: [{
+            in: 'cookie',
+            name: '__Host-owner_session',
+            type: 'apiKey'
+        }],
+    url: '/api/auth/session',
+    ...options
+});
 
 /**
  * Get Health
