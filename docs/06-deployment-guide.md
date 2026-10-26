@@ -27,5 +27,5 @@ Use a protected production environment for deployment credentials and approval. 
 - Apply versioned PostgreSQL migrations before serving incompatible code. Keep application/checkpoint compatibility in mind when changing persisted workflow state.
 - Give the worker graceful shutdown and bounded lease handling; terminating a container must not turn an uncertain email send into an automatic retry.
 - Establish encrypted backup storage outside the VPS and perform a PostgreSQL restore exercise. Neo4j/Qdrant projections need rebuild procedures backed by canonical records.
-- Supply OpenTelemetry, Prometheus, Tempo, and Grafana with bounded retention and resource use. Verify dashboards and trace correlation under real execution before treating instrumentation as complete.
+- Supply OpenTelemetry, Prometheus, Tempo, and Grafana with bounded retention and resource use. Expose Grafana through a protected endpoint separate from the application listener; keep metrics and trace stores private. Verify dashboards and trace correlation under real execution before treating instrumentation as complete.
 - Verify rollback with both database compatibility and in-flight jobs/approvals. Reverting a container cannot undo a sent email.

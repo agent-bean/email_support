@@ -2,7 +2,9 @@
 
 ## Outcome
 
-An owner receives a sourced company briefing from incoming business email or an upcoming meeting, reviews its content, and explicitly authorizes delivery to selected recipients and/or persistence as reusable knowledge.
+A sales or business-development owner receives a sourced company briefing from incoming business email or an upcoming meeting, reviews its content, and explicitly authorizes delivery to selected recipients and/or persistence as reusable knowledge.
+
+The briefing supports meeting preparation: distinguish verified company facts, needs stated in email, prior exchanges, meeting details, suggested questions, and unresolved information. Suggestions are not verified facts; do not invent budget, buying authority, attendance, or purchase intent.
 
 The v1.0.0 release serves one owner through Gmail and Google Calendar. Markdown is the first briefing format; PDF/Word export and attachment ingestion are separate increments within the same release.
 

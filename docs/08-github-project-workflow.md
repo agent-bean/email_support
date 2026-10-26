@@ -1,6 +1,6 @@
 # GitHub Project workflow
 
-Email Support Project #15 keeps one execution item per task: the Issue. Pull requests are linked to that Issue through GitHub's native Development relationship and never become separate Project items.
+Email Support Project #15 keeps one execution item per task: the Issue. Pull requests are linked to their scoped Issues through GitHub's native Development relationship and never become separate Project items.
 
 ## Status flow
 
@@ -50,14 +50,14 @@ The command changes only the Status field of exactly one matching Issue item in 
 
 ## Pull request creation
 
-Set the owning Issue's Type when creating the Issue (`Feature`, `Bug`, or `Task`). GitHub does not support Issue Type on pull requests; set Type on the Issue. Before creating a PR, read the owning Issue's labels and milestone. Set PR metadata in the creation command: assign it to the configured developer account, request review from the configured tech lead, and copy every Issue label and its milestone. Replace the username placeholders in this example with the repository's configured accounts:
+Set the owning Issue's Type when creating the Issue (`Feature`, `Bug`, or `Task`). GitHub does not support Issue Type on pull requests; set Type on the Issue. Before creating a PR, read the owning Issue's labels and milestone. Set PR metadata in the creation command: use the owning Issue's assignee, request review from the configured tech lead when different from the author, and copy the relevant Issue labels and milestone. GitHub does not allow authors to review their own PRs. Replace the username placeholders in this example with the repository's configured accounts:
 
 ```sh
 gh pr create \
-  --assignee "<developer-github-username>" \
+  --assignee "<issue-assignee>" \
   --reviewer "<tech-lead-github-username>" \
   --label "<issue-label>" \
   --milestone "<issue-milestone>"
 ```
 
-Repeat `--label` once per label on the Issue. Link exactly one owning Issue through the PR's native **Development** relationship when the PR is ready for review. Do not use `Fixes`, `Closes`, or `Resolves` in the PR body; the Project Status transition controls Issue closure. A plain `Refs #N` mention does not create the native relationship.
+Repeat `--label` once per label on the Issue. Link each explicitly owner-selected Issue covered by the PR through the native **Development** relationship when the PR is ready for review. One PR may cover related Issues, but scope, verification, acceptance and Project status remain independent for each Issue. A shared PR never authorizes starting another Issue or marking all linked Issues complete. Copy the relevant labels and shared milestone; use the existing status helper separately for each Issue. Do not use `Fixes`, `Closes`, or `Resolves` in the PR body; the Project Status transition controls Issue closure. A plain `Refs #N` mention does not create the native relationship.

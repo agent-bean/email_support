@@ -8,4 +8,4 @@
 
 ## Related issue
 
-<!-- Link one owning Issue through native Development; avoid closing keywords. Keep Type and PR metadata in GitHub fields. Track owner acceptance on the Issue and Project. See docs/08-github-project-workflow.md. -->
+<!-- Link the scoped Issue(s) through native Development; avoid closing keywords. Keep Type and PR metadata in GitHub fields. Track owner acceptance on the Issue and Project. See docs/08-github-project-workflow.md. -->

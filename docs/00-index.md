@@ -11,6 +11,8 @@ These documents record product, architecture, and engineering requirements; exec
 - [07 — Implementation roadmap](07-project-roadmap.md): issue-based delivery sequence within v1.0.0.
 - [08 — GitHub Project workflow](08-github-project-workflow.md): Issue status transitions, AI procedure, native PR links, and PR metadata.
 
+- [09 — Evaluation](09-evaluation.md): synthetic cases, verified evidence, quality measures, and regression/live evaluation boundaries.
+
 ## Documentation ownership
 
 Keep significant decisions and their rationale here. Issues own delivery progress; source, generated contracts, migrations, and deployment manifests own implementation details.

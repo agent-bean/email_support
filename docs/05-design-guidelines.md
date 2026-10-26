@@ -4,6 +4,8 @@
 
 The primary journey is a research queue followed by a briefing review. The review must show the company identity, editable Markdown, source references, relevant meeting context, and any incomplete research or unresolved facts.
 
+For meeting preparation, separate source-backed facts, needs stated in email, and suggested questions. Show missing information instead of inferring budget or purchase intent.
+
 Delivery and knowledge persistence are explicit actions. Present the exact briefing version, recipients, and action before authorization. Never preselect the sender as a recipient merely because their email triggered research. Editing content or recipients must clearly require renewed approval.
 
 ## Honest state
@@ -22,4 +24,4 @@ Use accessible semantic controls, keyboard navigation, visible focus, and textua
 
 Server state belongs to the API query layer; unsaved editor content remains local until saved. Background refresh must not overwrite an unsaved briefing edit. Shared components own repeated interaction patterns; feature modules own business-specific explanations.
 
-Attachment-derived sources remain untrusted evidence in the briefing and cannot enter reusable knowledge without owner approval. PDF and Word exports represent the reviewed briefing version; exporting does not authorize delivery or knowledge persistence.
+Attachment-derived sources remain untrusted evidence in the briefing and cannot enter reusable knowledge without owner approval. PDF and Word exports represent the reviewed briefing version; exporting does not authorize delivery or knowledge persistence. Sending generated files requires explicit approval of the selected version, recipients and attached artifacts.
