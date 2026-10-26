@@ -8,6 +8,8 @@ import pytest
 
 PROJECT_ROOT = Path(__file__).resolve().parents[4]
 SCRIPT = PROJECT_ROOT / "scripts/local-auth.sh"
+BACKEND_DOCKERFILE = PROJECT_ROOT / "apps/backend/Dockerfile"
+BACKEND_DOCKERIGNORE = PROJECT_ROOT / "apps/backend/.dockerignore"
 
 
 def runtime_directory(
@@ -363,6 +365,19 @@ def test_smoke_runs_only_in_the_owned_api_container(tmp_path: Path) -> None:
     calls = log.read_text(encoding="utf-8").splitlines()
     assert any("ps --status running --quiet api" in call for call in calls)
     assert any("live-google-smoke.py" in call for call in calls)
+
+
+def test_backend_image_includes_the_live_smoke_harness() -> None:
+    dockerfile = BACKEND_DOCKERFILE.read_text(encoding="utf-8")
+    dockerignore = BACKEND_DOCKERIGNORE.read_text(encoding="utf-8")
+
+    expected_copy = (
+        "COPY --chown=app:app scripts/live-google-smoke.py "
+        "./scripts/live-google-smoke.py"
+    )
+    assert expected_copy in dockerfile
+    assert "!scripts/" in dockerignore
+    assert "!scripts/live-google-smoke.py" in dockerignore
 
 
 def test_resolve_revoke_requires_exact_operation_and_updates_only_purged_unknown(
