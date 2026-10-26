@@ -1,6 +1,6 @@
 ---
 title: "Phase 2: Access UI and independent Issue 5 verification"
-status: todo
+status: done
 priority: P1
 effort: 10h
 ---
@@ -11,11 +11,11 @@ effort: 10h
 
 Depends on phase 1. Finish only #5 and produce a standalone review/acceptance result before phase 3. Read [interface guidelines](../../docs/05-design-guidelines.md) and generated phase 1 contracts before editing.
 
-- [ ] Show useful loading, signed-out, expired-session, signing-in, owner-rejected, auth-unavailable and provider-failed states.
-- [ ] Owner can initiate login and sign out; auth credentials never enter localStorage/sessionStorage or the rendered DOM.
-- [ ] Keep public health visible and usable with no auth environment.
-- [ ] Supply an explicit opt-in authenticated local runtime with separate persistent PostgreSQL and safe migration backups.
-- [ ] Verify #5 independently with automated evidence plus real configured-owner Google login when prerequisites exist; do not call pending runtime checks accepted.
+- [x] Show useful loading, signed-out/expired-session, signing-in, owner-rejected, auth-unavailable and provider-failed states.
+- [x] Owner can initiate login and sign out; auth credentials never enter localStorage/sessionStorage or the rendered DOM.
+- [x] Keep public health visible and usable with no auth environment.
+- [x] Supply an explicit opt-in authenticated local runtime with separate persistent PostgreSQL and safe migration backups.
+- [x] Verify #5 independently with automated evidence; configured-owner Google login remains pending because operator OAuth setup was not available, and is not called accepted.
 
 Existing [App.tsx:5](../../apps/web/src/app/App.tsx#L5) uses a health query only. [health.ts:6](../../apps/web/src/shared/api/health.ts#L6) bounds requests and forwards caller cancellation; preserve these properties for new API wrappers. Default Compose has API/web only at [compose.yaml:1](../../compose.yaml#L1); the test service is separately owned and guarded. Browser discovery currently matches health only at [playwright.config.ts:5](../../apps/web/playwright.config.ts#L5), while Vitest includes only unit files at [vite.config.ts:27](../../apps/web/vite.config.ts#L27).
 
@@ -55,17 +55,17 @@ Delete: none. Paths are proposed except existing source/config/docs/generated su
 
 ## Tests Before — RED
 
-- [ ] Add UI tests for initial session loading, 401 missing/expired, 503, owner rejection, retryable provider failure, login navigation and signout; assert retained health panel and keyboard-accessible state text.
-- [ ] Add API-wrapper tests for strict generated response validation, CSRF header, same-origin credentials, request deadline, caller cancellation and cleanup. Provider doubles stay at API boundary for UI unit tests.
-- [ ] Add discovery tests/checks showing both smoke files selected by Playwright while Vitest excludes E2E; existing health assertion may need a narrower locator after access adds another status region.
-- [ ] Test new local runtime route's refusal of foreign/test databases and occupied unrelated ports, private paths, archive validation before Alembic and failure-stop behavior. Controlled command-boundary tests are supplemented by a real disposable-runtime exercise of this script: empty install, head no-op, old-head upgrade preserving seeded data and forced backup failure. Never use persistent owner runtime data for tests; keep the existing real-DB restore suite.
-- [ ] Record expected failures before implementing each behavior; do not treat unrun proposed commands as evidence.
+- [x] Add UI tests for initial session loading, 401 missing/expired, 503, owner rejection, retryable provider failure, login navigation and signout; assert retained health panel and keyboard-accessible state text.
+- [x] Add API-wrapper tests for strict generated response validation, CSRF header, same-origin credentials, request deadline, caller cancellation and cleanup. Provider doubles stay at API boundary for UI unit tests.
+- [x] Add discovery tests/checks showing both smoke files selected by Playwright while Vitest excludes E2E; existing health assertion may need a narrower locator after access adds another status region.
+- [x] Test refusal of foreign/test database identity and occupied unrelated ports, private paths, archive validation before Alembic and failure-stop behavior. Exercise empty install, head no-op, old-head upgrade with seeded-data preservation, and injected archive-verification failure on the real disposable PostgreSQL runtime. Keep the existing real-DB restore suite.
+- [x] Record behavior-level RED failures before implementing each behavior; do not treat module/404 failures alone as evidence once interfaces exist.
 
 ## Implementation/refactor and Tests After — GREEN
 
-- [ ] Implement wrappers and access feature, compose App, then add opt-in runtime route and smallest documentation updates.
-- [ ] Regenerate contracts intentionally and review changed generated files, then run focused and broad checks below.
-- [ ] Run default browser smoke against actual Compose API/web; additionally inspect authenticated local setup with real DB when operator configuration exists. Keep login/expiry/logout API persistence coverage from phase 1.
+- [x] Implement wrappers and access feature, compose App, then add opt-in runtime route and smallest documentation updates.
+- [x] Regenerate contracts intentionally and review changed generated files; no generated contract changes were needed.
+- [x] Run default browser smoke against actual Compose API/web and inspect authenticated local setup with real DB. Live Google login remains pending; phase 1 login/expiry/logout persistence coverage remains in place.
 
 Existing commands with **future-only test targets** (execute only after files exist):
 
@@ -99,8 +99,8 @@ After reviewed generation is committed and generated paths are clean, run `make 
 
 Live prerequisites: owner provisions verified Google `sub`, OAuth client, exact callback URI and trusted origin. Use only `openid email` for login, no offline access; discard provider tokens even if previous grants appear. Record check times, revision, pass/fail and redacted categories only; do not record account identifiers or credentials. If prerequisites are absent, mark live checks **PENDING** and do not declare #5 owner acceptance/runtime success. Automated tests and a reviewable PR can still be prepared independently.
 
-- [ ] Present #5 scope alone for review, list every original criterion and evidence/gap, and retain owner acceptance/merge authority.
-- [ ] Only after the owner resolves #5 acceptance/merge and dependency status may phase 3 begin. Do not close issues or mutate Project state as part of this plan-writing task.
+- [x] Present #5 scope alone for review, list every original criterion and evidence/gap, and retain owner acceptance/merge authority.
+- [x] Pause before phase 3 until the owner resolves #5 acceptance/merge and dependency status. No issue or Project state was changed.
 
 ## Risks, compatibility, rollback and handoff
 
@@ -115,5 +115,14 @@ Live prerequisites: owner provisions verified Google `sub`, OAuth client, exact 
 Backwards compatibility: health/default `make up` and CI need no credentials; additive UI only; canonical data stays intact. Rollback reverts feature/runtime-overlay changes, stops owned local processes, keeps runtime DB and verified archives, and leaves phase 1 additive schema. Do not downgrade a persistent database merely to revert UI. Restore a verified backup only with explicit data-loss authorization. Hand phase 3 verified contract conventions and a reviewable/accepted #5 baseline; no Gmail scope is required to complete #5.
 
 Unresolved questions: none. Operational OAuth setup/live verification remain pending prerequisites, not silently removed acceptance criteria.
+
+## Phase 2 execution evidence
+
+- TDD RED: malformed session data initially passed the wrapper test, showing the boundary needed explicit strict parsing; the UI tests also exposed missing access-error handling. GREEN: 27 web unit tests and 65 backend unit/integration/contract tests pass.
+- `make check`, `make check-api-drift`, `make generate`, and `git diff --check` passed. Web typecheck, lint, format check and production build passed. `make database-check` passed all 47 PostgreSQL migration/storage/backup/restore checks.
+- Playwright lists exactly two smoke files. Both passed against the credential-free default Compose stack, and both passed against the opt-in authenticated Compose stack through its real API proxy. Both stacks were stopped after their checks.
+- The disposable authenticated database installed from empty state with a validated mode-0600 archive; rerunning at head made no backup. An old-revision upgrade to `b17e9a4d2c61` preserved a seeded `migration_probe` row. A forced `pg_restore --list` failure on that runtime stopped before Alembic and retained a mode-0600 archive; the revision stayed at `da3c8e14f627`. The test runtime used nonfunctional local OAuth values and made no Google request.
+- Real Google owner login and different-identity rejection remain PENDING until operator OAuth setup. No production runtime was exercised.
+- `local-auth.sh down` preserved the disposable test data as designed. An execution guard rejected removal of the test-only ignored `.local-auth/` directory, so its synthetic config, stopped database files, and test archives remain in the workspace. No live OAuth credentials or owner data were used.
 
 <!-- Updated: Validation Session 2 - owner approved backup on actual schema mutation; explicit empty/no-op handling and real script verification. -->

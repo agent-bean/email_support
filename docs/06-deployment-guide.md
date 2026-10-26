@@ -20,6 +20,29 @@ Use a protected production environment for deployment credentials and approval. 
 
 `make check` and `make check-api-drift` remain database-free. Maintainers can run the PostgreSQL migration, storage, backup, and restore suite with `make database-check`; `make database-up` and `make database-down` manage the reusable local test service. The local service binds to `127.0.0.1:55432` and keeps data and private credentials under the ignored `.test-database/` directory. A successful check removes its run's archives after cleanup verification. A failed run stops only the verified local service and retains local state and recovery files for investigation. Backend CI uses a job-scoped PostgreSQL service that is discarded with the job. These are development checks, not production backup storage, credentials, or a production restore procedure.
 
+## Local authenticated development
+
+Owner sign-in is opt-in and uses a separate Compose project and persistent PostgreSQL data. It does not reuse `.test-database/`, the test administrator, or CI credentials. Create `.local-auth/owner.conf` with mode `0600`, owned by the current user, containing these keys and the operator's Google OAuth values:
+
+```text
+EMAIL_SUPPORT_OWNER_SUB
+EMAIL_SUPPORT_GOOGLE_CLIENT_ID
+EMAIL_SUPPORT_GOOGLE_CLIENT_SECRET
+EMAIL_SUPPORT_GOOGLE_CALLBACK_URI
+EMAIL_SUPPORT_WEB_ORIGIN
+```
+
+For loopback development, register `http://127.0.0.1:8000/api/auth/google/callback` as the OAuth callback and use `http://127.0.0.1:5173` as the web origin. The configured Google subject must be the intended owner. Do not commit the file or copy its values into logs or shell history.
+
+```sh
+chmod 600 .local-auth/owner.conf
+./scripts/local-auth.sh up
+./scripts/local-auth.sh migrate
+./scripts/local-auth.sh down
+```
+
+`up` refuses occupied unrelated ports 5173/8000. `migrate` checks the owned database and current Alembic revision, skips backups when already at head, and otherwise saves and validates a custom-format PostgreSQL archive before changing schema. Runtime data and archives remain under ignored `.local-auth/`; `down` stops this Compose project and preserves both. The route is local development support, not production deployment or backup storage. Default `make up`, `make down`, health smoke, and CI remain credential-free.
+
 ## Operational prerequisites
 
 - Use explicit configuration validation and separate production/test credentials and data.

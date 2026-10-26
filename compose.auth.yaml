@@ -1,0 +1,31 @@
+services:
+  auth-postgres:
+    image: postgres:18.6-bookworm@sha256:bbf83594798e144bff365a9c191c5d779f181fb3135902064ab8ff11918020fc
+    profiles: [auth]
+    user: "${LOCAL_AUTH_UID:?local auth UID is required}:${LOCAL_AUTH_GID:?local auth GID is required}"
+    environment:
+      POSTGRES_DB: email_support_auth
+      POSTGRES_PASSWORD: ${LOCAL_AUTH_DB_PASSWORD:?local auth password is required}
+      POSTGRES_USER: email_support_auth
+    volumes:
+      - "${LOCAL_AUTH_ROOT:?local auth root is required}/postgres-data:/var/lib/postgresql"
+    labels:
+      com.email_support.local_auth: "true"
+    healthcheck:
+      test: [CMD, pg_isready, --username, email_support_auth, --dbname, email_support_auth]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
+  api:
+    depends_on:
+      auth-postgres:
+        condition: service_healthy
+    environment:
+      EMAIL_SUPPORT_AUTH_ENABLED: "true"
+      EMAIL_SUPPORT_DATABASE_URL: ${EMAIL_SUPPORT_DATABASE_URL:?local auth database URL is required}
+      EMAIL_SUPPORT_OWNER_SUB: ${EMAIL_SUPPORT_OWNER_SUB:?owner Google subject is required}
+      EMAIL_SUPPORT_GOOGLE_CLIENT_ID: ${EMAIL_SUPPORT_GOOGLE_CLIENT_ID:?Google client ID is required}
+      EMAIL_SUPPORT_GOOGLE_CLIENT_SECRET: ${EMAIL_SUPPORT_GOOGLE_CLIENT_SECRET:?Google client secret is required}
+      EMAIL_SUPPORT_GOOGLE_CALLBACK_URI: ${EMAIL_SUPPORT_GOOGLE_CALLBACK_URI:?Google callback URI is required}
+      EMAIL_SUPPORT_WEB_ORIGIN: ${EMAIL_SUPPORT_WEB_ORIGIN:?web origin is required}

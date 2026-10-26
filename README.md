@@ -4,7 +4,7 @@ A single-owner assistant for preparing sourced company briefings from business e
 
 ## Current status
 
-The repository has a credential-free FastAPI health endpoint, typed PostgreSQL persistence for canonical records, approvals, knowledge, and projection metadata, a minimal web client with a generated and runtime-validated API contract, a two-service local Compose stack, and pull request/main CI. The API still serves only health and does not connect to PostgreSQL. Authentication, provider integrations, the worker, and production deployment are not implemented.
+The repository has a credential-free FastAPI health endpoint, typed PostgreSQL persistence for canonical records, approvals, knowledge, and projection metadata, and an owner Google sign-in flow with PostgreSQL-backed sessions when explicitly configured. The web client includes owner access states and keeps health public. Default Compose and CI remain credential-free; Google access is unavailable there until the opt-in local runtime is configured. Provider connections, the worker, and production deployment are not implemented.
 
 ## Local development
 
@@ -22,6 +22,8 @@ make check-api-drift
 Run the backend and web dev servers in separate terminals with `make dev-api` and `make dev-web`, then open <http://127.0.0.1:5173>. To use the local container stack instead, run `make up`; stop it with `make down`.
 
 The browser smoke test uses Chromium. Install it from `apps/web/` with `npx playwright install chromium`, start the local stack with `make up`, run `npm --prefix apps/web run test:smoke`, and finish with `make down`.
+
+To exercise owner sign-in locally, configure the separate opt-in runtime described in [Local authenticated development](docs/06-deployment-guide.md#local-authenticated-development). It uses its own persistent PostgreSQL data and verified backups under ignored `.local-auth/`; it cannot share the test database. OAuth must be configured with the loopback callback and origin before login can succeed.
 
 ## PostgreSQL persistence verification
 

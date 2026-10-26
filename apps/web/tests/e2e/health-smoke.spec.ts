@@ -13,5 +13,7 @@ test('shows health returned by the actual API through the web proxy', async ({
   expect(healthResponse.status()).toBe(200);
   expect(new URL(healthResponse.url()).origin).toBe(new URL(page.url()).origin);
   expect(await healthResponse.json()).toEqual({ status: 'ok' });
-  await expect(page.getByRole('status')).toHaveText('API is healthy.');
+  await expect(
+    page.getByText('API is healthy.', { exact: true }),
+  ).toBeVisible();
 });
