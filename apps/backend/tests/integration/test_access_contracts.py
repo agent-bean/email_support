@@ -1,6 +1,8 @@
 """Access endpoints stay unavailable until owner authentication is configured."""
 
+import logging
 from collections.abc import Iterator
+from types import SimpleNamespace
 from typing import cast
 
 import pytest
@@ -49,7 +51,10 @@ def test_health_and_openapi_do_not_require_auth_configuration(
 def test_access_endpoints_fail_closed_without_auth_configuration(
     client: TestClient, method: str, path: str
 ) -> None:
-    response = getattr(client, method)(path)
+    if path == "/api/auth/google/login":
+        response = getattr(client, method)(path, json={})
+    else:
+        response = getattr(client, method)(path)
 
     assert response.status_code == 503
     assert response.json()["detail"]["code"] == "auth_unavailable"
@@ -66,6 +71,10 @@ def test_openapi_describes_authentication_and_csrf_contracts(
     logout_operation = schema["paths"]["/api/auth/logout"]["post"]
     assert "X-CSRF-Token" in str(logout_operation["parameters"])
     assert "OwnerSession" in schema["components"]["securitySchemes"]
+    login_operation = schema["paths"]["/api/auth/google/login"]["post"]
+    login_body = login_operation["requestBody"]
+    assert login_body["required"] is True
+    assert "application/json" in login_body["content"]
 
 
 def test_google_login_accepts_json_request(
@@ -101,17 +110,74 @@ def test_google_login_accepts_json_request(
 
     response = client.post(
         "/api/auth/google/login",
-        headers={
-            "Content-Type": "application/json",
-            "Origin": settings.web_origin,
-            "X-CSRF-Token": "csrf-secret",
-        },
+        json={},
+        headers={"Origin": settings.web_origin, "X-CSRF-Token": "csrf-secret"},
     )
 
     assert response.status_code == 200
     assert response.json() == {
         "authorization_url": "https://accounts.google.com/o/oauth2/v2/auth?state=test-state"
     }
+
+
+@pytest.mark.parametrize(
+    ("failure_stage", "failure_category"),
+    [
+        ("attempt consumption", "RuntimeError"),
+        ("token exchange", "invalid_grant"),
+    ],
+)
+def test_google_callback_redirects_to_web_origin_and_logs_only_safe_failure_data(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    failure_stage: str,
+    failure_category: str,
+) -> None:
+    settings = AuthSettings(
+        database_url="postgresql+psycopg://user:password@localhost/app",
+        owner_sub="owner-subject",
+        google_client_id="client-id",
+        google_client_secret="client-secret",
+        callback_uri="http://localhost:8000/api/auth/google/callback",
+        web_origin="http://localhost:5173",
+    )
+    sessions = cast(async_sessionmaker[AsyncSession], object())
+    monkeypatch.setattr(
+        access_api,
+        "runtime",
+        lambda _request: access_api.AccessRuntime(settings, sessions, None),
+    )
+
+    async def consume_attempt(*_: object, **__: object) -> object:
+        if failure_stage == "attempt consumption":
+            raise RuntimeError("private callback details")
+        return SimpleNamespace(nonce="nonce", code_verifier="verifier")
+
+    async def exchange(*_: object, **__: object) -> object:
+        error = RuntimeError("private callback details")
+        if failure_stage == "token exchange":
+            error.error = "invalid_grant"  # type: ignore[attr-defined]
+        raise error
+
+    monkeypatch.setattr(access_api, "consume_login_callback", consume_attempt)
+    monkeypatch.setattr(access_api, "exchange_code", exchange)
+    client.cookies.set("owner_browser", "browser-secret")
+    caplog.set_level(logging.WARNING, logger=access_api.__name__)
+
+    response = client.get(
+        "/api/auth/google/callback",
+        params={"code": "private-code", "state": "private-state"},
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    assert response.headers["location"] == ("http://localhost:5173/?auth=unavailable")
+    assert f"during {failure_stage}" in caplog.text
+    assert failure_category in caplog.text
+    assert "private callback details" not in caplog.text
+    assert "private-code" not in caplog.text
+    assert "private-state" not in caplog.text
 
 
 def test_invalid_configuration_fails_closed_without_affecting_health(

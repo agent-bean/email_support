@@ -212,6 +212,12 @@
         "title": "HealthStatus",
         "type": "string"
       },
+      "LoginRequest": {
+        "additionalProperties": false,
+        "properties": {},
+        "title": "LoginRequest",
+        "type": "object"
+      },
       "LoginResponse": {
         "additionalProperties": false,
         "properties": {
@@ -355,6 +361,16 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {

@@ -104,6 +104,7 @@ export function beginOwnerLogin(signal: AbortSignal): Promise<string> {
       baseUrl: window.location.origin,
       credentials: 'same-origin',
       signal: requestSignal,
+      body: {},
       headers: {
         'Content-Type': 'application/json',
         'X-CSRF-Token': preauthCsrf,

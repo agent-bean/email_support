@@ -70,6 +70,11 @@ export const zHealthResponse = z.object({
 });
 
 /**
+ * LoginRequest
+ */
+export const zLoginRequest = z.record(z.string(), z.never());
+
+/**
  * LoginResponse
  */
 export const zLoginResponse = z.object({
@@ -142,6 +147,8 @@ export const zValidationError = z.object({
 export const zHttpValidationError = z.object({
     detail: z.array(zValidationError).optional()
 });
+
+export const zStartGoogleLoginBody = zLoginRequest;
 
 export const zStartGoogleLoginHeaders = z.object({
     'X-CSRF-Token': z.string().nullish()

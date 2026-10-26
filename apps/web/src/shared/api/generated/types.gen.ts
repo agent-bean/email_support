@@ -112,6 +112,13 @@ export type HealthResponse = {
 export type HealthStatus = 'ok';
 
 /**
+ * LoginRequest
+ */
+export type LoginRequest = {
+    [key: string]: never;
+};
+
+/**
  * LoginResponse
  */
 export type LoginResponse = {
@@ -183,7 +190,7 @@ export type ValidationError = {
 };
 
 export type StartGoogleLoginData = {
-    body?: never;
+    body: LoginRequest;
     headers?: {
         /**
          * X-Csrf-Token

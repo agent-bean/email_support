@@ -125,8 +125,8 @@ def test_preauth_cookie_and_csrf_challenge_are_one_use(
         "Content-Type": "application/json",
         "X-CSRF-Token": preauth.json()["csrf_token"],
     }
-    first = configured_client.post("/api/auth/google/login", headers=headers)
-    replay = configured_client.post("/api/auth/google/login", headers=headers)
+    first = configured_client.post("/api/auth/google/login", json={}, headers=headers)
+    replay = configured_client.post("/api/auth/google/login", json={}, headers=headers)
 
     assert first.status_code == 200
     auth_query = parse_qs(urlparse(first.json()["authorization_url"]).query)
@@ -151,6 +151,7 @@ def test_callback_rejects_non_owner_subject_and_consumes_state(
     preauth = configured_client.get("/api/auth/preauth")
     login = configured_client.post(
         "/api/auth/google/login",
+        json={},
         headers={
             "Origin": WEB_ORIGIN,
             "Content-Type": "application/json",
@@ -171,9 +172,9 @@ def test_callback_rejects_non_owner_subject_and_consumes_state(
     )
 
     assert callback.status_code == 303
-    assert callback.headers["location"] == "/?auth=rejected"
+    assert callback.headers["location"] == f"{WEB_ORIGIN}/?auth=rejected"
     assert "owner_session" not in callback.headers.get("set-cookie", "")
-    assert replay.headers["location"] == "/?auth=restart"
+    assert replay.headers["location"] == f"{WEB_ORIGIN}/?auth=restart"
 
 
 def test_provider_denial_consumes_attempt_without_issuing_a_session(
@@ -182,6 +183,7 @@ def test_provider_denial_consumes_attempt_without_issuing_a_session(
     preauth = configured_client.get("/api/auth/preauth")
     login = configured_client.post(
         "/api/auth/google/login",
+        json={},
         headers={
             "Origin": WEB_ORIGIN,
             "Content-Type": "application/json",
@@ -197,7 +199,7 @@ def test_provider_denial_consumes_attempt_without_issuing_a_session(
     )
 
     assert callback.status_code == 303
-    assert callback.headers["location"] == "/?auth=rejected"
+    assert callback.headers["location"] == f"{WEB_ORIGIN}/?auth=rejected"
     assert "owner_session" not in callback.headers.get("set-cookie", "")
 
 
@@ -229,6 +231,7 @@ def test_owner_login_issues_https_session_cookie(
     preauth = secure_client.get("/api/auth/preauth")
     login = secure_client.post(
         "/api/auth/google/login",
+        json={},
         headers={
             "Origin": "https://support.example",
             "Content-Type": "application/json",
