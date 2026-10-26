@@ -44,7 +44,7 @@ All phases are sequential. Each phase owns its listed changes only while active;
 - [x] Refresh, partial consent, expiry, revocation and transient failure have typed outcomes and actionable UI; concurrent stale results cannot undo disconnect.
 - [ ] Disconnect blocks new operation admissions and purges credentials before revocation; previously admitted work may finish externally but its stale results are discarded. Reconnect waits for revoke resolution; real Google read/revoke smoke evidence exists, or acceptance stays pending with its prerequisite recorded.
 
-Phase 3 automated code, database and UI evidence is recorded in [the phase file](phase-03-google-connection-and-verification.md#implementation-and-local-verification-evidence). Real Google verification remains pending because the private runtime has no configured encryption key and the required live Google setup has not been verified.
+Phase 3 automated code, database and UI evidence is recorded in [the phase file](phase-03-google-connection-and-verification.md#implementation-and-local-verification-evidence). The owner has now configured the private encryption key and reports the Google prerequisites ready; live reads and revocation evidence remain pending.
 
 ## Review and validation records
 

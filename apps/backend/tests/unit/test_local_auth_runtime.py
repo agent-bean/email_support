@@ -77,11 +77,17 @@ elif 'psql' in ' '.join(args):
     ):
         pass
     elif 'to_regclass' in query:
-        print('t' if mode == 'head' else 'f')
+        print('t' if mode in {'head', 'phase2'} else 'f')
     elif 'information_schema.tables' in query:
         print('0')
     else:
-        print('3c0f6a9b21e8' if mode == 'head' else 'da3c8e14f627')
+        print(
+            '3c0f6a9b21e8'
+            if mode == 'head'
+            else 'b17e9a4d2c61'
+            if mode == 'phase2'
+            else 'da3c8e14f627'
+        )
 elif 'pg_dump' in ' '.join(args):
     sys.stdout.buffer.write(b'custom archive fixture')
 elif 'pg_restore' in args:
@@ -253,6 +259,56 @@ def test_up_refuses_an_unrelated_listener_on_the_documented_port(
         " up " in call for call in log.read_text(encoding="utf-8").splitlines()
     )
     assert "port 5173 is occupied" in result.stderr
+
+
+def test_up_builds_current_migration_image_before_applying_schema(
+    tmp_path: Path,
+) -> None:
+    runtime_directory(tmp_path)
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    _, log = fake_docker(bin_dir)
+    ss = bin_dir / "ss"
+    ss.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+    ss.chmod(0o700)
+    env = os.environ.copy()
+    env.update(
+        {
+            "PATH": f"{bin_dir}{os.pathsep}{env['PATH']}",
+            "FAKE_DOCKER_LOG": str(log),
+            "FAKE_DOCKER_MODE": "phase2",
+        }
+    )
+
+    result = subprocess.run(
+        [str(SCRIPT), "up"],
+        cwd=tmp_path,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    calls = log.read_text(encoding="utf-8").splitlines()
+    build_index = next(
+        index for index, call in enumerate(calls) if " build api web" in call
+    )
+    heads_index = next(index for index, call in enumerate(calls) if "heads" in call)
+    dump_index = next(index for index, call in enumerate(calls) if "pg_dump" in call)
+    verify_index = next(
+        index for index, call in enumerate(calls) if "pg_restore" in call
+    )
+    upgrade_index = next(
+        index for index, call in enumerate(calls) if "upgrade head" in call
+    )
+    api_up_index = next(
+        index
+        for index, call in enumerate(calls)
+        if " up --detach --wait --wait-timeout 90 api web" in call
+    )
+    assert build_index < heads_index < dump_index < verify_index < upgrade_index
+    assert upgrade_index < api_up_index
 
 
 def test_smoke_requires_a_private_encryption_key_before_docker(tmp_path: Path) -> None:

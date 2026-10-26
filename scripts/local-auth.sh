@@ -120,8 +120,9 @@ case "$ACTION" in
     done
     compose up --detach --wait --wait-timeout 90 auth-postgres
     check_owned_postgres
+    compose build api web
     "$0" migrate
-    compose up --detach --build --wait --wait-timeout 90 api web
+    compose up --detach --wait --wait-timeout 90 api web
     ;;
   migrate)
     check_owned_postgres
