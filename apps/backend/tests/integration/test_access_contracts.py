@@ -1,10 +1,15 @@
 """Access endpoints stay unavailable until owner authentication is configured."""
 
 from collections.abc import Iterator
+from typing import cast
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from email_support.api import access as access_api
+from email_support.config import AuthSettings
+from email_support.integrations.google_oidc import GoogleAuthorization
 from email_support.main import app
 
 
@@ -61,6 +66,52 @@ def test_openapi_describes_authentication_and_csrf_contracts(
     logout_operation = schema["paths"]["/api/auth/logout"]["post"]
     assert "X-CSRF-Token" in str(logout_operation["parameters"])
     assert "OwnerSession" in schema["components"]["securitySchemes"]
+
+
+def test_google_login_accepts_json_request(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    settings = AuthSettings(
+        database_url="postgresql+psycopg://user:password@localhost/app",
+        owner_sub="owner-subject",
+        google_client_id="client-id",
+        google_client_secret="client-secret",
+        callback_uri="http://localhost:8000/api/auth/google/callback",
+        web_origin="http://localhost:5173",
+    )
+
+    async def begin_login_stub(
+        *_args: object, **_kwargs: object
+    ) -> GoogleAuthorization:
+        return GoogleAuthorization(
+            url="https://accounts.google.com/o/oauth2/v2/auth?state=test-state",
+            state="test-state",
+            nonce="test-nonce",
+            code_verifier="test-verifier",
+        )
+
+    sessions = cast(async_sessionmaker[AsyncSession], object())
+    monkeypatch.setattr(
+        access_api,
+        "runtime",
+        lambda _request: access_api.AccessRuntime(settings, sessions, None),
+    )
+    monkeypatch.setattr(access_api, "begin_login", begin_login_stub)
+    client.cookies.set("owner_browser", "browser-secret")
+
+    response = client.post(
+        "/api/auth/google/login",
+        headers={
+            "Content-Type": "application/json",
+            "Origin": settings.web_origin,
+            "X-CSRF-Token": "csrf-secret",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "authorization_url": "https://accounts.google.com/o/oauth2/v2/auth?state=test-state"
+    }
 
 
 def test_invalid_configuration_fails_closed_without_affecting_health(

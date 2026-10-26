@@ -104,7 +104,10 @@ export function beginOwnerLogin(signal: AbortSignal): Promise<string> {
       baseUrl: window.location.origin,
       credentials: 'same-origin',
       signal: requestSignal,
-      headers: { 'X-CSRF-Token': preauthCsrf },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': preauthCsrf,
+      },
       throwOnError: true,
       responseValidator: (data) => strictLogin.parseAsync(data),
     });

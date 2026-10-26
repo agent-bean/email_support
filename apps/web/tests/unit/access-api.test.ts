@@ -69,7 +69,10 @@ describe('owner access API', () => {
     expect(sdk.startGoogleLogin).toHaveBeenCalledWith(
       expect.objectContaining({
         credentials: 'same-origin',
-        headers: { 'X-CSRF-Token': 'p'.repeat(40) },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': 'p'.repeat(40),
+        },
       }),
     );
   });
