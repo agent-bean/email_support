@@ -15,6 +15,8 @@ RUN groupadd --system --gid 10001 app \
 
 COPY --chown=app:app pyproject.toml uv.lock ./
 COPY --chown=app:app src/ ./src/
+COPY --chown=app:app alembic.ini ./alembic.ini
+COPY --chown=app:app migrations/ ./migrations/
 
 USER app
 RUN uv sync --locked

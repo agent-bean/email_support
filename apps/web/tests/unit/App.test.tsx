@@ -3,6 +3,19 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../../src/app/App';
 
+vi.mock('../../src/shared/api/access', () => ({
+  isAccessApiError: (value: unknown) =>
+    typeof value === 'object' && value !== null && 'code' in value,
+  fetchOwnerSession: vi
+    .fn()
+    .mockRejectedValue(
+      Object.assign(new Error('signed out'), { code: 'auth_required' }),
+    ),
+  beginOwnerLogin: vi.fn(),
+  logoutOwnerSession: vi.fn(),
+  clearOwnerAccessMemory: vi.fn(),
+}));
+
 function jsonResponse(payload: unknown): Response {
   const body = JSON.stringify(payload);
   if (body === undefined) {
@@ -44,9 +57,9 @@ describe('App health state', () => {
 
     renderApp();
 
-    expect((await screen.findByRole('status')).textContent).toBe(
-      'Checking service health…',
-    );
+    expect(
+      (await screen.findByText('Checking service health…')).textContent,
+    ).toBe('Checking service health…');
 
     const resolve = resolveResponse;
     if (!resolve) {

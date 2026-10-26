@@ -29,7 +29,7 @@ Exclude production deployment, real sends (#15), synchronization/jobs (#7), mult
 | # | Phase | Estimate | Depends on | Status |
 |---|-------|----------|------------|--------|
 | 1 | [Owner access backend](phase-01-start.md) | 14h | #3 verified closed | Done |
-| 2 | [Access UI and independent #5 verification](phase-02-owner-access-ui-and-verification.md) | 10h | Phase 1 | Pending |
+| 2 | [Access UI and independent #5 verification](phase-02-owner-access-ui-and-verification.md) | 10h | Phase 1 | Done |
 | 3 | [Google connection and independent #6 verification](phase-03-google-connection-and-verification.md) | 20h | Phase 2; #5 review/acceptance boundary | Pending |
 
 All phases are sequential. Each phase owns its listed changes only while active; shared composition, generated artifacts and metadata pass to the next phase after verification. Pause before phase 3 until #5 is independently reviewable and its acceptance/merge/dependency gates are resolved with the owner.
@@ -37,8 +37,8 @@ All phases are sequential. Each phase owns its listed changes only while active;
 ## Acceptance
 
 - [ ] Only the configured Google `sub` signs in; invalid/replayed protocol inputs reject.
-- [ ] Protected APIs reject unauthenticated/expired sessions and unsafe requests without CSRF; logout invalidates the server session; HTTPS cookie protections are verified.
-- [ ] Useful signed-out/expired UI works; public liveness needs no credentials, DB or provider.
+- [x] Protected APIs reject unauthenticated/expired sessions and unsafe requests without CSRF; logout invalidates the server session; HTTPS cookie protections are verified.
+- [x] Useful signed-out/expired UI works; public liveness needs no credentials, DB or provider.
 - [ ] Separate consent validates session, same owner, state/nonce/PKCE and exact required scopes, including secondary/shared Calendar reads.
 - [ ] Encrypted token bundles use an external key; tokens never reach web responses or normal logs.
 - [ ] Refresh, partial consent, expiry, revocation and transient failure have typed outcomes and actionable UI; concurrent stale results cannot undo disconnect.
