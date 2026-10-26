@@ -14,7 +14,7 @@ created: 2026-10-26
 
 # Owner access and Google connection
 
-Accepted phased implementation, `--tdd --yagni`. Planning began on `main`; implementation is on the issue branch recorded above. Phase 1 is complete. No live Google login or production runtime checks have run.
+Accepted phased implementation, `--tdd --yagni`. Planning began on `main`; implementation is on the issue branch recorded above. Phase 1 is complete. A live owner login attempt has not yet produced a session; no Google consent or production runtime check has run.
 
 ## Outcome and boundaries
 
@@ -44,7 +44,7 @@ All phases are sequential. Each phase owns its listed changes only while active;
 - [x] Refresh, partial consent, expiry, revocation and transient failure have typed outcomes and actionable UI; concurrent stale results cannot undo disconnect.
 - [ ] Disconnect blocks new operation admissions and purges credentials before revocation; previously admitted work may finish externally but its stale results are discarded. Reconnect waits for revoke resolution; real Google read/revoke smoke evidence exists, or acceptance stays pending with its prerequisite recorded.
 
-Phase 3 automated code, database and UI evidence is recorded in [the phase file](phase-03-google-connection-and-verification.md#implementation-and-local-verification-evidence). The owner has now configured the private encryption key and reports the Google prerequisites ready; live reads and revocation evidence remain pending.
+Phase 3 automated code, database and UI evidence is recorded in [the phase file](phase-03-google-connection-and-verification.md#implementation-and-local-verification-evidence). The owner has configured the private encryption key and reports the Google prerequisites ready. One live owner login attempt reached the callback but did not issue a session; Google consent, live reads and revocation evidence remain pending.
 
 ## Review and validation records
 
