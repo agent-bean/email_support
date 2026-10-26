@@ -22,10 +22,14 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 /**
  * Start Google Login
  */
-export const startGoogleLogin = <ThrowOnError extends boolean = false>(options?: Options<StartGoogleLoginData, ThrowOnError>): RequestResult<StartGoogleLoginResponses, StartGoogleLoginErrors, ThrowOnError> => (options?.client ?? client).post<StartGoogleLoginResponses, StartGoogleLoginErrors, ThrowOnError>({
+export const startGoogleLogin = <ThrowOnError extends boolean = false>(options: Options<StartGoogleLoginData, ThrowOnError>): RequestResult<StartGoogleLoginResponses, StartGoogleLoginErrors, ThrowOnError> => (options.client ?? client).post<StartGoogleLoginResponses, StartGoogleLoginErrors, ThrowOnError>({
     responseValidator: async (data) => await zStartGoogleLoginResponse.parseAsync(data),
     url: '/api/auth/google/login',
-    ...options
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
 });
 
 /**

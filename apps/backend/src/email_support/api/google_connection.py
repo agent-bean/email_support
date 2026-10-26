@@ -14,6 +14,7 @@ from email_support.api.access import (
     protected_session,
     runtime,
 )
+from email_support.config import AuthSettings
 from email_support.integrations.google_oidc import exchange_connection_code
 from email_support.integrations.google_workspace import GoogleWorkspaceClient
 from email_support.models.google_connection import (
@@ -123,6 +124,10 @@ def _raise_failure(failure: GoogleConnectionFailure) -> NoReturn:
     )
 
 
+def _connection_redirect(settings: AuthSettings, outcome: str) -> RedirectResponse:
+    return RedirectResponse(f"{settings.web_origin}/?google={outcome}", status_code=303)
+
+
 @router.get(
     "",
     response_model=GoogleConnectionResponse,
@@ -203,7 +208,7 @@ async def callback(
     session_token = _session_token(request, access)
     browser_cookie = _browser_cookie(request, access)
     if not session_token or not browser_cookie or not state or len(state) > 256:
-        return RedirectResponse("/?google=invalid_callback", status_code=303)
+        return _connection_redirect(access.settings, "invalid_callback")
     try:
         attempt = await consume_google_consent_attempt(
             access.sessions,
@@ -213,9 +218,9 @@ async def callback(
             owner_session_token=session_token,
         )
     except Exception:
-        return RedirectResponse("/?google=unavailable", status_code=303)
+        return _connection_redirect(access.settings, "unavailable")
     if attempt is None:
-        return RedirectResponse("/?google=invalid_callback", status_code=303)
+        return _connection_redirect(access.settings, "invalid_callback")
     if error:
         await record_google_consent_failure(
             access.sessions,
@@ -224,7 +229,7 @@ async def callback(
             code=GoogleConnectionErrorCode.CONSENT_DENIED,
             owner_session_token=session_token,
         )
-        return RedirectResponse("/?google=consent_denied", status_code=303)
+        return _connection_redirect(access.settings, "consent_denied")
     if not code or len(code) > 2048:
         await record_google_consent_failure(
             access.sessions,
@@ -233,7 +238,7 @@ async def callback(
             code=GoogleConnectionErrorCode.INVALID_CALLBACK,
             owner_session_token=session_token,
         )
-        return RedirectResponse("/?google=invalid_callback", status_code=303)
+        return _connection_redirect(access.settings, "invalid_callback")
     try:
         grant = await exchange_connection_code(
             code,
@@ -260,7 +265,7 @@ async def callback(
             code=failure.code,
             owner_session_token=session_token,
         )
-        return RedirectResponse("/?google=unavailable", status_code=303)
+        return _connection_redirect(access.settings, "unavailable")
     except Exception:
         await record_google_consent_failure(
             access.sessions,
@@ -269,19 +274,17 @@ async def callback(
             code=GoogleConnectionErrorCode.PROVIDER_UNAVAILABLE,
             owner_session_token=session_token,
         )
-        return RedirectResponse("/?google=unavailable", status_code=303)
+        return _connection_redirect(access.settings, "unavailable")
     if result is None:
-        return RedirectResponse("/?google=session_expired", status_code=303)
+        return _connection_redirect(access.settings, "session_expired")
     status = await get_google_connection_status(
         access.sessions, owner_sub=access.settings.owner_sub, settings=access.settings
     )
     if status.error is GoogleConnectionErrorCode.IDENTITY_MISMATCH:
-        return RedirectResponse("/?google=identity_mismatch", status_code=303)
-    return RedirectResponse(
-        "/?google=connected"
-        if result.value == "connected"
-        else "/?google=reconnect_required",
-        status_code=303,
+        return _connection_redirect(access.settings, "identity_mismatch")
+    return _connection_redirect(
+        access.settings,
+        "connected" if result.value == "connected" else "reconnect_required",
     )
 
 

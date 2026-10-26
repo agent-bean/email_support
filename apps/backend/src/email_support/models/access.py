@@ -25,6 +25,10 @@ class PreauthResponse(BaseModel):
     csrf_token: str = Field(min_length=32)
 
 
+class LoginRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+
 class LoginResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
     authorization_url: HttpUrl

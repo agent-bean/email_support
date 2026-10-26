@@ -1,11 +1,12 @@
 """Owner sign-in endpoints and protected session operations."""
 
 import hmac
+import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import (
     APIRouter,
@@ -26,6 +27,7 @@ from email_support.integrations.google_oidc import exchange_code
 from email_support.models.access import (
     AccessError,
     AccessErrorCode,
+    LoginRequest,
     LoginResponse,
     OwnerSession,
     PreauthResponse,
@@ -45,6 +47,7 @@ from email_support.storage.postgres.persistence.database import (
 )
 
 router = APIRouter(prefix="/api/auth", tags=["access"])
+logger = logging.getLogger(__name__)
 SESSION_TTL_SECONDS = 12 * 60 * 60
 HTTP_URL_ADAPTER: TypeAdapter[HttpUrl] = TypeAdapter(HttpUrl)
 OWNER_SESSION_COOKIE = APIKeyCookie(
@@ -113,6 +116,28 @@ def set_cookie(
         path="/",
         max_age=max_age,
     )
+
+
+def _auth_redirect(
+    settings: AuthSettings,
+    outcome: Literal["restart", "unavailable", "rejected", "ok"],
+) -> RedirectResponse:
+    return RedirectResponse(f"{settings.web_origin}/?auth={outcome}", status_code=303)
+
+
+def _safe_failure_category(error: Exception) -> str:
+    provider_code = getattr(error, "error", None)
+    if isinstance(provider_code, str) and provider_code in {
+        "access_denied",
+        "invalid_client",
+        "invalid_grant",
+        "invalid_request",
+        "server_error",
+        "temporarily_unavailable",
+        "unauthorized_client",
+    }:
+        return provider_code
+    return type(error).__name__
 
 
 def clear_cookie(response: Response, name: str, secure: bool) -> None:
@@ -213,6 +238,7 @@ async def preauth(request: Request, response: Response) -> PreauthResponse:
 )
 async def start_google_login(
     request: Request,
+    _payload: LoginRequest,
     csrf_token: str | None = Header(default=None, alias="X-CSRF-Token"),
 ) -> LoginResponse:
     access = runtime(request)
@@ -275,17 +301,22 @@ async def google_callback(
     assert access.settings is not None and access.sessions is not None
     browser_secret = _cookie(request, access.settings)
     if not browser_secret or not state:
-        return RedirectResponse("/?auth=restart", status_code=303)
+        return _auth_redirect(access.settings, "restart")
     try:
         attempt = await consume_login_callback(
             access.sessions, browser_cookie=browser_secret, state=state
         )
-    except Exception:
-        return RedirectResponse("/?auth=unavailable", status_code=303)
+    except Exception as exc:
+        logger.warning(
+            "Google login callback failed during attempt consumption (%s)",
+            _safe_failure_category(exc),
+        )
+        return _auth_redirect(access.settings, "unavailable")
     if attempt is None:
-        return RedirectResponse("/?auth=restart", status_code=303)
+        return _auth_redirect(access.settings, "restart")
     if error or not code or not attempt.nonce or not attempt.code_verifier:
-        return RedirectResponse("/?auth=rejected", status_code=303)
+        return _auth_redirect(access.settings, "rejected")
+    failure_stage = "token exchange"
     try:
         identity = await exchange_code(
             code,
@@ -295,6 +326,7 @@ async def google_callback(
             code_verifier=attempt.code_verifier,
             expected_nonce=attempt.nonce,
         )
+        failure_stage = "session issuance"
         old_token = _cookie(request, access.settings, session=True)
         credentials = await issue_owner_session(
             access.sessions,
@@ -303,11 +335,16 @@ async def google_callback(
             old_token=old_token,
         )
     except PermissionError:
-        return RedirectResponse("/?auth=rejected", status_code=303)
-    except Exception:
-        return RedirectResponse("/?auth=unavailable", status_code=303)
+        return _auth_redirect(access.settings, "rejected")
+    except Exception as exc:
+        logger.warning(
+            "Google login callback failed during %s (%s)",
+            failure_stage,
+            _safe_failure_category(exc),
+        )
+        return _auth_redirect(access.settings, "unavailable")
     _, session_name = cookie_names(access.settings)
-    response = RedirectResponse("/?auth=ok", status_code=303)
+    response = _auth_redirect(access.settings, "ok")
     set_cookie(
         response,
         name=session_name,

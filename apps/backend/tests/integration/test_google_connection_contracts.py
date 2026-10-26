@@ -159,4 +159,4 @@ def test_callback_redirect_does_not_reflect_provider_query_values(
     assert response.status_code == 303
     assert "private-code" not in response.headers["location"]
     assert "private-state" not in response.headers["location"]
-    assert response.headers["location"] == "/?google=invalid_callback"
+    assert response.headers["location"] == (f"{WEB_ORIGIN}/?google=invalid_callback")
