@@ -1,7 +1,12 @@
+import type { ReactNode } from 'react';
 import { isAccessApiError } from '../../shared/api/access';
 import { useAccess } from './use-access';
 
-export function AccessPanel() {
+export function AccessPanel({
+  ownerContent,
+}: {
+  ownerContent?: (csrfToken: string) => ReactNode;
+}) {
   const { session, login, logout, signInHint } = useAccess();
   const failure = isAccessApiError(session.error)
     ? session.error.code
@@ -19,6 +24,7 @@ export function AccessPanel() {
       {session.isSuccess && (
         <>
           <p role="status">Signed in to owner access.</p>
+          {ownerContent?.(session.data.csrf_token)}
           <button
             type="button"
             disabled={logout.isPending}

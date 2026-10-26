@@ -14,6 +14,32 @@ vi.mock('../../src/shared/api/access', () => ({
   beginOwnerLogin: vi.fn(),
   logoutOwnerSession: vi.fn(),
   clearOwnerAccessMemory: vi.fn(),
+  navigateToAuthorization: vi.fn(),
+}));
+
+vi.mock('../../src/shared/api/google-connection', () => ({
+  fetchGoogleConnection: vi.fn(),
+  beginGoogleConnectionConsent: vi.fn(),
+  disconnectGoogleConnection: vi.fn(),
+  navigateToGoogleAuthorization: vi.fn(),
+  isGoogleConnectionApiError: (value: unknown) =>
+    typeof value === 'object' && value !== null && 'code' in value,
+}));
+
+import { fetchOwnerSession } from '../../src/shared/api/access';
+import { fetchGoogleConnection } from '../../src/shared/api/google-connection';
+
+vi.mock('../../src/shared/api/access', () => ({
+  isAccessApiError: (value: unknown) =>
+    typeof value === 'object' && value !== null && 'code' in value,
+  fetchOwnerSession: vi
+    .fn()
+    .mockRejectedValue(
+      Object.assign(new Error('signed out'), { code: 'auth_required' }),
+    ),
+  beginOwnerLogin: vi.fn(),
+  logoutOwnerSession: vi.fn(),
+  clearOwnerAccessMemory: vi.fn(),
 }));
 
 function jsonResponse(payload: unknown): Response {
@@ -97,5 +123,44 @@ describe('App health state', () => {
     const alert = await screen.findByRole('alert');
     expect(alert.textContent).toContain('Check that the API is running');
     expect(screen.queryByText('API is healthy.')).toBeNull();
+  });
+
+  it('keeps Google connection status hidden for a signed-out browser', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn<typeof fetch>().mockResolvedValue(jsonResponse({ status: 'ok' })),
+    );
+    renderApp();
+
+    expect(
+      await screen.findByText(/signed out or your session expired/i),
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole('heading', { name: 'Google Workspace connection' }),
+    ).toBeNull();
+    expect(fetchGoogleConnection).not.toHaveBeenCalled();
+  });
+
+  it('mounts Google connection status for an authenticated owner', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn<typeof fetch>().mockResolvedValue(jsonResponse({ status: 'ok' })),
+    );
+    vi.mocked(fetchOwnerSession).mockResolvedValueOnce({
+      authenticated: true,
+      csrf_token: 's'.repeat(40),
+      expires_at: '2026-10-27T00:00:00Z',
+    });
+    vi.mocked(fetchGoogleConnection).mockResolvedValueOnce({
+      status: 'disconnected',
+    });
+    renderApp();
+
+    expect(
+      await screen.findByRole('heading', {
+        name: 'Google Workspace connection',
+      }),
+    ).toBeTruthy();
+    expect(fetchGoogleConnection).toHaveBeenCalledWith(expect.any(AbortSignal));
   });
 });

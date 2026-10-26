@@ -20,6 +20,7 @@ from .decisions import (
     KnowledgeRow,
     PreferenceRow,
 )
+from .google_connection import GoogleConnectionRow
 from .projections import ProjectionMetadataRow
 
 __all__ = [
@@ -30,6 +31,7 @@ __all__ = [
     "BriefingVersionEvidenceRow",
     "BriefingVersionRow",
     "CompanyRow",
+    "GoogleConnectionRow",
     "ContactRow",
     "EvidenceRow",
     "KnowledgeEvidenceRow",

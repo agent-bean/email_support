@@ -32,6 +32,9 @@ def test_local_http_is_limited_to_loopback(monkeypatch: pytest.MonkeyPatch) -> N
 
     assert settings is not None
     assert settings.secure_cookie is False
+    assert settings.google_connection_callback_uri == (
+        "http://localhost:8000/api/google/connection/callback"
+    )
 
     monkeypatch.setenv("EMAIL_SUPPORT_WEB_ORIGIN", "http://example.com")
     with pytest.raises(ValueError, match="loopback"):
@@ -50,3 +53,30 @@ def test_public_https_uses_secure_cookies(monkeypatch: pytest.MonkeyPatch) -> No
 
     assert settings is not None
     assert settings.secure_cookie is True
+    assert settings.google_connection_callback_uri == (
+        "https://support.example.com/api/google/connection/callback"
+    )
+
+
+def test_missing_connection_encryption_key_keeps_owner_login_configured(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    set_valid_configuration(monkeypatch)
+    monkeypatch.delenv("EMAIL_SUPPORT_GOOGLE_TOKEN_ENCRYPTION_KEY", raising=False)
+
+    settings = load_auth_settings()
+
+    assert settings is not None
+    assert settings.google_token_encryption_key is None
+
+
+def test_connection_encryption_key_is_read_only_from_private_runtime_config(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    set_valid_configuration(monkeypatch)
+    monkeypatch.setenv("EMAIL_SUPPORT_GOOGLE_TOKEN_ENCRYPTION_KEY", "private-key")
+
+    settings = load_auth_settings()
+
+    assert settings is not None
+    assert settings.google_token_encryption_key == "private-key"

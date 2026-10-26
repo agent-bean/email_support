@@ -59,8 +59,9 @@ async def test_empty_database_installs_through_real_alembic_revision(
         "projection_metadata",
         "oauth_attempts",
         "owner_sessions",
+        "google_connections",
     } <= tables
-    assert revision == "b17e9a4d2c61"
+    assert revision == "3c0f6a9b21e8"
     await asyncio.to_thread(check_migration_drift, database_url)
 
 
@@ -119,7 +120,7 @@ async def test_guarded_restore_recovers_revision_and_committed_core_rows(
                 )
         assert getattr(duplicate_error.value.orig, "sqlstate", None) == "23505"
         assert restored_id == account_id
-        assert revision == "b17e9a4d2c61"
+        assert revision == "3c0f6a9b21e8"
     finally:
         await dispose_database_engine(restored_engine)
         await asyncio.to_thread(database_lifecycle.drop_target, restored_database)
@@ -317,7 +318,7 @@ async def test_additive_upgrade_preserves_seeded_first_revision_records(
         finally:
             await dispose_database_engine(upgraded_engine)
 
-        assert revision == "b17e9a4d2c61"
+        assert revision == "3c0f6a9b21e8"
         assert preserved_email == "Owner@Example.com"
         assert after_rows == before_rows
         assert account.id == account_id
@@ -445,6 +446,98 @@ async def test_owner_access_migration_preserves_existing_decision_and_knowledge_
             await dispose_database_engine(upgraded_engine)
 
         assert after_rows == before_rows
-        assert revision == "b17e9a4d2c61"
+        assert revision == "3c0f6a9b21e8"
+    finally:
+        await asyncio.to_thread(database_lifecycle.drop_target, database_name)
+
+
+@pytest.mark.asyncio
+async def test_google_connection_upgrade_preserves_owner_session_and_canonical_account(
+    database_lifecycle: DatabaseLifecycle,
+) -> None:
+    database_name = database_lifecycle.create_target("google-upgrade-preservation")
+    database_url = database_lifecycle.target_url(database_name)
+    account_id = uuid4()
+    token_digest = b"s" * 32
+    created_at = datetime(2026, 10, 26, 10, tzinfo=UTC)
+    expires_at = datetime(2026, 10, 27, 10, tzinfo=UTC)
+    try:
+        await asyncio.to_thread(run_migrations, database_url, "b17e9a4d2c61")
+        engine = create_database_engine(database_url)
+        try:
+            async with engine.begin() as connection:
+                await connection.execute(
+                    text(
+                        "INSERT INTO provider_accounts "
+                        "(id, provider, external_account_id) "
+                        "VALUES (:id, 'gmail', 'kept-google-account')"
+                    ),
+                    {"id": account_id},
+                )
+                await connection.execute(
+                    text(
+                        "INSERT INTO owner_sessions "
+                        "(token_digest, owner_sub, created_at, expires_at, "
+                        "csrf_secret) VALUES (:digest, 'configured-owner', "
+                        ":created, :expires, 'kept-csrf')"
+                    ),
+                    {
+                        "digest": token_digest,
+                        "created": created_at,
+                        "expires": expires_at,
+                    },
+                )
+        finally:
+            await dispose_database_engine(engine)
+
+        await asyncio.to_thread(
+            database_lifecycle.backup_database,
+            database_name,
+            "before-google-connection-upgrade",
+        )
+        await asyncio.to_thread(run_migrations, database_url)
+
+        upgraded_engine = create_database_engine(database_url)
+        try:
+            async with upgraded_engine.connect() as connection:
+                revision = await connection.scalar(
+                    text("SELECT version_num FROM alembic_version")
+                )
+                session = (
+                    await connection.execute(
+                        text(
+                            "SELECT token_digest, owner_sub, created_at, expires_at, "
+                            "csrf_secret FROM owner_sessions "
+                            "WHERE token_digest = :digest"
+                        ),
+                        {"digest": token_digest},
+                    )
+                ).one()
+                account = (
+                    await connection.execute(
+                        text(
+                            "SELECT provider, external_account_id "
+                            "FROM provider_accounts "
+                            "WHERE id = :id"
+                        ),
+                        {"id": account_id},
+                    )
+                ).one()
+                connection_count = await connection.scalar(
+                    text("SELECT count(*) FROM google_connections")
+                )
+        finally:
+            await dispose_database_engine(upgraded_engine)
+
+        assert revision == "3c0f6a9b21e8"
+        assert tuple(session) == (
+            token_digest,
+            "configured-owner",
+            created_at,
+            expires_at,
+            "kept-csrf",
+        )
+        assert tuple(account) == ("gmail", "kept-google-account")
+        assert connection_count == 0
     finally:
         await asyncio.to_thread(database_lifecycle.drop_target, database_name)

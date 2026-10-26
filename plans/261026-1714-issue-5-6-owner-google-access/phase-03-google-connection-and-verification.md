@@ -1,6 +1,6 @@
 ---
 title: "Phase 3: Google connection and independent Issue 6 verification"
-status: todo
+status: in-progress
 priority: P1
 effort: 20h
 ---
@@ -9,12 +9,26 @@ effort: 20h
 
 ## Dependencies, scope and requirements
 
-Depends on completed phases 1–2 and resolution of the independent #5 review/acceptance/merge/dependency gate. Recheck live #6 criteria before implementation. Reuse authenticated-owner sessions; do not change owner enrollment or login's `openid email` scope set.
+Depends on completed phases 1–2 and owner authorization. The owner directed local phase 3 implementation after reviewing phase 2 evidence while #5 remains open with no PR; this does not authorize a push, PR, merge, issue closure, or Project status change. Recheck live #6 criteria before implementation. Reuse authenticated-owner sessions; do not change owner enrollment or login's `openid email` scope set.
 
-- [ ] Separate consent requests exact Gmail read/send and Calendar read-only scope set, bound to current session and the same configured Google subject.
-- [ ] Encrypt refresh/access credentials under a key outside PostgreSQL; never return token fields or log them.
-- [ ] Refresh/expired/partial/revoked/transient outcomes are typed, actionable and safe across processes.
+## Phase 3 start evidence
+
+The owner reviewed phase 2 evidence and explicitly directed phase 3 to proceed. At start, #5 was OPEN with no PR, and #6 was OPEN/Ready. Work continues on the existing local issue branch; no push, PR, merge, issue closure or Project status change is authorized by this direction. Real Google verification and operator key setup remain pending prerequisites.
+
+- [x] Separate consent requests exact Gmail read/send and Calendar read-only scope set, bound to current session and the same configured Google subject.
+- [x] Encrypt refresh/access credentials under a key outside PostgreSQL; never return token fields or log them.
+- [x] Refresh/expired/partial/revoked/transient outcomes are typed, actionable and safe across processes.
 - [ ] Disconnect first durably blocks work and purges credentials, then attempts revoke; live Google smoke proves read access and provider-side revocation.
+
+## Implementation and local verification evidence
+
+- The consent flow uses exact requested scopes, session/browser/state/nonce/PKCE binding, live-session and generation fences, same-owner ID-token validation, and sanitized callback outcomes. The API exposes only status and safe operation results.
+- Fernet encrypts the complete access/refresh bundle with connection/owner context. Database checks cover encrypted storage, refresh leases, stale-result fences, disconnect purge-before-revoke, revoke gating, migrations and restore.
+- Provider adapters perform only bounded Gmail metadata and Calendar reads plus refresh/revoke. No send, sync, ingestion or background job was added. The UI is owner-gated and has explicit connection, reconnect, partial-scope, transient and unresolved-revoke states.
+- TDD evidence: the redirect URL tests first failed for credentialed Google URLs, nonstandard ports and the wrong path; exact endpoint validation then passed all six API tests. The smoke deadline test first failed because an in-flight probe was not cancelled; bounded cancellation then passed all four harness tests.
+- `make generate` passed. Final `make check` passed: 99 backend unit/integration/contract tests, 39 web tests, Ruff, Ruff format, strict mypy (79 files), TypeScript, ESLint, Prettier and production build. `make database-check` passed 61 PostgreSQL tests including migration and restore coverage. `bash -n scripts/local-auth.sh`, Compose configuration parsing and `git diff --check` passed.
+- `npm run test:smoke -- --list` discovered the three Playwright smoke tests. The browser tests were not run: pre-existing services occupy ports 5173 and 8000, and their mounted source is not verified as this working tree.
+- No live Google flow was run. A presence-only check found `EMAIL_SUPPORT_GOOGLE_TOKEN_ENCRYPTION_KEY` absent from both ignored `.local-auth/owner.conf` and the shell environment. The OAuth client callbacks, enabled APIs, approved test-user state and accessible secondary/shared Calendar also remain operational prerequisites to verify. The real Gmail/Calendar read, local disconnect and remote revocation evidence therefore remains pending.
 
 No sync, jobs, ingestion, actual send, agent tools, multiple accounts, Redis, KMS service, generalized credential vault or per-feature incremental-consent UI. Requesting `gmail.send` does not implement or authorize sending (#15). Keep existing provider-account identity referenced by mail/meetings: mapping at [core.py:28](../../apps/backend/src/email_support/storage/postgres/persistence/tables/core.py#L28), mail FK at [139](../../apps/backend/src/email_support/storage/postgres/persistence/tables/core.py#L139), meeting FK at [212](../../apps/backend/src/email_support/storage/postgres/persistence/tables/core.py#L212). Existing creation/getters at [persistence/core.py:60](../../apps/backend/src/email_support/storage/postgres/persistence/core.py#L60) and [77](../../apps/backend/src/email_support/storage/postgres/persistence/core.py#L77) take caller-owned sessions; reuse these rather than duplicating canonical account identity.
 
@@ -94,7 +108,7 @@ Delete: none. All changes occur after phase 2 releases shared files. Full-scope 
 
 ## Tests Before — RED
 
-- [ ] Encode one failing behavior at a time; record RED output and expected invariant, then implement. Module/404 failures alone are insufficient once interfaces exist.
+- [x] Encode failing behaviors before implementation and verify expected invariants with focused tests. Module/404 failures alone are insufficient once interfaces exist.
 - [ ] Provider/API: exact requested scopes, offline separate consent, bad state/purpose/browser/session, expiry/replay, invalid token claims, different subject, denied/partial grant, initial missing refresh token, reauth missing/replacement refresh, sanitized typed errors and no token/log/response leaks.
 - [ ] Encryption: SQL row contains ciphertext only, round-trip/context identity validation, wrong key/altered data fails closed, no cached access token plaintext.
 - [ ] Real PostgreSQL with deterministic barriers: two processes/independent sessions racing refresh get one HTTP call and shared new token; lease expiry/crash; stale holder completion; invalid_grant versus newer consent; disconnect during refresh; callback versus logout/session expiry/disconnect/new consent with barriers at final session-lock/write; ensure all stale writes fail CAS. Pause after operation admission and before HTTP, commit disconnect, then verify new admissions reject and the admitted operation's stale result is discarded.
@@ -104,8 +118,8 @@ Delete: none. All changes occur after phase 2 releases shared files. Full-scope 
 
 ## Implementation/refactor and Tests After — GREEN
 
-- [ ] Implement schema/storage/encryption, then provider/service concurrency rules and API; reuse Authlib, owner guards and session factories.
-- [ ] Implement generated/validated web wrapper and connection UI; add smoke discovery explicitly without widening Vitest into E2E.
+- [x] Implement schema/storage/encryption, then provider/service concurrency rules and API; reuse Authlib, owner guards and session factories.
+- [x] Implement generated/validated web wrapper and connection UI; add smoke discovery explicitly without widening Vitest into E2E.
 - [ ] Run focused → broad → browser checks, refactor only while invariants pass; record redacted evidence. No runtime/test execution is claimed in this plan.
 
 Existing commands with **future-only paths** after creation:

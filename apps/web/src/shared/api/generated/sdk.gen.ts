@@ -2,8 +2,8 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { GetAccessPreauthData, GetAccessPreauthErrors, GetAccessPreauthResponses, GetHealthData, GetHealthResponses, GetOwnerSessionData, GetOwnerSessionErrors, GetOwnerSessionResponses, LogoutOwnerData, LogoutOwnerErrors, LogoutOwnerResponses, StartGoogleLoginData, StartGoogleLoginErrors, StartGoogleLoginResponses } from './types.gen';
-import { zGetAccessPreauthResponse, zGetHealthResponse, zGetOwnerSessionResponse, zLogoutOwnerResponse, zStartGoogleLoginResponse } from './zod.gen';
+import type { DisconnectGoogleConnectionData, DisconnectGoogleConnectionErrors, DisconnectGoogleConnectionResponses, GetAccessPreauthData, GetAccessPreauthErrors, GetAccessPreauthResponses, GetGoogleConnectionData, GetGoogleConnectionErrors, GetGoogleConnectionResponses, GetHealthData, GetHealthResponses, GetOwnerSessionData, GetOwnerSessionErrors, GetOwnerSessionResponses, LogoutOwnerData, LogoutOwnerErrors, LogoutOwnerResponses, StartGoogleConnectionConsentData, StartGoogleConnectionConsentErrors, StartGoogleConnectionConsentResponses, StartGoogleLoginData, StartGoogleLoginErrors, StartGoogleLoginResponses } from './types.gen';
+import { zDisconnectGoogleConnectionResponse, zGetAccessPreauthResponse, zGetGoogleConnectionResponse, zGetHealthResponse, zGetOwnerSessionResponse, zLogoutOwnerResponse, zStartGoogleConnectionConsentResponse, zStartGoogleLoginResponse } from './zod.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -62,6 +62,48 @@ export const getOwnerSession = <ThrowOnError extends boolean = false>(options?: 
             type: 'apiKey'
         }],
     url: '/api/auth/session',
+    ...options
+});
+
+/**
+ * Get Connection
+ */
+export const getGoogleConnection = <ThrowOnError extends boolean = false>(options?: Options<GetGoogleConnectionData, ThrowOnError>): RequestResult<GetGoogleConnectionResponses, GetGoogleConnectionErrors, ThrowOnError> => (options?.client ?? client).get<GetGoogleConnectionResponses, GetGoogleConnectionErrors, ThrowOnError>({
+    responseValidator: async (data) => await zGetGoogleConnectionResponse.parseAsync(data),
+    security: [{
+            in: 'cookie',
+            name: '__Host-owner_session',
+            type: 'apiKey'
+        }],
+    url: '/api/google/connection',
+    ...options
+});
+
+/**
+ * Consent
+ */
+export const startGoogleConnectionConsent = <ThrowOnError extends boolean = false>(options?: Options<StartGoogleConnectionConsentData, ThrowOnError>): RequestResult<StartGoogleConnectionConsentResponses, StartGoogleConnectionConsentErrors, ThrowOnError> => (options?.client ?? client).post<StartGoogleConnectionConsentResponses, StartGoogleConnectionConsentErrors, ThrowOnError>({
+    responseValidator: async (data) => await zStartGoogleConnectionConsentResponse.parseAsync(data),
+    security: [{
+            in: 'cookie',
+            name: '__Host-owner_session',
+            type: 'apiKey'
+        }],
+    url: '/api/google/connection/consent',
+    ...options
+});
+
+/**
+ * Disconnect
+ */
+export const disconnectGoogleConnection = <ThrowOnError extends boolean = false>(options?: Options<DisconnectGoogleConnectionData, ThrowOnError>): RequestResult<DisconnectGoogleConnectionResponses, DisconnectGoogleConnectionErrors, ThrowOnError> => (options?.client ?? client).post<DisconnectGoogleConnectionResponses, DisconnectGoogleConnectionErrors, ThrowOnError>({
+    responseValidator: async (data) => await zDisconnectGoogleConnectionResponse.parseAsync(data),
+    security: [{
+            in: 'cookie',
+            name: '__Host-owner_session',
+            type: 'apiKey'
+        }],
+    url: '/api/google/connection/disconnect',
     ...options
 });
 

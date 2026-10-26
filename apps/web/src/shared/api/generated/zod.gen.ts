@@ -22,6 +22,38 @@ export const zAccessError = z.object({
 });
 
 /**
+ * GoogleConnectionErrorCode
+ */
+export const zGoogleConnectionErrorCode = z.enum([
+    'partial_scope',
+    'consent_denied',
+    'identity_mismatch',
+    'session_expired',
+    'invalid_callback',
+    'refresh_invalid',
+    'provider_unavailable',
+    'refresh_busy',
+    'credentials_unavailable',
+    'revocation_pending'
+]);
+
+/**
+ * GoogleConnectionStatus
+ */
+export const zGoogleConnectionStatus = z.enum([
+    'connected',
+    'reconnect_required',
+    'disconnected'
+]);
+
+/**
+ * GoogleConsentResponse
+ */
+export const zGoogleConsentResponse = z.object({
+    authorization_url: z.url().min(1).max(2083)
+});
+
+/**
  * HealthStatus
  *
  * Closed health states returned by the API.
@@ -58,6 +90,39 @@ export const zOwnerSession = z.object({
  */
 export const zPreauthResponse = z.object({
     csrf_token: z.string().min(32)
+});
+
+/**
+ * RevokeOutcome
+ */
+export const zRevokeOutcome = z.enum([
+    'confirmed',
+    'unknown',
+    'not_attempted'
+]);
+
+/**
+ * GoogleConnectionResponse
+ */
+export const zGoogleConnectionResponse = z.object({
+    error: zGoogleConnectionErrorCode.nullish(),
+    granted_scopes: z.array(z.string()).optional(),
+    missing_scopes: z.array(z.string()).optional(),
+    reconnect_blocked: z.boolean().optional().default(false),
+    revoke_outcome: zRevokeOutcome.nullish(),
+    revoke_recorded_at: z.iso.datetime().nullish(),
+    status: zGoogleConnectionStatus,
+    unexpected_scopes: z.array(z.string()).optional()
+});
+
+/**
+ * GoogleDisconnectResponse
+ */
+export const zGoogleDisconnectResponse = z.object({
+    reconnect_blocked: z.boolean(),
+    revoke_outcome: zRevokeOutcome,
+    revoke_recorded_at: z.iso.datetime().nullish(),
+    status: zGoogleConnectionStatus
 });
 
 /**
@@ -105,6 +170,29 @@ export const zGetAccessPreauthResponse = zPreauthResponse;
  * Successful Response
  */
 export const zGetOwnerSessionResponse = zOwnerSession;
+
+/**
+ * Successful Response
+ */
+export const zGetGoogleConnectionResponse = zGoogleConnectionResponse;
+
+export const zStartGoogleConnectionConsentHeaders = z.object({
+    'X-CSRF-Token': z.string().nullish()
+});
+
+/**
+ * Successful Response
+ */
+export const zStartGoogleConnectionConsentResponse = zGoogleConsentResponse;
+
+export const zDisconnectGoogleConnectionHeaders = z.object({
+    'X-CSRF-Token': z.string().nullish()
+});
+
+/**
+ * Successful Response
+ */
+export const zDisconnectGoogleConnectionResponse = zGoogleDisconnectResponse;
 
 /**
  * Successful Response

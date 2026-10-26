@@ -11,8 +11,8 @@ fail() {
   exit 1
 }
 
-[[ $# -eq 1 ]] || fail 'usage: scripts/local-auth.sh {up|migrate|down}'
-case "$1" in up|migrate|down) ACTION=$1 ;; *) fail 'usage: scripts/local-auth.sh {up|migrate|down}' ;; esac
+[[ $# -eq 1 ]] || fail 'usage: scripts/local-auth.sh {up|migrate|down|smoke|resolve-revoke}'
+case "$1" in up|migrate|down|smoke|resolve-revoke) ACTION=$1 ;; *) fail 'usage: scripts/local-auth.sh {up|migrate|down|smoke|resolve-revoke}' ;; esac
 
 [[ ! -L "$ROOT" ]] || fail 'runtime directory must not be a symbolic link'
 mkdir -p -m 700 "$ROOT"
@@ -30,7 +30,7 @@ while IFS= read -r line || [[ -n "$line" ]]; do
   key=${line%%=*}
   value=${line#*=}
   case "$key" in
-    EMAIL_SUPPORT_OWNER_SUB|EMAIL_SUPPORT_GOOGLE_CLIENT_ID|EMAIL_SUPPORT_GOOGLE_CLIENT_SECRET|EMAIL_SUPPORT_GOOGLE_CALLBACK_URI|EMAIL_SUPPORT_WEB_ORIGIN) ;;
+    EMAIL_SUPPORT_OWNER_SUB|EMAIL_SUPPORT_GOOGLE_CLIENT_ID|EMAIL_SUPPORT_GOOGLE_CLIENT_SECRET|EMAIL_SUPPORT_GOOGLE_CALLBACK_URI|EMAIL_SUPPORT_WEB_ORIGIN|EMAIL_SUPPORT_GOOGLE_TOKEN_ENCRYPTION_KEY) ;;
     *) fail 'owner.conf contains an unsupported key' ;;
   esac
   [[ -n "$value" && "$value" != *$'\r'* ]] || fail 'owner.conf contains an empty or malformed value'
@@ -41,6 +41,12 @@ for key in EMAIL_SUPPORT_OWNER_SUB EMAIL_SUPPORT_GOOGLE_CLIENT_ID EMAIL_SUPPORT_
   [[ -n "${settings[$key]:-}" ]] || fail 'owner.conf is missing a required value'
   export "$key=${settings[$key]}"
 done
+if [[ -n "${settings[EMAIL_SUPPORT_GOOGLE_TOKEN_ENCRYPTION_KEY]:-}" ]]; then
+  export EMAIL_SUPPORT_GOOGLE_TOKEN_ENCRYPTION_KEY="${settings[EMAIL_SUPPORT_GOOGLE_TOKEN_ENCRYPTION_KEY]}"
+fi
+if [[ "$ACTION" == smoke && -z "${settings[EMAIL_SUPPORT_GOOGLE_TOKEN_ENCRYPTION_KEY]:-}" ]]; then
+  fail 'Google token encryption key is required for smoke; configure it in owner.conf'
+fi
 
 [[ ! -L "$PASSWORD_FILE" ]] || fail 'database password path must not be a symbolic link'
 if [[ ! -e "$PASSWORD_FILE" ]]; then
@@ -78,6 +84,14 @@ check_owned_postgres() {
 
 db_query() {
   compose exec --no-TTY auth-postgres sh -ec 'PGPASSWORD="$POSTGRES_PASSWORD" psql -v ON_ERROR_STOP=1 -U email_support_auth -d email_support_auth -Atqc "$1"' sh "$1"
+}
+
+db_owner_query() {
+  local query=$1 operation_id=${2:-}
+  compose exec --no-TTY \
+    --env "LOCAL_AUTH_OWNER_SUB=$EMAIL_SUPPORT_OWNER_SUB" \
+    --env "LOCAL_AUTH_REVOKE_OPERATION_ID=$operation_id" \
+    auth-postgres sh -ec 'PGPASSWORD="$POSTGRES_PASSWORD" psql -v ON_ERROR_STOP=1 -v owner_sub="$LOCAL_AUTH_OWNER_SUB" -v operation_id="$LOCAL_AUTH_REVOKE_OPERATION_ID" -U email_support_auth -d email_support_auth -Atqc "$1"' sh "$query"
 }
 
 run_alembic() {
@@ -140,5 +154,31 @@ case "$ACTION" in
       done <<< "$existing"
     fi
     compose down --remove-orphans
+    ;;
+  smoke)
+    api_id=$(compose ps --status running --quiet api)
+    [[ -n "$api_id" && "$api_id" != *$'\n'* ]] || fail 'the owned auth API service is not running'
+    project=$(docker inspect --format '{{index .Config.Labels "com.docker.compose.project"}}' "$api_id")
+    service=$(docker inspect --format '{{index .Config.Labels "com.docker.compose.service"}}' "$api_id")
+    [[ "$project" == "$PROJECT" && "$service" == api ]] || fail 'API container identity does not match the private auth runtime'
+    compose exec --no-TTY api /app/.venv/bin/python /app/scripts/live-google-smoke.py
+    ;;
+  resolve-revoke)
+    check_owned_postgres
+    api_id=$(compose ps --status running --quiet api)
+    if [[ -n "$api_id" ]]; then
+      compose stop --timeout 10 api
+    fi
+    api_id=$(compose ps --status running --quiet api)
+    [[ -z "$api_id" ]] || fail 'could not stop the owner API before revoke recovery'
+    operation_id=$(db_owner_query "SELECT revoke_operation_id FROM google_connections WHERE owner_sub = :'owner_sub' AND revoke_state IN ('in_progress', 'unknown') AND revoke_outcome = 'unknown' AND status = 'disconnected' AND encrypted_token_bundle IS NULL") || fail 'could not inspect the unresolved Google revoke'
+    [[ "$operation_id" =~ ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ ]] || fail 'no single purged unresolved Google revoke was found'
+    read -r -p 'Verify this app grant is removed in Google Account permissions; type REMOVED to confirm: ' confirmation
+    [[ "$confirmation" == REMOVED ]] || fail 'operator confirmation is required'
+    read -r -p "Enter the exact revoke operation ID ($operation_id): " supplied_operation_id
+    [[ "$supplied_operation_id" == "$operation_id" ]] || fail 'revoke operation ID did not match'
+    resolved_id=$(db_owner_query "UPDATE google_connections SET revoke_state = 'resolved', revoke_outcome = 'confirmed', revoke_recorded_at = now(), last_error = NULL, updated_at = now() WHERE owner_sub = :'owner_sub' AND revoke_operation_id = :'operation_id' AND revoke_state IN ('in_progress', 'unknown') AND revoke_outcome = 'unknown' AND status = 'disconnected' AND encrypted_token_bundle IS NULL RETURNING revoke_operation_id" "$operation_id") || fail 'guarded Google revoke recovery transaction failed'
+    [[ "$resolved_id" == "$operation_id" ]] || fail 'the unresolved revoke changed; no marker was cleared'
+    printf 'Google revoke marker resolved for the confirmed operation. Restart the owner runtime with scripts/local-auth.sh up.\n'
     ;;
 esac

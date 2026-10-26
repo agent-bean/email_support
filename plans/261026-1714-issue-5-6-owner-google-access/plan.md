@@ -5,7 +5,7 @@ status: in-progress
 priority: P1
 effort: 44h
 issue: 5
-branch: feat/issue-5-owner-access-backend
+branch: feat/issue-6-google-connection
 tags: [feature, auth, backend, frontend, database]
 blockedBy: []
 blocks: []
@@ -30,19 +30,21 @@ Exclude production deployment, real sends (#15), synchronization/jobs (#7), mult
 |---|-------|----------|------------|--------|
 | 1 | [Owner access backend](phase-01-start.md) | 14h | #3 verified closed | Done |
 | 2 | [Access UI and independent #5 verification](phase-02-owner-access-ui-and-verification.md) | 10h | Phase 1 | Done |
-| 3 | [Google connection and independent #6 verification](phase-03-google-connection-and-verification.md) | 20h | Phase 2; #5 review/acceptance boundary | Pending |
+| 3 | [Google connection and independent #6 verification](phase-03-google-connection-and-verification.md) | 20h | Phase 2; owner-directed continuation | In Progress |
 
-All phases are sequential. Each phase owns its listed changes only while active; shared composition, generated artifacts and metadata pass to the next phase after verification. Pause before phase 3 until #5 is independently reviewable and its acceptance/merge/dependency gates are resolved with the owner.
+All phases are sequential. Each phase owns its listed changes only while active; shared composition, generated artifacts and metadata pass to the next phase after verification. The owner reviewed the phase 2 evidence and directed phase 3 to proceed. At that handoff, #5 remained open with no PR; GitHub issue/project state and merge remain separate owner-controlled gates.
 
 ## Acceptance
 
 - [ ] Only the configured Google `sub` signs in; invalid/replayed protocol inputs reject.
 - [x] Protected APIs reject unauthenticated/expired sessions and unsafe requests without CSRF; logout invalidates the server session; HTTPS cookie protections are verified.
 - [x] Useful signed-out/expired UI works; public liveness needs no credentials, DB or provider.
-- [ ] Separate consent validates session, same owner, state/nonce/PKCE and exact required scopes, including secondary/shared Calendar reads.
-- [ ] Encrypted token bundles use an external key; tokens never reach web responses or normal logs.
-- [ ] Refresh, partial consent, expiry, revocation and transient failure have typed outcomes and actionable UI; concurrent stale results cannot undo disconnect.
+- [x] Separate consent validates session, same owner, state/nonce/PKCE and exact required scopes, including secondary/shared Calendar reads.
+- [x] Encrypted token bundles use an external key; tokens never reach web responses or normal logs.
+- [x] Refresh, partial consent, expiry, revocation and transient failure have typed outcomes and actionable UI; concurrent stale results cannot undo disconnect.
 - [ ] Disconnect blocks new operation admissions and purges credentials before revocation; previously admitted work may finish externally but its stale results are discarded. Reconnect waits for revoke resolution; real Google read/revoke smoke evidence exists, or acceptance stays pending with its prerequisite recorded.
+
+Phase 3 automated code, database and UI evidence is recorded in [the phase file](phase-03-google-connection-and-verification.md#implementation-and-local-verification-evidence). Real Google verification remains pending because the private runtime has no configured encryption key and the required live Google setup has not been verified.
 
 ## Review and validation records
 
