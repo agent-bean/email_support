@@ -5,7 +5,7 @@ status: in-progress
 priority: P1
 effort: 44h
 issue: 5
-branch: feat/issue-6-google-connection
+branch: fix/issue-6-verification
 tags: [feature, auth, backend, frontend, database]
 blockedBy: []
 blocks: []
@@ -14,7 +14,7 @@ created: 2026-10-26
 
 # Owner access and Google connection
 
-Accepted phased implementation, `--tdd --yagni`. Planning began on `main`; implementation is on the issue branch recorded above. Phases 1–2 are complete. Phase 3's core live acceptance now passes: Gmail metadata and secondary Calendar reads succeeded, local credentials were purged, and Google rejected the pre-disconnect token. Additional detailed test-matrix rows and owner acceptance remain pending. No production runtime check has run.
+Accepted phased implementation, `--tdd --yagni`. Planning began on `main`; Phase 3 implementation was merged from `feat/issue-6-google-connection`. Phases 1–2 are complete. Phase 3 live acceptance and detailed test matrix now pass, including Gmail and secondary Calendar reads, local credential purge, and Google rejection of the pre-disconnect token. Owner acceptance remains pending; production runtime is unverified.
 
 ## Outcome and boundaries
 
