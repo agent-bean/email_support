@@ -539,5 +539,55 @@ async def test_google_connection_upgrade_preserves_owner_session_and_canonical_a
         )
         assert tuple(account) == ("gmail", "kept-google-account")
         assert connection_count == 0
+
+        archive = await asyncio.to_thread(
+            database_lifecycle.backup_database,
+            database_name,
+            "google-upgrade-after",
+        )
+        restored_database = await asyncio.to_thread(
+            database_lifecycle.restore_target,
+            archive,
+            "google-upgrade-restore",
+        )
+        restored_engine = create_database_engine(
+            database_lifecycle.target_url(restored_database)
+        )
+        try:
+            async with restored_engine.connect() as connection:
+                restored_revision = await connection.scalar(
+                    text("SELECT version_num FROM alembic_version")
+                )
+                restored_session = (
+                    await connection.execute(
+                        text(
+                            "SELECT token_digest, owner_sub, created_at, expires_at, "
+                            "csrf_secret FROM owner_sessions "
+                            "WHERE token_digest = :digest"
+                        ),
+                        {"digest": token_digest},
+                    )
+                ).one()
+                restored_account = (
+                    await connection.execute(
+                        text(
+                            "SELECT provider, external_account_id "
+                            "FROM provider_accounts WHERE id = :id"
+                        ),
+                        {"id": account_id},
+                    )
+                ).one()
+            assert restored_revision == "3c0f6a9b21e8"
+            assert tuple(restored_session) == (
+                token_digest,
+                "configured-owner",
+                created_at,
+                expires_at,
+                "kept-csrf",
+            )
+            assert tuple(restored_account) == ("gmail", "kept-google-account")
+        finally:
+            await dispose_database_engine(restored_engine)
+            await asyncio.to_thread(database_lifecycle.drop_target, restored_database)
     finally:
         await asyncio.to_thread(database_lifecycle.drop_target, database_name)

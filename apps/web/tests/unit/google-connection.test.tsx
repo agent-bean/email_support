@@ -131,6 +131,20 @@ describe('Google connection panel', () => {
     ).toBeTruthy();
   });
 
+  it('asks the owner to sign in again after session expiry', async () => {
+    vi.mocked(fetchGoogleConnection).mockRejectedValue({
+      code: 'session_expired',
+    });
+    renderPanel();
+
+    expect(
+      await screen.findByText(/your owner session expired\. sign in again/i),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole('button', { name: /retry google connection status/i }),
+    ).toBeTruthy();
+  });
+
   it('shows a safe callback hint without trusting arbitrary query values', async () => {
     window.history.replaceState(
       {},

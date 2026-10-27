@@ -3,6 +3,7 @@
 from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 from typing import cast
+from uuid import uuid4
 
 import pytest
 from fastapi import FastAPI
@@ -18,6 +19,7 @@ from email_support.models.google_connection import (
     GoogleConnectionResponse,
     GoogleConnectionStatus,
 )
+from email_support.services.google_connection import GoogleConsentAttempt
 
 OWNER_SUB = "configured-owner-subject"
 WEB_ORIGIN = "http://localhost:5173"
@@ -207,3 +209,38 @@ def test_callback_redirect_does_not_reflect_provider_query_values(
     assert "private-code" not in response.headers["location"]
     assert "private-state" not in response.headers["location"]
     assert response.headers["location"] == (f"{WEB_ORIGIN}/?google=invalid_callback")
+
+
+def test_provider_denial_is_recorded_as_a_safe_typed_outcome(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    attempt = GoogleConsentAttempt(
+        connection_id=uuid4(),
+        generation=1,
+        nonce="private-nonce",
+        code_verifier="private-verifier",
+    )
+    recorded: list[GoogleConnectionErrorCode] = []
+
+    async def consume(*_: object, **__: object) -> GoogleConsentAttempt:
+        return attempt
+
+    async def record_failure(
+        *_: object, code: GoogleConnectionErrorCode, **__: object
+    ) -> bool:
+        recorded.append(code)
+        return True
+
+    monkeypatch.setattr(google_api, "consume_google_consent_attempt", consume)
+    monkeypatch.setattr(google_api, "record_google_consent_failure", record_failure)
+
+    response = client.get(
+        "/api/google/connection/callback",
+        params={"state": "private-state", "error": "private-access-denied"},
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    assert response.headers["location"] == f"{WEB_ORIGIN}/?google=consent_denied"
+    assert "private-access-denied" not in response.headers["location"]
+    assert recorded == [GoogleConnectionErrorCode.CONSENT_DENIED]

@@ -110,6 +110,33 @@ describe('Google connection API', () => {
     await expectation;
   });
 
+  it('forwards caller cancellation and preserves its reason', async () => {
+    let requestSignal: AbortSignal | undefined;
+    sdk.getGoogleConnection.mockImplementation(
+      ({ signal }: { signal: AbortSignal }) =>
+        new Promise((_, reject) => {
+          requestSignal = signal;
+          signal.addEventListener(
+            'abort',
+            () => reject(signal.reason as Error),
+            {
+              once: true,
+            },
+          );
+        }),
+    );
+
+    const controller = new AbortController();
+    const reason = new DOMException('caller cancelled', 'AbortError');
+    const result = fetchGoogleConnection(controller.signal);
+    const expectation = expect(result).rejects.toBe(reason);
+    controller.abort(reason);
+    await expectation;
+
+    expect(requestSignal?.aborted).toBe(true);
+    expect(requestSignal?.reason).toBe(reason);
+  });
+
   it.each([
     'https://attacker.example/',
     'https://attacker@accounts.google.com/o/oauth2/v2/auth',

@@ -5,11 +5,11 @@ import hashlib
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime, timedelta
 from typing import cast
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import pytest
 from cryptography.fernet import Fernet
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from email_support.config import AuthSettings
@@ -44,7 +44,15 @@ from email_support.services.google_connection_crypto import (
     encrypt_token_bundle,
 )
 from email_support.storage.postgres.persistence.auth import create_owner_session
-from email_support.storage.postgres.persistence.tables.auth import OwnerSessionRow
+from email_support.storage.postgres.persistence.google_connection import (
+    claim_refresh_lease,
+    save_refreshed_bundle,
+)
+from email_support.storage.postgres.persistence.tables.auth import (
+    OAuthAttemptRow,
+    OwnerSessionRow,
+)
+from email_support.storage.postgres.persistence.tables.core import ProviderAccountRow
 from email_support.storage.postgres.persistence.tables.google_connection import (
     GoogleConnectionRow,
 )
@@ -236,6 +244,203 @@ async def test_consent_attempt_is_bound_to_live_session_browser_and_generation(
 
 
 @pytest.mark.asyncio
+async def test_consent_attempt_rejects_wrong_session_and_expiry(
+    database_sessions: async_sessionmaker[AsyncSession],
+) -> None:
+    await seed_owner_session(database_sessions)
+    settings = make_settings()
+    authorization = await start_attempt(database_sessions)
+
+    wrong_session = await consume_google_consent_attempt(
+        database_sessions,
+        settings=settings,
+        state=authorization.state,
+        browser_cookie=BROWSER_COOKIE,
+        owner_session_token="another-session-token",
+    )
+    async with database_sessions() as session, session.begin():
+        attempt = await session.scalar(
+            select(OAuthAttemptRow).where(
+                OAuthAttemptRow.state_digest
+                == hashlib.sha256(authorization.state.encode()).digest()
+            )
+        )
+        assert attempt is not None
+        attempt.expires_at = datetime.now(UTC) - timedelta(hours=1)
+
+    expired = await consume_google_consent_attempt(
+        database_sessions,
+        settings=settings,
+        state=authorization.state,
+        browser_cookie=BROWSER_COOKIE,
+        owner_session_token=SESSION_TOKEN,
+    )
+
+    assert wrong_session is None
+    assert expired is None
+
+
+@pytest.mark.asyncio
+async def test_login_purpose_attempt_cannot_be_consumed_as_google_consent(
+    database_sessions: async_sessionmaker[AsyncSession],
+) -> None:
+    await seed_owner_session(database_sessions)
+    settings = make_settings()
+    authorization = await start_attempt(database_sessions)
+    async with database_sessions() as session, session.begin():
+        attempt = await session.scalar(
+            select(OAuthAttemptRow).where(
+                OAuthAttemptRow.state_digest
+                == hashlib.sha256(authorization.state.encode()).digest()
+            )
+        )
+        assert attempt is not None
+        attempt.purpose = "login"
+        attempt.connection_id = None
+        attempt.session_digest = None
+        attempt.generation = None
+
+    result = await consume_google_consent_attempt(
+        database_sessions,
+        settings=settings,
+        state=authorization.state,
+        browser_cookie=BROWSER_COOKIE,
+        owner_session_token=SESSION_TOKEN,
+    )
+
+    assert result is None
+
+
+@pytest.mark.asyncio
+async def test_new_consent_generation_rejects_a_late_callback(
+    database_sessions: async_sessionmaker[AsyncSession],
+) -> None:
+    await seed_owner_session(database_sessions)
+    settings = make_settings()
+    first_authorization = await start_attempt(database_sessions)
+    first_attempt = await consume_google_consent_attempt(
+        database_sessions,
+        settings=settings,
+        state=first_authorization.state,
+        browser_cookie=BROWSER_COOKIE,
+        owner_session_token=SESSION_TOKEN,
+    )
+    assert first_attempt is not None
+
+    second_authorization = await start_attempt(database_sessions)
+    second_attempt = await consume_google_consent_attempt(
+        database_sessions,
+        settings=settings,
+        state=second_authorization.state,
+        browser_cookie=BROWSER_COOKIE,
+        owner_session_token=SESSION_TOKEN,
+    )
+    assert second_attempt is not None
+    grant = GoogleTokenBundle(
+        access_token="new-consent-access-token",
+        refresh_token="new-consent-refresh-token",
+        access_expires_at=datetime.now(UTC) + timedelta(hours=1),
+    )
+
+    stale = await finish_google_consent(
+        database_sessions,
+        settings=settings,
+        attempt=first_attempt,
+        owner_session_token=SESSION_TOKEN,
+        identity=GoogleIdentity(sub=OWNER_SUB, email="owner@example.test"),
+        token_bundle=grant,
+        granted_scopes=frozenset(CONNECTION_SCOPES),
+    )
+    accepted = await finish_google_consent(
+        database_sessions,
+        settings=settings,
+        attempt=second_attempt,
+        owner_session_token=SESSION_TOKEN,
+        identity=GoogleIdentity(sub=OWNER_SUB, email="owner@example.test"),
+        token_bundle=grant,
+        granted_scopes=frozenset(CONNECTION_SCOPES),
+    )
+
+    async with database_sessions() as session:
+        row = await session.get(GoogleConnectionRow, second_attempt.connection_id)
+
+    assert stale is None
+    assert accepted is GoogleConnectionStatus.CONNECTED
+    assert row is not None and row.status == GoogleConnectionStatus.CONNECTED.value
+
+
+@pytest.mark.asyncio
+async def test_different_google_subject_never_persists_callback_credentials(
+    database_sessions: async_sessionmaker[AsyncSession],
+) -> None:
+    await seed_owner_session(database_sessions)
+    settings = make_settings()
+    authorization = await start_attempt(database_sessions)
+    attempt = await consume_google_consent_attempt(
+        database_sessions,
+        settings=settings,
+        state=authorization.state,
+        browser_cookie=BROWSER_COOKIE,
+        owner_session_token=SESSION_TOKEN,
+    )
+    assert attempt is not None
+
+    status = await finish_google_consent(
+        database_sessions,
+        settings=settings,
+        attempt=attempt,
+        owner_session_token=SESSION_TOKEN,
+        identity=GoogleIdentity(
+            sub="different-google-subject", email="owner@example.test"
+        ),
+        token_bundle=GoogleTokenBundle(
+            access_token="wrong-subject-access-token",
+            refresh_token="wrong-subject-refresh-token",
+            access_expires_at=datetime.now(UTC) + timedelta(hours=1),
+        ),
+        granted_scopes=frozenset(CONNECTION_SCOPES),
+    )
+
+    async with database_sessions() as session:
+        row = await session.get(GoogleConnectionRow, attempt.connection_id)
+
+    assert status is GoogleConnectionStatus.DISCONNECTED
+    assert row is not None
+    assert row.last_error == GoogleConnectionErrorCode.IDENTITY_MISMATCH.value
+    assert row.encrypted_token_bundle is None
+
+
+@pytest.mark.asyncio
+async def test_reauthorization_replaces_a_rotated_refresh_token(
+    database_sessions: async_sessionmaker[AsyncSession],
+) -> None:
+    await seed_owner_session(database_sessions)
+    connection_id = await complete_consent(database_sessions)
+
+    _, status = await finish_grant(
+        database_sessions,
+        token_bundle=GoogleTokenBundle(
+            access_token="reauthorized-access-token",
+            refresh_token="rotated-refresh-token",
+            access_expires_at=datetime.now(UTC) + timedelta(hours=1),
+        ),
+        granted_scopes=frozenset(CONNECTION_SCOPES),
+    )
+
+    async with database_sessions() as session:
+        row = await session.get(GoogleConnectionRow, connection_id)
+    assert status is GoogleConnectionStatus.CONNECTED
+    assert row is not None and row.encrypted_token_bundle is not None
+    bundle = decrypt_token_bundle(
+        row.encrypted_token_bundle,
+        ENCRYPTION_KEY,
+        connection_id=connection_id,
+        owner_sub=OWNER_SUB,
+    )
+    assert bundle.refresh_token == "rotated-refresh-token"
+
+
+@pytest.mark.asyncio
 async def test_completed_grant_stores_only_context_bound_ciphertext(
     database_sessions: async_sessionmaker[AsyncSession],
 ) -> None:
@@ -396,8 +601,9 @@ async def test_disconnect_fences_a_callback_consumed_before_disconnect(
 
 
 @pytest.mark.asyncio
-async def test_session_logout_fences_a_consumed_connection_callback(
-    database_sessions: async_sessionmaker[AsyncSession],
+@pytest.mark.parametrize("invalidation", ["logout", "expiry"])
+async def test_session_invalidation_fences_callback_waiting_on_final_lock(
+    database_sessions: async_sessionmaker[AsyncSession], invalidation: str
 ) -> None:
     await seed_owner_session(database_sessions)
     settings = make_settings()
@@ -410,28 +616,62 @@ async def test_session_logout_fences_a_consumed_connection_callback(
         owner_session_token=SESSION_TOKEN,
     )
     assert attempt is not None
-    async with database_sessions() as session, session.begin():
-        await session.execute(
-            delete(OwnerSessionRow).where(
-                OwnerSessionRow.token_digest
-                == hashlib.sha256(SESSION_TOKEN.encode()).digest()
+
+    session_digest = hashlib.sha256(SESSION_TOKEN.encode()).digest()
+    callback: asyncio.Task[GoogleConnectionStatus | None]
+    async with database_sessions() as invalidating_session:
+        async with invalidating_session.begin():
+            locked_session = await invalidating_session.scalar(
+                select(OwnerSessionRow)
+                .where(OwnerSessionRow.token_digest == session_digest)
+                .with_for_update()
             )
-        )
+            assert locked_session is not None
+            callback = asyncio.create_task(
+                finish_google_consent(
+                    database_sessions,
+                    settings=settings,
+                    attempt=attempt,
+                    owner_session_token=SESSION_TOKEN,
+                    identity=GoogleIdentity(sub=OWNER_SUB, email="owner@example.test"),
+                    token_bundle=GoogleTokenBundle(
+                        access_token="late-access-token",
+                        refresh_token="late-refresh-token",
+                        access_expires_at=datetime.now(UTC) + timedelta(hours=1),
+                    ),
+                    granted_scopes=frozenset(CONNECTION_SCOPES),
+                )
+            )
 
-    result = await finish_google_consent(
-        database_sessions,
-        settings=settings,
-        attempt=attempt,
-        owner_session_token=SESSION_TOKEN,
-        identity=GoogleIdentity(sub=OWNER_SUB, email="owner@example.test"),
-        token_bundle=GoogleTokenBundle(
-            access_token="late-access-token",
-            refresh_token="late-refresh-token",
-            access_expires_at=datetime.now(UTC) + timedelta(hours=1),
-        ),
-        granted_scopes=frozenset(CONNECTION_SCOPES),
-    )
+            deadline = asyncio.get_running_loop().time() + 2
+            while True:
+                async with database_sessions() as observer:
+                    waiting_callbacks = await observer.scalar(
+                        text(
+                            "SELECT count(*) FROM pg_stat_activity "
+                            "WHERE pid <> pg_backend_pid() "
+                            "AND wait_event_type = 'Lock' "
+                            "AND query ILIKE '%owner_sessions%'"
+                        )
+                    )
+                if waiting_callbacks:
+                    break
+                if asyncio.get_running_loop().time() >= deadline:
+                    raise AssertionError("callback did not wait on the session lock")
+                await asyncio.sleep(0.01)
 
+            if invalidation == "logout":
+                await invalidating_session.execute(
+                    delete(OwnerSessionRow).where(
+                        OwnerSessionRow.token_digest == session_digest
+                    )
+                )
+            else:
+                locked_session.expires_at = locked_session.created_at + timedelta(
+                    microseconds=1
+                )
+
+    result = await callback
     async with database_sessions() as session:
         row = await session.get(GoogleConnectionRow, attempt.connection_id)
 
@@ -442,12 +682,43 @@ async def test_session_logout_fences_a_consumed_connection_callback(
 
 
 @pytest.mark.asyncio
+async def test_owner_logout_keeps_the_independent_google_connection(
+    database_sessions: async_sessionmaker[AsyncSession],
+) -> None:
+    await seed_owner_session(database_sessions)
+    connection_id = await complete_consent(database_sessions)
+    async with database_sessions() as session, session.begin():
+        await session.execute(
+            delete(OwnerSessionRow).where(
+                OwnerSessionRow.token_digest
+                == hashlib.sha256(SESSION_TOKEN.encode()).digest()
+            )
+        )
+
+    status = await get_google_connection_status(database_sessions, owner_sub=OWNER_SUB)
+    async with database_sessions() as session:
+        row = await session.get(GoogleConnectionRow, connection_id)
+
+    assert status.status is GoogleConnectionStatus.CONNECTED
+    assert row is not None and row.encrypted_token_bundle is not None
+
+
+@pytest.mark.asyncio
 async def test_unknown_revoke_purges_first_and_cannot_be_replayed_or_reconnected(
     database_sessions: async_sessionmaker[AsyncSession],
 ) -> None:
     await seed_owner_session(database_sessions)
     await complete_consent(database_sessions)
     settings = make_settings()
+    authorization = await start_attempt(database_sessions)
+    pending_attempt = await consume_google_consent_attempt(
+        database_sessions,
+        settings=settings,
+        state=authorization.state,
+        browser_cookie=BROWSER_COOKIE,
+        owner_session_token=SESSION_TOKEN,
+    )
+    assert pending_attempt is not None
     workspace = FakeWorkspace(revoke_result=False)
 
     async def assert_local_block_is_committed() -> None:
@@ -466,6 +737,19 @@ async def test_unknown_revoke_purges_first_and_cannot_be_replayed_or_reconnected
         owner_session_token=SESSION_TOKEN,
         workspace=cast(GoogleWorkspaceClient, workspace),
     )
+    stale_promotion = await finish_google_consent(
+        database_sessions,
+        settings=settings,
+        attempt=pending_attempt,
+        owner_session_token=SESSION_TOKEN,
+        identity=GoogleIdentity(sub=OWNER_SUB, email="owner@example.test"),
+        token_bundle=GoogleTokenBundle(
+            access_token="stale-access-token",
+            refresh_token="stale-refresh-token",
+            access_expires_at=datetime.now(UTC) + timedelta(hours=1),
+        ),
+        granted_scopes=frozenset(CONNECTION_SCOPES),
+    )
     second = await disconnect_google_connection(
         database_sessions,
         settings=settings,
@@ -476,6 +760,7 @@ async def test_unknown_revoke_purges_first_and_cannot_be_replayed_or_reconnected
         row = await session.scalar(select(GoogleConnectionRow))
 
     assert first.revoke_outcome.value == "unknown"
+    assert stale_promotion is None
     assert first.reconnect_blocked is True
     assert second.reconnect_blocked is True
     assert workspace.revoke_calls == ["stored-refresh-token"]
@@ -489,8 +774,49 @@ async def test_unknown_revoke_purges_first_and_cannot_be_replayed_or_reconnected
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "revoke_error", [asyncio.CancelledError, TimeoutError], ids=["cancelled", "timeout"]
+)
+async def test_timeout_or_cancellation_during_revoke_keeps_local_credentials_purged(
+    database_sessions: async_sessionmaker[AsyncSession],
+    revoke_error: type[BaseException],
+) -> None:
+    await seed_owner_session(database_sessions)
+    connection_id = await complete_consent(database_sessions)
+    workspace = FakeWorkspace()
+
+    async def cancel_provider_revoke() -> None:
+        raise revoke_error()
+
+    workspace.before_revoke = cancel_provider_revoke
+    with pytest.raises(revoke_error):
+        await disconnect_google_connection(
+            database_sessions,
+            settings=make_settings(),
+            owner_session_token=SESSION_TOKEN,
+            workspace=cast(GoogleWorkspaceClient, workspace),
+        )
+
+    async with database_sessions() as session:
+        row = await session.get(GoogleConnectionRow, connection_id)
+        account = await session.get(ProviderAccountRow, connection_id)
+
+    assert row is not None
+    assert row.status == GoogleConnectionStatus.DISCONNECTED.value
+    assert row.encrypted_token_bundle is None
+    assert row.revoke_state == "in_progress"
+    assert account is not None
+    assert account.provider == "google"
+    assert account.external_account_id == OWNER_SUB
+    with pytest.raises(GoogleConnectionFailure) as failure:
+        await start_attempt(database_sessions)
+    assert failure.value.code == "revocation_pending"
+
+
+@pytest.mark.asyncio
 async def test_refresh_lease_allows_one_provider_call_for_concurrent_sessions(
     database_sessions: async_sessionmaker[AsyncSession],
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     await seed_owner_session(database_sessions)
     await seed_owner_session(database_sessions, token="second-session-token")
@@ -515,6 +841,33 @@ async def test_refresh_lease_allows_one_provider_call_for_concurrent_sessions(
     workspace = FakeWorkspace()
     workspace.block_refresh = True
     settings = make_settings()
+    follower_observed_lease = asyncio.Event()
+
+    async def observe_follower_claim(
+        session: AsyncSession,
+        *,
+        connection_id: UUID,
+        generation: int,
+        credential_version: int,
+        lease_owner: UUID,
+        lease_duration: timedelta,
+    ) -> bool:
+        claimed = await claim_refresh_lease(
+            session,
+            connection_id=connection_id,
+            generation=generation,
+            credential_version=credential_version,
+            lease_owner=lease_owner,
+            lease_duration=lease_duration,
+        )
+        if not claimed:
+            follower_observed_lease.set()
+        return claimed
+
+    monkeypatch.setattr(
+        "email_support.services.google_connection.claim_refresh_lease",
+        observe_follower_claim,
+    )
 
     first = asyncio.create_task(
         read_gmail_metadata(
@@ -531,7 +884,7 @@ async def test_refresh_lease_allows_one_provider_call_for_concurrent_sessions(
             workspace=cast(GoogleWorkspaceClient, workspace),
         )
     )
-    await asyncio.sleep(0.05)
+    await asyncio.wait_for(follower_observed_lease.wait(), timeout=2)
     workspace.refresh_release.set()
     assert tuple(await asyncio.gather(first, second)) == (None, None)
 
@@ -543,6 +896,73 @@ async def test_refresh_lease_allows_one_provider_call_for_concurrent_sessions(
     assert row.credential_version == 2
     assert row.refresh_lease_owner is None
     assert row.refresh_lease_expires_at is None
+
+
+@pytest.mark.asyncio
+async def test_expired_refresh_lease_allows_a_new_holder_and_rejects_stale_save(
+    database_sessions: async_sessionmaker[AsyncSession],
+) -> None:
+    await seed_owner_session(database_sessions)
+    connection_id = await complete_consent(database_sessions)
+    first_holder = uuid4()
+    second_holder = uuid4()
+    async with database_sessions() as session, session.begin():
+        row = await session.get(GoogleConnectionRow, connection_id)
+        assert row is not None
+        generation = row.generation
+        credential_version = row.credential_version
+        assert await claim_refresh_lease(
+            session,
+            connection_id=connection_id,
+            generation=generation,
+            credential_version=credential_version,
+            lease_owner=first_holder,
+            lease_duration=timedelta(minutes=1),
+        )
+        row.refresh_lease_expires_at = datetime.now(UTC) - timedelta(seconds=1)
+
+    async with database_sessions() as session, session.begin():
+        assert await claim_refresh_lease(
+            session,
+            connection_id=connection_id,
+            generation=generation,
+            credential_version=credential_version,
+            lease_owner=second_holder,
+            lease_duration=timedelta(minutes=1),
+        )
+
+    encrypted, key_version = encrypt_token_bundle(
+        GoogleTokenBundle(
+            access_token="refreshed-access-token",
+            refresh_token="stored-refresh-token",
+            access_expires_at=datetime.now(UTC) + timedelta(hours=1),
+        ),
+        ENCRYPTION_KEY,
+        connection_id=connection_id,
+        owner_sub=OWNER_SUB,
+    )
+    async with database_sessions() as session, session.begin():
+        stale_saved = await save_refreshed_bundle(
+            session,
+            connection_id=connection_id,
+            generation=generation,
+            credential_version=credential_version,
+            lease_owner=first_holder,
+            encrypted_bundle=encrypted,
+            key_version=key_version,
+        )
+        current_saved = await save_refreshed_bundle(
+            session,
+            connection_id=connection_id,
+            generation=generation,
+            credential_version=credential_version,
+            lease_owner=second_holder,
+            encrypted_bundle=encrypted,
+            key_version=key_version,
+        )
+
+    assert stale_saved is False
+    assert current_saved is True
 
 
 @pytest.mark.asyncio
@@ -582,6 +1002,79 @@ async def test_invalid_refresh_purges_grant_and_advances_generation(
     assert row.status == GoogleConnectionStatus.RECONNECT_REQUIRED.value
     assert row.encrypted_token_bundle is None
     assert row.generation == 2
+
+
+@pytest.mark.asyncio
+async def test_stale_invalid_grant_cannot_purge_a_newer_consent(
+    database_sessions: async_sessionmaker[AsyncSession],
+) -> None:
+    await seed_owner_session(database_sessions)
+    connection_id = await complete_consent(database_sessions)
+    async with database_sessions() as session, session.begin():
+        row = await session.get(GoogleConnectionRow, connection_id)
+        assert row is not None and row.encrypted_token_bundle is not None
+        row.encrypted_token_bundle, row.encryption_key_version = encrypt_token_bundle(
+            GoogleTokenBundle(
+                access_token="expired-access-token",
+                refresh_token="stored-refresh-token",
+                access_expires_at=datetime.now(UTC) - timedelta(seconds=1),
+            ),
+            ENCRYPTION_KEY,
+            connection_id=connection_id,
+            owner_sub=OWNER_SUB,
+        )
+    workspace = FakeWorkspace()
+    workspace.block_refresh = True
+    workspace.refresh_failure = GoogleConnectionErrorCode.REFRESH_INVALID
+    settings = make_settings()
+    pending_read = asyncio.create_task(
+        read_gmail_metadata(
+            database_sessions,
+            settings=settings,
+            workspace=cast(GoogleWorkspaceClient, workspace),
+        )
+    )
+    await asyncio.wait_for(workspace.refresh_started.wait(), timeout=2)
+
+    authorization = await start_attempt(database_sessions)
+    attempt = await consume_google_consent_attempt(
+        database_sessions,
+        settings=settings,
+        state=authorization.state,
+        browser_cookie=BROWSER_COOKIE,
+        owner_session_token=SESSION_TOKEN,
+    )
+    assert attempt is not None
+    new_status = await finish_google_consent(
+        database_sessions,
+        settings=settings,
+        attempt=attempt,
+        owner_session_token=SESSION_TOKEN,
+        identity=GoogleIdentity(sub=OWNER_SUB, email="owner@example.test"),
+        token_bundle=GoogleTokenBundle(
+            access_token="new-access-token",
+            refresh_token="new-refresh-token",
+            access_expires_at=datetime.now(UTC) + timedelta(hours=1),
+        ),
+        granted_scopes=frozenset(CONNECTION_SCOPES),
+    )
+    workspace.refresh_release.set()
+    read_result = await asyncio.wait_for(pending_read, timeout=2)
+
+    async with database_sessions() as session:
+        row = await session.get(GoogleConnectionRow, connection_id)
+    assert new_status is GoogleConnectionStatus.CONNECTED
+    assert read_result is None
+    assert workspace.refresh_calls == 1
+    assert row is not None and row.encrypted_token_bundle is not None
+    assert row.status == GoogleConnectionStatus.CONNECTED.value
+    bundle = decrypt_token_bundle(
+        row.encrypted_token_bundle,
+        ENCRYPTION_KEY,
+        connection_id=connection_id,
+        owner_sub=OWNER_SUB,
+    )
+    assert bundle.refresh_token == "new-refresh-token"
 
 
 @pytest.mark.asyncio
