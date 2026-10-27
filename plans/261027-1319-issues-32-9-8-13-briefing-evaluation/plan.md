@@ -13,7 +13,7 @@ created: 2026-10-27
 
 ## Outcome and contract
 
-A developer runs explicit normalized email/meeting inputs, resolves company identity, and proceeds through bounded real research, obtains a cited immutable Markdown briefing paused for review, and measures support/usefulness with honest coverage. Flags: `--tdd --hard --yagni`. This document authorizes no implementation, acceptance, merge or release.
+A developer runs explicit normalized email/meeting inputs, resolves company identity, and proceeds through bounded real research, obtains a cited immutable Markdown briefing paused for review, and measures support/usefulness with honest coverage. Flags: `--tdd --hard --yagni`. The owner explicitly approved this plan on 2026-10-27. Implementation has not started; issue acceptance, merge and release remain separately authorized gates.
 
 The owner accepted one plan and four sequential PRs, #32 → #9 → #8 → #13. Each requires its own review, checks, explicit owner acceptance and merge authorization before the next PR proceeds. Use new issue branches from updated `main`; the frontmatter branch records planning provenance only.
 
@@ -55,11 +55,11 @@ Phase files own executable steps, repo-relative file inventories, RED/GREEN scen
 
 ## Red Team Review
 
-The owner approved all three findings (two High, one Medium) and the citation correction. Applied public research isolation, canonical knowledge eligibility checks and compatible reserved example-domain fixtures; [adjudication and evidence](../reports/red-team-261027-1319-briefing-evaluation.md). Forty overlapping claim samples checked. Owner plan acceptance remains separate. No application tests, providers, database changes or implementation commands were run while drafting.
+The owner approved all three findings (two High, one Medium) and the citation correction, then explicitly approved the complete plan on 2026-10-27. Applied public research isolation, canonical knowledge eligibility checks and compatible reserved example-domain fixtures; [adjudication and evidence](../reports/red-team-261027-1319-briefing-evaluation.md). Forty overlapping claim samples checked. No application tests, providers, database changes or implementation commands were run while drafting.
 
 ### Whole-Plan Consistency Sweep
 
-Re-read all five files after propagation; reconciled requirements, steps, tests, acceptance and risks. No superseded fixture/citation instructions or unresolved contradictions remain. Local links, phase dependencies and CLI format validation pass; [verification record](../reports/validation-261027-1319-briefing-evaluation.md). Plan is ready for owner approval before implementation.
+Re-read all five files after propagation; reconciled requirements, steps, tests, acceptance and risks. No superseded fixture/citation instructions or unresolved contradictions remain. Local links, phase dependencies and CLI format validation pass; [verification record](../reports/validation-261027-1319-briefing-evaluation.md). Plan is owner-approved and ready for execution through cook.
 
 ## Open evidence
 
