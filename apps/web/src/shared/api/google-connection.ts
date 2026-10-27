@@ -14,6 +14,7 @@ import {
 import * as z from 'zod';
 
 const REQUEST_DEADLINE_MS = 5_000;
+const DISCONNECT_DEADLINE_MS = 12_000;
 const strictConnection = z.strictObject(zGoogleConnectionResponse.shape);
 const strictDisconnect = z.strictObject(zGoogleDisconnectResponse.shape);
 const strictConnectionError = z.strictObject({
@@ -59,6 +60,7 @@ export function isGoogleConnectionApiError(
 async function withRequest<T>(
   signal: AbortSignal,
   request: (requestSignal: AbortSignal) => Promise<T>,
+  deadlineMs = REQUEST_DEADLINE_MS,
 ): Promise<T> {
   const controller = new AbortController();
   const forwardAbort = () => controller.abort(signal.reason);
@@ -72,7 +74,7 @@ async function withRequest<T>(
           'TimeoutError',
         ),
       ),
-    REQUEST_DEADLINE_MS,
+    deadlineMs,
   );
   try {
     return await request(controller.signal);
@@ -91,7 +93,10 @@ async function withRequest<T>(
         throw new GoogleConnectionApiError('auth_required');
       }
     }
-    if (controller.signal.aborted) throw controller.signal.reason ?? error;
+    if (signal.aborted) throw signal.reason ?? error;
+    if (controller.signal.aborted) {
+      throw new GoogleConnectionApiError('network_error');
+    }
     throw new GoogleConnectionApiError('network_error');
   } finally {
     window.clearTimeout(timeout);
@@ -134,17 +139,21 @@ export function disconnectGoogleConnection(
   csrfToken: string,
   signal: AbortSignal,
 ): Promise<GoogleDisconnectResponse> {
-  return withRequest(signal, async (requestSignal) => {
-    const { data } = await disconnectGoogleConnectionRequest({
-      baseUrl: window.location.origin,
-      credentials: 'same-origin',
-      signal: requestSignal,
-      headers: { 'X-CSRF-Token': csrfToken },
-      throwOnError: true,
-      responseValidator: (value) => strictDisconnect.parseAsync(value),
-    });
-    return strictDisconnect.parse(data) as GoogleDisconnectResponse;
-  });
+  return withRequest(
+    signal,
+    async (requestSignal) => {
+      const { data } = await disconnectGoogleConnectionRequest({
+        baseUrl: window.location.origin,
+        credentials: 'same-origin',
+        signal: requestSignal,
+        headers: { 'X-CSRF-Token': csrfToken },
+        throwOnError: true,
+        responseValidator: (value) => strictDisconnect.parseAsync(value),
+      });
+      return strictDisconnect.parse(data) as GoogleDisconnectResponse;
+    },
+    DISCONNECT_DEADLINE_MS,
+  );
 }
 
 function validateGoogleAuthorizationUrl(value: string): string {

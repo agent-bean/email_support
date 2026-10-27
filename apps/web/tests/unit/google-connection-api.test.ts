@@ -86,6 +86,30 @@ describe('Google connection API', () => {
     expect(disconnectOptions?.signal).toBeInstanceOf(AbortSignal);
   });
 
+  it('reports a disconnect deadline as a visible network error', async () => {
+    vi.useFakeTimers();
+    sdk.disconnectGoogleConnection.mockImplementation(
+      ({ signal }: { signal: AbortSignal }) =>
+        new Promise((_, reject) => {
+          signal.addEventListener(
+            'abort',
+            () => reject(new Error('request aborted')),
+            { once: true },
+          );
+        }),
+    );
+
+    const result = disconnectGoogleConnection(
+      'csrf-value',
+      new AbortController().signal,
+    );
+    const expectation = expect(result).rejects.toMatchObject({
+      code: 'network_error',
+    });
+    await vi.advanceTimersByTimeAsync(12_000);
+    await expectation;
+  });
+
   it.each([
     'https://attacker.example/',
     'https://attacker@accounts.google.com/o/oauth2/v2/auth',

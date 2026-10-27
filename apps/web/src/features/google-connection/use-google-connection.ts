@@ -21,7 +21,7 @@ export function useGoogleConnection(csrfToken: string) {
   const disconnect = useMutation({
     mutationFn: ({ signal }: { signal: AbortSignal }) =>
       disconnectGoogleConnection(csrfToken, signal),
-    onSuccess: async () => {
+    onSettled: async () => {
       await queryClient.invalidateQueries({ queryKey: googleConnectionKey });
     },
   });
