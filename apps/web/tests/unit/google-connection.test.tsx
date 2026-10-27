@@ -67,6 +67,28 @@ describe('Google connection panel', () => {
     );
   });
 
+  it('refreshes status after an ambiguous disconnect failure', async () => {
+    vi.mocked(fetchGoogleConnection)
+      .mockResolvedValueOnce({ status: 'connected' })
+      .mockResolvedValueOnce({ status: 'disconnected' });
+    vi.mocked(disconnectGoogleConnection).mockRejectedValue({
+      code: 'network_error',
+    });
+    renderPanel();
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: /disconnect google/i }),
+    );
+
+    expect(
+      await screen.findByText(/google workspace is disconnected/i),
+    ).toBeTruthy();
+    expect(
+      await screen.findByText(/could not reach the google connection service/i),
+    ).toBeTruthy();
+    expect(fetchGoogleConnection).toHaveBeenCalledTimes(2);
+  });
+
   it('offers one connection action while disconnected', async () => {
     vi.mocked(fetchGoogleConnection).mockResolvedValue({
       status: 'disconnected',
