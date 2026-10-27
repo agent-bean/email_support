@@ -2,10 +2,12 @@
 
 import logging
 from collections.abc import Iterator
+from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from typing import cast
 
 import pytest
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -216,3 +218,46 @@ def test_database_outage_does_not_affect_health(
     assert health.status_code == 200
     assert protected.status_code == 503
     assert protected.json()["detail"]["code"] == "auth_unavailable"
+
+
+def test_session_from_previous_configured_owner_is_deleted_and_rejected(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    settings = AuthSettings(
+        database_url="postgresql+psycopg://user:password@localhost/app",
+        owner_sub="new-owner-subject",
+        google_client_id="client-id",
+        google_client_secret="client-secret",
+        callback_uri="http://localhost:8000/api/auth/google/callback",
+        web_origin="http://localhost:5173",
+    )
+    sessions = cast(async_sessionmaker[AsyncSession], object())
+    test_app = cast(FastAPI, client.app)
+    monkeypatch.setitem(
+        test_app.dependency_overrides,
+        auth_api.require_auth_runtime,
+        lambda: auth_api.AuthRuntime(settings, sessions, None),
+    )
+
+    async def get_session(*_: object) -> tuple[str, datetime, str]:
+        return _session_result("previous-owner-subject")
+
+    monkeypatch.setattr(auth_api, "get_valid_session", get_session)
+    deleted: list[str] = []
+
+    async def delete_session(_sessions: object, token: str) -> None:
+        deleted.append(token)
+
+    monkeypatch.setattr(auth_api, "logout_session", delete_session)
+    client.cookies.set("owner_session", "old-session-token")
+
+    response = client.get("/api/auth/session")
+
+    assert response.status_code == 401, response.text
+    assert response.json()["detail"]["code"] == "auth_required"
+    assert deleted == ["old-session-token"]
+    assert 'owner_session=""' in response.headers["set-cookie"]
+
+
+def _session_result(owner_sub: str) -> tuple[str, datetime, str]:
+    return owner_sub, datetime.now(UTC) + timedelta(hours=1), "csrf-secret"
