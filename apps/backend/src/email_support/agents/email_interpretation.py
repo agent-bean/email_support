@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from typing import Protocol, cast
 from uuid import UUID
 
@@ -22,7 +23,7 @@ from email_support.models.research import (
 )
 from email_support.tools.execution import ToolExecutor
 
-PROMPT_VERSION = "email-interpretation-v1"
+PROMPT_VERSION = "email-interpretation-v2"
 MAX_INTERPRETATION_INPUT_CHARS = 50_000
 
 
@@ -44,6 +45,7 @@ class EmailInterpretationAgent:
         input_json = value.payload.model_dump_json()
         if len(input_json) > MAX_INTERPRETATION_INPUT_CHARS:
             raise ProviderCallError(ProviderErrorCategory.INVALID_REQUEST)
+        schema = EmailInterpretation.model_json_schema()
         request = ChatCompletionRequest(
             model=self._model,
             messages=[
@@ -57,7 +59,9 @@ class EmailInterpretationAgent:
                         "offsets into one supplied field. These are unverified "
                         "candidates, not identity decisions. Do not research, approve, "
                         "send, persist corrections, or claim company identity. "
-                        f"Return the schema only. Prompt version: {PROMPT_VERSION}."
+                        f"Return the schema only. Prompt version: {PROMPT_VERSION}. "
+                        "The output must conform exactly to this JSON schema: "
+                        f"{json.dumps(schema, ensure_ascii=False)}"
                     ),
                 ),
                 ChatMessage(
@@ -65,7 +69,7 @@ class EmailInterpretationAgent:
                     content=f"Normalized input JSON:\n{input_json}",
                 ),
             ],
-            response_schema=EmailInterpretation.model_json_schema(),
+            response_schema=schema,
             max_output_tokens=1600,
         )
         try:
@@ -89,6 +93,7 @@ class EmailInterpretationAgent:
             interpretation = EmailInterpretation.model_validate_json(
                 result.completion.content
             )
+            interpretation = interpretation.anchor_evidence_against(value.payload)
             interpretation.validate_evidence_against(value.payload)
             return interpretation
         except ValidationError:

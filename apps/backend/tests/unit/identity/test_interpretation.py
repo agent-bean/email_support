@@ -167,6 +167,40 @@ def test_interpretation_requires_source_spans_for_needs_and_company_candidates()
         )
 
 
+def test_interpretation_reanchors_wrong_offsets_only_for_unique_exact_quotes() -> None:
+    content = "Please prepare for a discussion about Microsoft."
+    correct_start = content.index("Microsoft")
+    payload = _input().payload
+    interpretation = EmailInterpretation(
+        relevance=EmailRelevance.RELEVANT,
+        company_candidates=[
+            CompanyCandidate(
+                name="Microsoft",
+                evidence=[
+                    EvidenceSpan(
+                        field=InputField.EMAIL_BODY,
+                        start=correct_start + 1,
+                        end=correct_start + 10,
+                        quote="Microsoft",
+                    )
+                ],
+            )
+        ],
+        contact_candidates=[],
+        stated_needs=[],
+        ambiguity_reasons=[],
+        unknowns=[],
+    )
+
+    anchored = interpretation.anchor_evidence_against(payload)
+    anchored.validate_evidence_against(payload)
+    assert anchored.company_candidates[0].evidence[0].start == correct_start
+
+    repeated = _input(body="Microsoft met Microsoft.").payload
+    with pytest.raises(ValueError, match="not unique"):
+        interpretation.anchor_evidence_against(repeated)
+
+
 @pytest.mark.asyncio
 async def test_email_interpreter_uses_strict_output_without_any_tools() -> None:
     requested: list[dict[str, object]] = []
@@ -176,6 +210,10 @@ async def test_email_interpreter_uses_strict_output_without_any_tools() -> None:
         requested.append(payload)
         response_schema = payload["response_format"]["json_schema"]["schema"]
         assert response_schema["additionalProperties"] is False
+        assert (
+            json.dumps(response_schema, ensure_ascii=False)
+            in payload["messages"][0]["content"]
+        )
         assert "tools" not in payload
         assert "PRIVATE-EMAIL-CONTENT" in payload["messages"][1]["content"]
         return httpx2.Response(

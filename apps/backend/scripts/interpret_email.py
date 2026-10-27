@@ -15,7 +15,10 @@ import httpx2
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from email_support.agents.email_interpretation import EmailInterpretationAgent
+from email_support.agents.email_interpretation import (
+    PROMPT_VERSION,
+    EmailInterpretationAgent,
+)
 from email_support.integrations.llm_gateway import GatewayClient
 from email_support.models.email_interpretation import (
     CompanyCorrectionRequest,
@@ -79,7 +82,11 @@ async def _interpret(input_path: Path, output_path: Path) -> None:
     sessions: async_sessionmaker[AsyncSession] = create_session_factory(engine)
     run_id = uuid4()
     try:
-        async with httpx2.AsyncClient() as client:
+        async with httpx2.AsyncClient(
+            timeout=httpx2.Timeout(settings.request_timeout_seconds),
+            follow_redirects=False,
+            trust_env=False,
+        ) as client:
             gateway = GatewayClient(settings, client)
             executor = ToolExecutor(
                 [],
@@ -102,7 +109,8 @@ async def _interpret(input_path: Path, output_path: Path) -> None:
             {
                 "input_id": str(persisted.id),
                 "run_id": str(run_id),
-                "prompt_version": "email-interpretation-v1",
+                "prompt_version": PROMPT_VERSION,
+                "input": normalized.model_dump(mode="json"),
                 "interpretation": interpretation.model_dump(mode="json"),
                 "identity": identity.model_dump(mode="json"),
                 "provider_events": [

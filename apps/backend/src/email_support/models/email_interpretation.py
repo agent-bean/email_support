@@ -191,6 +191,26 @@ class EvidenceSpan(PersistenceContract):
             raise ValueError("evidence span does not match input")
         return matched
 
+    def anchored_against(self, payload: NormalizedEmailInput) -> EvidenceSpan:
+        """Derive offsets from a unique exact quote in its declared input field."""
+        try:
+            self.validate_against(payload)
+            return self
+        except ValueError:
+            source = _input_text(payload, self.field)
+            if source is None:
+                raise ValueError(
+                    "evidence field is absent from the normalized input"
+                ) from None
+            start = source.find(self.quote)
+            if start < 0 or source.find(self.quote, start + 1) >= 0:
+                raise ValueError(
+                    "evidence quote is not unique in the normalized input"
+                ) from None
+            return self.model_copy(
+                update={"start": start, "end": start + len(self.quote)}
+            )
+
 
 class CompanyCandidate(PersistenceContract):
     name: NonBlankText = Field(max_length=200)
@@ -235,6 +255,45 @@ class EmailInterpretation(PersistenceContract):
         spans.extend(span for need in self.stated_needs for span in need.evidence)
         for span in spans:
             span.validate_against(payload)
+
+    def anchor_evidence_against(self, payload: NormalizedEmailInput) -> Self:
+        """Correct model offset mistakes only when the exact quote is unique."""
+        return self.model_copy(
+            update={
+                "company_candidates": [
+                    candidate.model_copy(
+                        update={
+                            "evidence": [
+                                span.anchored_against(payload)
+                                for span in candidate.evidence
+                            ]
+                        }
+                    )
+                    for candidate in self.company_candidates
+                ],
+                "contact_candidates": [
+                    candidate.model_copy(
+                        update={
+                            "evidence": [
+                                span.anchored_against(payload)
+                                for span in candidate.evidence
+                            ]
+                        }
+                    )
+                    for candidate in self.contact_candidates
+                ],
+                "stated_needs": [
+                    need.model_copy(
+                        update={
+                            "evidence": [
+                                span.anchored_against(payload) for span in need.evidence
+                            ]
+                        }
+                    )
+                    for need in self.stated_needs
+                ],
+            }
+        )
 
 
 def _input_text(payload: NormalizedEmailInput, field: InputField) -> str | None:
