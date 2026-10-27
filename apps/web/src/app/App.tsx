@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchHealth } from '../shared/api/health';
-import { AccessPanel } from '../features/access/AccessPanel';
+import { OwnerAuthPanel } from '../features/owner-auth/OwnerAuthPanel';
 import { GoogleConnectionPanel } from '../features/google-connection/GoogleConnectionPanel';
 
 export function App() {
@@ -13,7 +13,7 @@ export function App() {
   return (
     <main>
       <h1>Email Support</h1>
-      <AccessPanel
+      <OwnerAuthPanel
         ownerContent={(csrfToken) => (
           <GoogleConnectionPanel csrfToken={csrfToken} />
         )}

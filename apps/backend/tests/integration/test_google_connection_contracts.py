@@ -10,7 +10,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from email_support.api import google_connection as google_api
-from email_support.api.access import AccessRuntime, protected_session
+from email_support.api.owner_auth import OwnerAuthRuntime, protected_session
 from email_support.config import AuthSettings
 from email_support.integrations.google_oidc import GoogleAuthorization
 from email_support.models.google_connection import (
@@ -34,7 +34,7 @@ def client(monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClient]:
         callback_uri="http://localhost:8000/api/auth/google/callback",
         web_origin=WEB_ORIGIN,
     )
-    access = AccessRuntime(
+    owner_auth = OwnerAuthRuntime(
         settings,
         cast(async_sessionmaker[AsyncSession], object()),
         None,
@@ -46,7 +46,7 @@ def client(monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClient]:
         datetime.now(UTC) + timedelta(hours=1),
         CSRF,
     )
-    monkeypatch.setattr(google_api, "runtime", lambda _: access)
+    monkeypatch.setattr(google_api, "require_owner_auth_runtime", lambda _: owner_auth)
     with TestClient(app) as test_client:
         test_client.cookies.set("owner_browser", "browser-secret")
         test_client.cookies.set("owner_session", "session-secret")
