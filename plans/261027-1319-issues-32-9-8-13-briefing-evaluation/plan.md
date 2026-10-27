@@ -38,7 +38,7 @@ Phase files own executable steps, repo-relative file inventories, RED/GREEN scen
 
 ## Acceptance
 
-- [ ] #32: validated runnable corpus/runner represents all ten scenarios, verifies source provenance, separates candidate/golden/unsupported statuses, and passes its evaluator oracle self-check.
+- [x] #32: validated runnable corpus/runner represents all ten scenarios, verifies source provenance, separates candidate/golden/unsupported statuses, and passes its evaluator oracle self-check.
 - [ ] #9: typed read-only tools enforce permissions, budgets and public-only query/source provenance; fetch fails closed unless the actual connection is vetted; genuine smoke records gateway/tools/schema/usage and search/embedding capabilities.
 - [ ] #8: typed interpretation separates relevance/needs/candidates; repeated identities stay stable, ambiguity never silently merges, and durable owner corrections control future lookups.
 - [ ] #13: the shared production graph persists one sealed version and pending review per run; restart, concurrent ownership and revoked-knowledge recovery/binding ordering are proven; private synthesis context stays outside web research; reviewed applicable live cases record support and human usefulness.
