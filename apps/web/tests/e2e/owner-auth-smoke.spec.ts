@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-test('shows the access surface without hiding public health', async ({
+test('shows the owner auth surface without hiding public health', async ({
   page,
 }) => {
   await page.goto('/');

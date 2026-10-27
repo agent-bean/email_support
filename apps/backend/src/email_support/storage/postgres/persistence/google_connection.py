@@ -7,13 +7,13 @@ from sqlalchemy import delete, func, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from email_support.storage.postgres.persistence.tables.access import (
-    OAuthAttemptRow,
-    OwnerSessionRow,
-)
 from email_support.storage.postgres.persistence.tables.core import ProviderAccountRow
 from email_support.storage.postgres.persistence.tables.google_connection import (
     GoogleConnectionRow,
+)
+from email_support.storage.postgres.persistence.tables.owner_auth import (
+    OAuthAttemptRow,
+    OwnerSessionRow,
 )
 
 

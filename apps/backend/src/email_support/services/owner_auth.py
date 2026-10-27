@@ -15,7 +15,7 @@ from email_support.integrations.google_oidc import (
     GoogleIdentity,
     create_authorization,
 )
-from email_support.storage.postgres.persistence.access import (
+from email_support.storage.postgres.persistence.owner_auth import (
     consume_attempt,
     create_attempt,
     create_owner_session,
@@ -24,7 +24,7 @@ from email_support.storage.postgres.persistence.access import (
     remove_expired_attempts,
     remove_expired_sessions,
 )
-from email_support.storage.postgres.persistence.tables.access import OAuthAttemptRow
+from email_support.storage.postgres.persistence.tables.owner_auth import OAuthAttemptRow
 
 ATTEMPT_TTL = timedelta(minutes=10)
 SESSION_TTL = timedelta(hours=12)

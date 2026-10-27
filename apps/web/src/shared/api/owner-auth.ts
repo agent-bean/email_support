@@ -1,13 +1,13 @@
 import {
-  getAccessPreauth,
+  getOwnerAuthPreauth,
   getOwnerSession,
   logoutOwner,
   startGoogleLogin,
-  type AccessErrorCode,
+  type OwnerAuthErrorCode,
   type OwnerSession,
 } from '@api-generated';
 import {
-  zAccessError,
+  zOwnerAuthError,
   zOwnerSession,
   zPreauthResponse,
   zLoginResponse,
@@ -18,18 +18,20 @@ const REQUEST_DEADLINE_MS = 5_000;
 const strictOwnerSession = z.strictObject(zOwnerSession.shape);
 const strictPreauth = z.strictObject(zPreauthResponse.shape);
 const strictLogin = z.strictObject(zLoginResponse.shape);
-const strictAccessError = z.strictObject(zAccessError.shape);
+const strictOwnerAuthError = z.strictObject(zOwnerAuthError.shape);
 
-export class AccessApiError extends Error {
-  constructor(readonly code: AccessErrorCode | 'network_error') {
+export class OwnerAuthApiError extends Error {
+  constructor(readonly code: OwnerAuthErrorCode | 'network_error') {
     super(code);
-    this.name = 'AccessApiError';
+    this.name = 'OwnerAuthApiError';
   }
 }
 
-export function isAccessApiError(value: unknown): value is AccessApiError {
+export function isOwnerAuthApiError(
+  value: unknown,
+): value is OwnerAuthApiError {
   return (
-    value instanceof AccessApiError ||
+    value instanceof OwnerAuthApiError ||
     (typeof value === 'object' &&
       value !== null &&
       'code' in value &&
@@ -55,7 +57,10 @@ async function withRequest<T>(
   const timeout = window.setTimeout(
     () =>
       controller.abort(
-        new DOMException('Access request timed out.', 'TimeoutError'),
+        new DOMException(
+          'Owner authentication request timed out.',
+          'TimeoutError',
+        ),
       ),
     REQUEST_DEADLINE_MS,
   );
@@ -66,10 +71,10 @@ async function withRequest<T>(
       typeof error === 'object' && error !== null && 'detail' in error
         ? (error as { detail?: unknown }).detail
         : undefined;
-    const parsed = strictAccessError.safeParse(detail);
-    if (parsed.success) throw new AccessApiError(parsed.data.code);
+    const parsed = strictOwnerAuthError.safeParse(detail);
+    if (parsed.success) throw new OwnerAuthApiError(parsed.data.code);
     if (controller.signal.aborted) throw controller.signal.reason ?? error;
-    throw new AccessApiError('network_error');
+    throw new OwnerAuthApiError('network_error');
   } finally {
     window.clearTimeout(timeout);
     signal.removeEventListener('abort', forwardAbort);
@@ -91,7 +96,7 @@ export function fetchOwnerSession(signal: AbortSignal): Promise<OwnerSession> {
 
 export function beginOwnerLogin(signal: AbortSignal): Promise<string> {
   return withRequest(signal, async (requestSignal) => {
-    const preauth = await getAccessPreauth({
+    const preauth = await getOwnerAuthPreauth({
       baseUrl: window.location.origin,
       credentials: 'same-origin',
       signal: requestSignal,
@@ -126,7 +131,7 @@ export function beginOwnerLogin(signal: AbortSignal): Promise<string> {
   });
 }
 
-export function clearOwnerAccessMemory(): void {
+export function clearOwnerAuthMemory(): void {
   preauthCsrf = undefined;
 }
 
@@ -138,7 +143,7 @@ export function logoutOwnerSession(
   csrfToken: string,
   signal: AbortSignal,
 ): Promise<void> {
-  clearOwnerAccessMemory();
+  clearOwnerAuthMemory();
   return withRequest(signal, async (requestSignal) => {
     await logoutOwner({
       baseUrl: window.location.origin,

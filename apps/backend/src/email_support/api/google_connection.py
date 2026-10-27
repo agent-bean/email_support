@@ -8,11 +8,11 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response
 from fastapi.responses import RedirectResponse
 from pydantic import HttpUrl, TypeAdapter
 
-from email_support.api.access import (
-    AccessRuntime,
+from email_support.api.owner_auth import (
+    OwnerAuthRuntime,
     cookie_names,
     protected_session,
-    runtime,
+    require_owner_auth_runtime,
 )
 from email_support.config import AuthSettings
 from email_support.integrations.google_oidc import exchange_connection_code
@@ -38,23 +38,23 @@ router = APIRouter(prefix="/api/google/connection", tags=["google-connection"])
 HTTP_URL_ADAPTER: TypeAdapter[HttpUrl] = TypeAdapter(HttpUrl)
 
 
-def _session_token(request: Request, access: AccessRuntime) -> str | None:
-    assert access.settings is not None
-    _, name = cookie_names(access.settings)
+def _session_token(request: Request, owner_auth: OwnerAuthRuntime) -> str | None:
+    assert owner_auth.settings is not None
+    _, name = cookie_names(owner_auth.settings)
     return request.cookies.get(name)
 
 
-def _browser_cookie(request: Request, access: AccessRuntime) -> str | None:
-    assert access.settings is not None
-    name, _ = cookie_names(access.settings)
+def _browser_cookie(request: Request, owner_auth: OwnerAuthRuntime) -> str | None:
+    assert owner_auth.settings is not None
+    name, _ = cookie_names(owner_auth.settings)
     return request.cookies.get(name)
 
 
 def _require_configured_owner(
-    access: AccessRuntime, identity: tuple[str, datetime, str]
+    owner_auth: OwnerAuthRuntime, identity: tuple[str, datetime, str]
 ) -> None:
-    assert access.settings is not None
-    if identity[0] != access.settings.owner_sub:
+    assert owner_auth.settings is not None
+    if identity[0] != owner_auth.settings.owner_sub:
         raise HTTPException(
             status_code=401,
             detail={"code": "auth_required", "message": "Sign in to continue."},
@@ -63,12 +63,12 @@ def _require_configured_owner(
 
 def _require_origin_and_csrf(
     request: Request,
-    access: AccessRuntime,
+    owner_auth: OwnerAuthRuntime,
     identity: tuple[str, datetime, str],
     csrf_token: str | None,
 ) -> None:
-    assert access.settings is not None
-    if request.headers.get("origin") != access.settings.web_origin:
+    assert owner_auth.settings is not None
+    if request.headers.get("origin") != owner_auth.settings.web_origin:
         raise HTTPException(
             status_code=403,
             detail=GoogleConnectionErrorResponse(
@@ -139,13 +139,13 @@ async def get_connection(
     response: Response,
     identity: tuple[str, datetime, str] = Depends(protected_session),
 ) -> GoogleConnectionResponse:
-    access = runtime(request)
-    assert access.settings is not None and access.sessions is not None
-    _require_configured_owner(access, identity)
+    owner_auth = require_owner_auth_runtime(request)
+    assert owner_auth.settings is not None and owner_auth.sessions is not None
+    _require_configured_owner(owner_auth, identity)
     response.headers["Cache-Control"] = "no-store"
     try:
         return await get_google_connection_status(
-            access.sessions, owner_sub=identity[0], settings=access.settings
+            owner_auth.sessions, owner_sub=identity[0], settings=owner_auth.settings
         )
     except Exception:
         raise HTTPException(
@@ -169,17 +169,17 @@ async def consent(
     identity: tuple[str, datetime, str] = Depends(protected_session),
     csrf_token: str | None = Header(default=None, alias="X-CSRF-Token"),
 ) -> GoogleConsentResponse:
-    access = runtime(request)
-    assert access.settings is not None and access.sessions is not None
-    _require_origin_and_csrf(request, access, identity, csrf_token)
-    session_token = _session_token(request, access)
-    browser_cookie = _browser_cookie(request, access)
+    owner_auth = require_owner_auth_runtime(request)
+    assert owner_auth.settings is not None and owner_auth.sessions is not None
+    _require_origin_and_csrf(request, owner_auth, identity, csrf_token)
+    session_token = _session_token(request, owner_auth)
+    browser_cookie = _browser_cookie(request, owner_auth)
     if not session_token or not browser_cookie:
         _raise_failure(GoogleConnectionFailure("session_expired"))
     try:
         authorization = await begin_google_consent(
-            access.settings,
-            access.sessions,
+            owner_auth.settings,
+            owner_auth.sessions,
             owner_sub=identity[0],
             owner_session_token=session_token,
             browser_cookie=browser_cookie,
@@ -203,54 +203,54 @@ async def callback(
     state: str | None = None,
     error: str | None = None,
 ) -> RedirectResponse:
-    access = runtime(request)
-    assert access.settings is not None and access.sessions is not None
-    session_token = _session_token(request, access)
-    browser_cookie = _browser_cookie(request, access)
+    owner_auth = require_owner_auth_runtime(request)
+    assert owner_auth.settings is not None and owner_auth.sessions is not None
+    session_token = _session_token(request, owner_auth)
+    browser_cookie = _browser_cookie(request, owner_auth)
     if not session_token or not browser_cookie or not state or len(state) > 256:
-        return _connection_redirect(access.settings, "invalid_callback")
+        return _connection_redirect(owner_auth.settings, "invalid_callback")
     try:
         attempt = await consume_google_consent_attempt(
-            access.sessions,
-            settings=access.settings,
+            owner_auth.sessions,
+            settings=owner_auth.settings,
             state=state,
             browser_cookie=browser_cookie,
             owner_session_token=session_token,
         )
     except Exception:
-        return _connection_redirect(access.settings, "unavailable")
+        return _connection_redirect(owner_auth.settings, "unavailable")
     if attempt is None:
-        return _connection_redirect(access.settings, "invalid_callback")
+        return _connection_redirect(owner_auth.settings, "invalid_callback")
     if error:
         await record_google_consent_failure(
-            access.sessions,
-            settings=access.settings,
+            owner_auth.sessions,
+            settings=owner_auth.settings,
             attempt=attempt,
             code=GoogleConnectionErrorCode.CONSENT_DENIED,
             owner_session_token=session_token,
         )
-        return _connection_redirect(access.settings, "consent_denied")
+        return _connection_redirect(owner_auth.settings, "consent_denied")
     if not code or len(code) > 2048:
         await record_google_consent_failure(
-            access.sessions,
-            settings=access.settings,
+            owner_auth.sessions,
+            settings=owner_auth.settings,
             attempt=attempt,
             code=GoogleConnectionErrorCode.INVALID_CALLBACK,
             owner_session_token=session_token,
         )
-        return _connection_redirect(access.settings, "invalid_callback")
+        return _connection_redirect(owner_auth.settings, "invalid_callback")
     try:
         grant = await exchange_connection_code(
             code,
-            client_id=access.settings.google_client_id,
-            client_secret=access.settings.google_client_secret,
-            callback_uri=access.settings.google_connection_callback_uri,
+            client_id=owner_auth.settings.google_client_id,
+            client_secret=owner_auth.settings.google_client_secret,
+            callback_uri=owner_auth.settings.google_connection_callback_uri,
             code_verifier=attempt.code_verifier,
             expected_nonce=attempt.nonce,
         )
         result = await finish_google_consent(
-            access.sessions,
-            settings=access.settings,
+            owner_auth.sessions,
+            settings=owner_auth.settings,
             attempt=attempt,
             owner_session_token=session_token,
             identity=grant.identity,
@@ -259,31 +259,33 @@ async def callback(
         )
     except GoogleConnectionFailure as failure:
         await record_google_consent_failure(
-            access.sessions,
-            settings=access.settings,
+            owner_auth.sessions,
+            settings=owner_auth.settings,
             attempt=attempt,
             code=failure.code,
             owner_session_token=session_token,
         )
-        return _connection_redirect(access.settings, "unavailable")
+        return _connection_redirect(owner_auth.settings, "unavailable")
     except Exception:
         await record_google_consent_failure(
-            access.sessions,
-            settings=access.settings,
+            owner_auth.sessions,
+            settings=owner_auth.settings,
             attempt=attempt,
             code=GoogleConnectionErrorCode.PROVIDER_UNAVAILABLE,
             owner_session_token=session_token,
         )
-        return _connection_redirect(access.settings, "unavailable")
+        return _connection_redirect(owner_auth.settings, "unavailable")
     if result is None:
-        return _connection_redirect(access.settings, "session_expired")
+        return _connection_redirect(owner_auth.settings, "session_expired")
     status = await get_google_connection_status(
-        access.sessions, owner_sub=access.settings.owner_sub, settings=access.settings
+        owner_auth.sessions,
+        owner_sub=owner_auth.settings.owner_sub,
+        settings=owner_auth.settings,
     )
     if status.error is GoogleConnectionErrorCode.IDENTITY_MISMATCH:
-        return _connection_redirect(access.settings, "identity_mismatch")
+        return _connection_redirect(owner_auth.settings, "identity_mismatch")
     return _connection_redirect(
-        access.settings,
+        owner_auth.settings,
         "connected" if result.value == "connected" else "reconnect_required",
     )
 
@@ -300,16 +302,16 @@ async def disconnect(
     identity: tuple[str, datetime, str] = Depends(protected_session),
     csrf_token: str | None = Header(default=None, alias="X-CSRF-Token"),
 ) -> GoogleDisconnectResponse:
-    access = runtime(request)
-    assert access.settings is not None and access.sessions is not None
-    _require_origin_and_csrf(request, access, identity, csrf_token)
-    session_token = _session_token(request, access)
+    owner_auth = require_owner_auth_runtime(request)
+    assert owner_auth.settings is not None and owner_auth.sessions is not None
+    _require_origin_and_csrf(request, owner_auth, identity, csrf_token)
+    session_token = _session_token(request, owner_auth)
     if not session_token:
         _raise_failure(GoogleConnectionFailure("session_expired"))
     try:
         result = await disconnect_google_connection(
-            access.sessions,
-            settings=access.settings,
+            owner_auth.sessions,
+            settings=owner_auth.settings,
             owner_session_token=session_token,
             workspace=GoogleWorkspaceClient(),
         )

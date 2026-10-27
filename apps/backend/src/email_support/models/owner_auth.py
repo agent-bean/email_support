@@ -1,4 +1,4 @@
-"""Typed public access contracts and errors."""
+"""Typed owner authentication contracts and errors."""
 
 from datetime import datetime
 from enum import StrEnum
@@ -6,7 +6,7 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 
 
-class AccessErrorCode(StrEnum):
+class OwnerAuthErrorCode(StrEnum):
     AUTH_UNAVAILABLE = "auth_unavailable"
     AUTH_REQUIRED = "auth_required"
     CSRF_REJECTED = "csrf_rejected"
@@ -14,9 +14,9 @@ class AccessErrorCode(StrEnum):
     LOGIN_RESTART = "login_restart"
 
 
-class AccessError(BaseModel):
+class OwnerAuthError(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    code: AccessErrorCode
+    code: OwnerAuthErrorCode
     message: str
 
 

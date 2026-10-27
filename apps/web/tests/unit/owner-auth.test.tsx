@@ -9,17 +9,17 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../../src/app/App';
 
-vi.mock('../../src/shared/api/access', () => ({
-  isAccessApiError: (value: unknown) =>
+vi.mock('../../src/shared/api/owner-auth', () => ({
+  isOwnerAuthApiError: (value: unknown) =>
     typeof value === 'object' && value !== null && 'code' in value,
   fetchOwnerSession: vi.fn(),
   beginOwnerLogin: vi.fn(),
   logoutOwnerSession: vi.fn(),
-  clearOwnerAccessMemory: vi.fn(),
+  clearOwnerAuthMemory: vi.fn(),
   navigateToAuthorization: vi.fn(),
 }));
 
-import { fetchOwnerSession } from '../../src/shared/api/access';
+import { fetchOwnerSession } from '../../src/shared/api/owner-auth';
 
 function installHealthyApi() {
   vi.stubGlobal(
@@ -50,7 +50,7 @@ afterEach(() => {
   window.history.replaceState({}, '', '/');
 });
 
-describe('access panel', () => {
+describe('owner auth panel', () => {
   it('keeps the health panel while session state loads', async () => {
     installHealthyApi();
     let rejectSession: ((reason: Error) => void) | undefined;
@@ -136,7 +136,7 @@ describe('access panel', () => {
     vi.mocked(fetchOwnerSession).mockRejectedValue(
       Object.assign(new Error('required'), { code: 'auth_required' }),
     );
-    const { beginOwnerLogin } = await import('../../src/shared/api/access');
+    const { beginOwnerLogin } = await import('../../src/shared/api/owner-auth');
     vi.mocked(beginOwnerLogin).mockResolvedValue(
       'https://accounts.google.com/o/oauth2/auth',
     );
@@ -148,7 +148,7 @@ describe('access panel', () => {
       expect(beginOwnerLogin).toHaveBeenCalledWith(expect.any(AbortSignal)),
     );
     const { navigateToAuthorization } =
-      await import('../../src/shared/api/access');
+      await import('../../src/shared/api/owner-auth');
     await waitFor(() =>
       expect(navigateToAuthorization).toHaveBeenCalledWith(
         'https://accounts.google.com/o/oauth2/auth',
@@ -167,7 +167,8 @@ describe('access panel', () => {
       .mockRejectedValueOnce(
         Object.assign(new Error('signed out'), { code: 'auth_required' }),
       );
-    const { logoutOwnerSession } = await import('../../src/shared/api/access');
+    const { logoutOwnerSession } =
+      await import('../../src/shared/api/owner-auth');
     vi.mocked(logoutOwnerSession).mockResolvedValue(undefined);
     renderApp();
     fireEvent.click(await screen.findByRole('button', { name: 'Sign out' }));

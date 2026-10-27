@@ -3,25 +3,6 @@
 import * as z from 'zod';
 
 /**
- * AccessErrorCode
- */
-export const zAccessErrorCode = z.enum([
-    'auth_unavailable',
-    'auth_required',
-    'csrf_rejected',
-    'login_rejected',
-    'login_restart'
-]);
-
-/**
- * AccessError
- */
-export const zAccessError = z.object({
-    code: zAccessErrorCode,
-    message: z.string()
-});
-
-/**
  * GoogleConnectionErrorCode
  */
 export const zGoogleConnectionErrorCode = z.enum([
@@ -79,6 +60,25 @@ export const zLoginRequest = z.record(z.string(), z.never());
  */
 export const zLoginResponse = z.object({
     authorization_url: z.url().min(1).max(2083)
+});
+
+/**
+ * OwnerAuthErrorCode
+ */
+export const zOwnerAuthErrorCode = z.enum([
+    'auth_unavailable',
+    'auth_required',
+    'csrf_rejected',
+    'login_rejected',
+    'login_restart'
+]);
+
+/**
+ * OwnerAuthError
+ */
+export const zOwnerAuthError = z.object({
+    code: zOwnerAuthErrorCode,
+    message: z.string()
 });
 
 /**
@@ -171,7 +171,7 @@ export const zLogoutOwnerResponse = z.void();
 /**
  * Successful Response
  */
-export const zGetAccessPreauthResponse = zPreauthResponse;
+export const zGetOwnerAuthPreauthResponse = zPreauthResponse;
 
 /**
  * Successful Response
