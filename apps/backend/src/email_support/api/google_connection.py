@@ -1,6 +1,7 @@
 """Owner-only endpoints for separate Google Workspace consent and disconnect."""
 
 import hmac
+import secrets
 from datetime import datetime
 from typing import NoReturn
 
@@ -13,6 +14,7 @@ from email_support.api.auth import (
     cookie_names,
     protected_session,
     require_auth_runtime,
+    set_cookie,
 )
 from email_support.config import AuthSettings
 from email_support.integrations.google_oidc import exchange_connection_code
@@ -173,9 +175,9 @@ async def consent(
     assert auth.settings is not None and auth.sessions is not None
     _require_origin_and_csrf(request, auth, identity, csrf_token)
     session_token = _session_token(request, auth)
-    browser_cookie = _browser_cookie(request, auth)
-    if not session_token or not browser_cookie:
+    if not session_token:
         _raise_failure(GoogleConnectionFailure("session_expired"))
+    browser_cookie = _browser_cookie(request, auth) or secrets.token_urlsafe(32)
     try:
         authorization = await begin_google_consent(
             auth.settings,
@@ -186,6 +188,14 @@ async def consent(
         )
     except GoogleConnectionFailure as failure:
         _raise_failure(failure)
+    browser_name, _ = cookie_names(auth.settings)
+    set_cookie(
+        response,
+        name=browser_name,
+        value=browser_cookie,
+        secure=auth.settings.secure_cookie,
+        max_age=600,
+    )
     response.headers["Cache-Control"] = "no-store"
     return GoogleConsentResponse(
         authorization_url=HTTP_URL_ADAPTER.validate_python(authorization.url)
