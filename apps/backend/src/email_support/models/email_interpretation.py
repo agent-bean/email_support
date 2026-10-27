@@ -171,6 +171,12 @@ class EmailRelevance(StrEnum):
     UNCERTAIN = "uncertain"
 
 
+class FollowUpIntent(StrEnum):
+    REPLY = "reply"
+    NONE = "none"
+    UNCERTAIN = "uncertain"
+
+
 class EvidenceSpan(PersistenceContract):
     field: InputField
     start: int = Field(ge=0)
@@ -234,6 +240,7 @@ class StatedNeed(PersistenceContract):
 
 class EmailInterpretation(PersistenceContract):
     relevance: EmailRelevance
+    follow_up_intent: FollowUpIntent | None = None
     company_candidates: list[CompanyCandidate] = Field(max_length=10)
     contact_candidates: list[ContactCandidate] = Field(max_length=10)
     stated_needs: list[StatedNeed] = Field(max_length=20)

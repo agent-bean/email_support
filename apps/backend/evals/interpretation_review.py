@@ -12,6 +12,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from email_support.models.email_interpretation import (
     EmailInterpretation,
+    FollowUpIntent,
     InputOriginKind,
     MeetingState,
     NormalizedInputCreate,
@@ -34,6 +35,8 @@ class PairRubric(BaseModel):
     unknowns_and_forbidden: str = Field(min_length=1)
     cases: dict[str, CaseBinding]
     relevance_review: str | None = None
+    expected_follow_up: FollowUpIntent | None = None
+    follow_up_guidance: str | None = None
 
 
 class Rubric(BaseModel):
@@ -180,6 +183,28 @@ def build_review(
                         f"Expected '{expected_relevance}'; observed '{observed}'."
                     ),
                 }
+            follow_up_observed = output.get("follow_up_intent") if output else None
+            if pair.expected_follow_up is None:
+                follow_up_check = {
+                    "status": "not_evaluated",
+                    "reason": "No follow-up expectation.",
+                }
+            elif follow_up_observed is None:
+                follow_up_check = {
+                    "status": "not_evaluated",
+                    "reason": "No valid follow-up output.",
+                }
+            else:
+                expected_follow_up = pair.expected_follow_up.value
+                follow_up_check = {
+                    "status": "pass"
+                    if follow_up_observed == expected_follow_up
+                    else "fail",
+                    "reason": (
+                        f"Expected '{expected_follow_up}'; "
+                        f"observed '{follow_up_observed}'."
+                    ),
+                }
             content = {}
             if include_content:
                 content = {
@@ -201,6 +226,11 @@ def build_review(
                 {
                     **content,
                     "relevance_check": check,
+                    "follow_up_check": follow_up_check,
+                    "expected_follow_up": pair.expected_follow_up.value
+                    if pair.expected_follow_up
+                    else None,
+                    "follow_up_guidance": pair.follow_up_guidance,
                     "unsupported_checks": [
                         item.model_dump(mode="json") for item in case.unsupported_checks
                     ],

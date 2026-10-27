@@ -7,6 +7,7 @@ from typing import Any
 
 import pytest
 
+from email_support.models.email_interpretation import FollowUpIntent
 from evals.interpretation_review import build_review, load_rubric, main
 from evals.runner import EvaluationInputError, load_dataset
 from scripts.evaluate_interpretation import select_cases
@@ -111,6 +112,29 @@ def test_valid_capture_requires_bound_input_and_validated_output() -> None:
     mismatch = build_review(dataset, rubric, [record])["cases"][0]["relevance_check"]
     assert mismatch["status"] == "fail" and "uncertain" in mismatch["reason"]
     record["output"]["relevance"] = "relevant"
+    follow_up_rubric = rubric.model_copy(
+        update={
+            "pairs": [
+                rubric.pairs[0].model_copy(
+                    update={"expected_follow_up": FollowUpIntent.REPLY}
+                )
+            ]
+        }
+    )
+    record["output"]["follow_up_intent"] = "reply"
+    assert (
+        build_review(dataset, follow_up_rubric, [record])["cases"][0][
+            "follow_up_check"
+        ]["status"]
+        == "pass"
+    )
+    record["output"]["follow_up_intent"] = "none"
+    assert (
+        build_review(dataset, follow_up_rubric, [record])["cases"][0][
+            "follow_up_check"
+        ]["status"]
+        == "fail"
+    )
     vietnamese = dataset.cases[1]
     vi_record = deepcopy(record)
     vi_record["case_id"] = vietnamese.id
@@ -173,3 +197,18 @@ def test_v3_distinguishes_profile_sharing_from_explicit_briefing() -> None:
     for case_id in before:
         if not case_id.startswith("viettel-solutions-"):
             assert before[case_id].content_hash() == after[case_id].content_hash()
+
+
+def test_v5_follow_up_expectations_include_positive_and_negative_pairs() -> None:
+    path = ROOT.parent / "customer-examples-v5"
+    dataset = load_dataset(path)
+    rubric = load_rubric(path / "interpretation-rubric.json", dataset)
+    pairs = {pair.id: pair for pair in rubric.pairs}
+    assert len(dataset.cases) == 24
+    assert pairs["viettel-solutions"].expected_follow_up == FollowUpIntent.REPLY
+    assert pairs["request-our-profile"].expected_follow_up == FollowUpIntent.REPLY
+    assert pairs["past-meeting-thanks"].expected_follow_up == FollowUpIntent.NONE
+    assert pairs["store-promotion"].expected_follow_up == FollowUpIntent.NONE
+    assert pairs["meeting-agreed"].follow_up_guidance is not None
+    assert "independently" in pairs["meeting-agreed"].follow_up_guidance
+    assert (path / "synthetic-our-capability-profile.txt").is_file()

@@ -16,6 +16,7 @@ from email_support.models.email_interpretation import (
     EmailInterpretation,
     EmailRelevance,
     EvidenceSpan,
+    FollowUpIntent,
     InputField,
     InputOriginKind,
     NormalizedEmailInput,
@@ -356,3 +357,20 @@ async def test_interpreter_rejects_oversized_input_before_provider_call() -> Non
             await agent.interpret(_input(body="x" * 60_000), run_id=uuid4())
     assert error.value.category is ProviderErrorCategory.INVALID_REQUEST
     assert budget.calls_used == 0
+
+
+def test_follow_up_intent_is_separate_from_meeting_relevance() -> None:
+    interpretation = EmailInterpretation(
+        relevance=EmailRelevance.UNCERTAIN,
+        follow_up_intent=FollowUpIntent.REPLY,
+        company_candidates=[],
+        contact_candidates=[],
+        stated_needs=[],
+        ambiguity_reasons=[],
+        unknowns=[],
+    )
+    assert interpretation.relevance is EmailRelevance.UNCERTAIN
+    assert interpretation.follow_up_intent is FollowUpIntent.REPLY
+    old = interpretation.model_dump()
+    old.pop("follow_up_intent")
+    assert EmailInterpretation.model_validate(old).follow_up_intent is None

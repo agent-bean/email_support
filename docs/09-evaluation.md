@@ -47,6 +47,8 @@ The [`customer-examples-v3` corpus](../apps/backend/evals/datasets/customer-exam
 
 These customer corpora include a case-hash-bound `interpretation-rubric.json` covering each English/Vietnamese pair. It records candidate company mentions, needs, unknowns and forbidden inferences for review. The review aid checks exact company-name presence and compares relevance and need presence across pairs; these are diagnostics, not semantic correctness or approved golden labels. It validates captured inputs and evidence spans against the dataset, and marks every semantic assessment pending human review. The v3 labels reflect the stated inputs; they remain candidates awaiting owner review.
 
+The [`customer-examples-v5` corpus](../apps/backend/evals/datasets/customer-examples-v5/README.md) tests candidate follow-up intent independently of meeting-briefing relevance, including bilingual scenarios for our synthetic profile, a received profile, meeting discussions and negative controls. Sender claims about our consent do not establish our consent. Interpretation does not draft, attach, send or create calendar events; those outcomes remain untested.
+
 ## Measures and decisions
 
 Measure email relevance, company identity, retrieval relevance, factual support, meeting usefulness and task completion separately. Replay compares captured relevance and identity status/company/candidates against case expectations; a wrong identity fails independently of briefing claim quality. For each factual claim, identify supporting evidence or mark it unsupported; a valid URL alone does not establish support. Meeting usefulness includes stated needs, relevant history, meeting details and useful questions while distinguishing suggestions from facts.

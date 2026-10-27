@@ -1,0 +1,1054 @@
+{
+  "version": "customer-examples-v5",
+  "cases": [
+    {
+      "id": "fpt-software-en",
+      "scenario": "new_company",
+      "language": "en",
+      "status": "candidate",
+      "synthetic": true,
+      "clock": "2026-10-27T07:00:00Z",
+      "timezone": "Asia/Bangkok",
+      "email": {
+        "from_address": "customer-fpt-software@example.com",
+        "subject": "Exploring enterprise AI solutions",
+        "body": "We would like to learn about AI solutions for businesses.\n\nFPT Software\nWebsite: https://fptsoftware.com"
+      },
+      "meeting": null,
+      "expected_relevance": "relevant",
+      "expected_identity": "unresolved",
+      "expected_company": null,
+      "expected_identity_candidates": [],
+      "source_ids": [],
+      "expected_facts": [],
+      "forbidden_outcomes": [],
+      "checks": [
+        "relevance"
+      ],
+      "unsupported_checks": [
+        {
+          "name": "identity_resolution",
+          "reason": "The screenshot supplies no owner-confirmed contact-company mapping."
+        },
+        {
+          "name": "claim_reference_integrity",
+          "reason": "The production briefing workflow is not invoked by interpretation replay."
+        },
+        {
+          "name": "source_provenance",
+          "reason": "The website is a sender-supplied URL; no research source snapshot is supplied."
+        },
+        {
+          "name": "usefulness_review",
+          "reason": "No briefing is generated in interpretation replay."
+        },
+        {
+          "name": "workflow_events",
+          "reason": "The requested workflow or attachment data is not available in interpretation replay."
+        }
+      ]
+    },
+    {
+      "id": "fpt-software-vi",
+      "scenario": "new_company",
+      "language": "vi",
+      "status": "candidate",
+      "synthetic": true,
+      "clock": "2026-10-27T07:00:00Z",
+      "timezone": "Asia/Bangkok",
+      "email": {
+        "from_address": "customer-fpt-software@example.com",
+        "subject": "Tìm hiểu giải pháp AI cho doanh nghiệp",
+        "body": "Chúng tôi muốn tìm hiểu giải pháp AI cho doanh nghiệp.\n\nFPT Software\nWebsite: https://fptsoftware.com"
+      },
+      "meeting": null,
+      "expected_relevance": "relevant",
+      "expected_identity": "unresolved",
+      "expected_company": null,
+      "expected_identity_candidates": [],
+      "source_ids": [],
+      "expected_facts": [],
+      "forbidden_outcomes": [],
+      "checks": [
+        "relevance"
+      ],
+      "unsupported_checks": [
+        {
+          "name": "identity_resolution",
+          "reason": "The screenshot supplies no owner-confirmed contact-company mapping."
+        },
+        {
+          "name": "claim_reference_integrity",
+          "reason": "The production briefing workflow is not invoked by interpretation replay."
+        },
+        {
+          "name": "source_provenance",
+          "reason": "The website is a sender-supplied URL; no research source snapshot is supplied."
+        },
+        {
+          "name": "usefulness_review",
+          "reason": "No briefing is generated in interpretation replay."
+        },
+        {
+          "name": "workflow_events",
+          "reason": "The requested workflow or attachment data is not available in interpretation replay."
+        }
+      ]
+    },
+    {
+      "id": "vinamilk-en",
+      "scenario": "new_company",
+      "language": "en",
+      "status": "candidate",
+      "synthetic": true,
+      "clock": "2026-10-27T07:00:00Z",
+      "timezone": "Asia/Bangkok",
+      "email": {
+        "from_address": "customer-vinamilk@example.com",
+        "subject": "Discussing AI for document management",
+        "body": "We would like to discuss using AI for document management.\n\nVinamilk\nWebsite: https://www.vinamilk.com.vn"
+      },
+      "meeting": null,
+      "expected_relevance": "relevant",
+      "expected_identity": "unresolved",
+      "expected_company": null,
+      "expected_identity_candidates": [],
+      "source_ids": [],
+      "expected_facts": [],
+      "forbidden_outcomes": [],
+      "checks": [
+        "relevance"
+      ],
+      "unsupported_checks": [
+        {
+          "name": "identity_resolution",
+          "reason": "The screenshot supplies no owner-confirmed contact-company mapping."
+        },
+        {
+          "name": "claim_reference_integrity",
+          "reason": "The production briefing workflow is not invoked by interpretation replay."
+        },
+        {
+          "name": "source_provenance",
+          "reason": "The website is a sender-supplied URL; no research source snapshot is supplied."
+        },
+        {
+          "name": "usefulness_review",
+          "reason": "No briefing is generated in interpretation replay."
+        }
+      ]
+    },
+    {
+      "id": "vinamilk-vi",
+      "scenario": "new_company",
+      "language": "vi",
+      "status": "candidate",
+      "synthetic": true,
+      "clock": "2026-10-27T07:00:00Z",
+      "timezone": "Asia/Bangkok",
+      "email": {
+        "from_address": "customer-vinamilk@example.com",
+        "subject": "Trao đổi về AI trong quản lý tài liệu",
+        "body": "Mong muốn trao đổi về ứng dụng AI trong quản lý tài liệu.\n\nVinamilk\nWebsite: https://www.vinamilk.com.vn"
+      },
+      "meeting": null,
+      "expected_relevance": "relevant",
+      "expected_identity": "unresolved",
+      "expected_company": null,
+      "expected_identity_candidates": [],
+      "source_ids": [],
+      "expected_facts": [],
+      "forbidden_outcomes": [],
+      "checks": [
+        "relevance"
+      ],
+      "unsupported_checks": [
+        {
+          "name": "identity_resolution",
+          "reason": "The screenshot supplies no owner-confirmed contact-company mapping."
+        },
+        {
+          "name": "claim_reference_integrity",
+          "reason": "The production briefing workflow is not invoked by interpretation replay."
+        },
+        {
+          "name": "source_provenance",
+          "reason": "The website is a sender-supplied URL; no research source snapshot is supplied."
+        },
+        {
+          "name": "usefulness_review",
+          "reason": "No briefing is generated in interpretation replay."
+        }
+      ]
+    },
+    {
+      "id": "samsung-vietnam-en",
+      "scenario": "new_company",
+      "language": "en",
+      "status": "candidate",
+      "synthetic": true,
+      "clock": "2026-10-27T07:00:00Z",
+      "timezone": "Asia/Bangkok",
+      "email": {
+        "from_address": "customer-samsung-vietnam@example.com",
+        "subject": "Request for a solution introduction",
+        "body": "We would like to schedule an introductory session about the solution next week.\n\nSamsung Electronics Vietnam\nWebsite: https://www.samsung.com/vn"
+      },
+      "meeting": null,
+      "expected_relevance": "relevant",
+      "expected_identity": "unresolved",
+      "expected_company": null,
+      "expected_identity_candidates": [],
+      "source_ids": [],
+      "expected_facts": [],
+      "forbidden_outcomes": [],
+      "checks": [
+        "relevance"
+      ],
+      "unsupported_checks": [
+        {
+          "name": "identity_resolution",
+          "reason": "The screenshot supplies no owner-confirmed contact-company mapping."
+        },
+        {
+          "name": "claim_reference_integrity",
+          "reason": "The production briefing workflow is not invoked by interpretation replay."
+        },
+        {
+          "name": "source_provenance",
+          "reason": "The website is a sender-supplied URL; no research source snapshot is supplied."
+        },
+        {
+          "name": "usefulness_review",
+          "reason": "No briefing is generated in interpretation replay."
+        },
+        {
+          "name": "workflow_events",
+          "reason": "The requested workflow or attachment data is not available in interpretation replay."
+        }
+      ]
+    },
+    {
+      "id": "samsung-vietnam-vi",
+      "scenario": "new_company",
+      "language": "vi",
+      "status": "candidate",
+      "synthetic": true,
+      "clock": "2026-10-27T07:00:00Z",
+      "timezone": "Asia/Bangkok",
+      "email": {
+        "from_address": "customer-samsung-vietnam@example.com",
+        "subject": "Hẹn buổi giới thiệu giải pháp",
+        "body": "Xin hẹn buổi giới thiệu giải pháp vào tuần tới.\n\nSamsung Electronics Vietnam\nWebsite: https://www.samsung.com/vn"
+      },
+      "meeting": null,
+      "expected_relevance": "relevant",
+      "expected_identity": "unresolved",
+      "expected_company": null,
+      "expected_identity_candidates": [],
+      "source_ids": [],
+      "expected_facts": [],
+      "forbidden_outcomes": [],
+      "checks": [
+        "relevance"
+      ],
+      "unsupported_checks": [
+        {
+          "name": "identity_resolution",
+          "reason": "The screenshot supplies no owner-confirmed contact-company mapping."
+        },
+        {
+          "name": "claim_reference_integrity",
+          "reason": "The production briefing workflow is not invoked by interpretation replay."
+        },
+        {
+          "name": "source_provenance",
+          "reason": "The website is a sender-supplied URL; no research source snapshot is supplied."
+        },
+        {
+          "name": "usefulness_review",
+          "reason": "No briefing is generated in interpretation replay."
+        },
+        {
+          "name": "workflow_events",
+          "reason": "The requested workflow or attachment data is not available in interpretation replay."
+        }
+      ]
+    },
+    {
+      "id": "shopee-vietnam-en",
+      "scenario": "new_company",
+      "language": "en",
+      "status": "candidate",
+      "synthetic": true,
+      "clock": "2026-10-27T07:00:00Z",
+      "timezone": "Asia/Bangkok",
+      "email": {
+        "from_address": "customer-shopee-vietnam@example.com",
+        "subject": "Interest in OCR solutions",
+        "body": "We are interested in an OCR solution.\n\nShopee Vietnam\nWebsite: https://shopee.vn"
+      },
+      "meeting": null,
+      "expected_relevance": "relevant",
+      "expected_identity": "unresolved",
+      "expected_company": null,
+      "expected_identity_candidates": [],
+      "source_ids": [],
+      "expected_facts": [],
+      "forbidden_outcomes": [],
+      "checks": [
+        "relevance"
+      ],
+      "unsupported_checks": [
+        {
+          "name": "identity_resolution",
+          "reason": "The screenshot supplies no owner-confirmed contact-company mapping."
+        },
+        {
+          "name": "claim_reference_integrity",
+          "reason": "The production briefing workflow is not invoked by interpretation replay."
+        },
+        {
+          "name": "source_provenance",
+          "reason": "The website is a sender-supplied URL; no research source snapshot is supplied."
+        },
+        {
+          "name": "usefulness_review",
+          "reason": "No briefing is generated in interpretation replay."
+        }
+      ]
+    },
+    {
+      "id": "shopee-vietnam-vi",
+      "scenario": "new_company",
+      "language": "vi",
+      "status": "candidate",
+      "synthetic": true,
+      "clock": "2026-10-27T07:00:00Z",
+      "timezone": "Asia/Bangkok",
+      "email": {
+        "from_address": "customer-shopee-vietnam@example.com",
+        "subject": "Quan tâm đến giải pháp OCR",
+        "body": "Chúng tôi quan tâm đến giải pháp OCR.\n\nShopee Vietnam\nWebsite: https://shopee.vn"
+      },
+      "meeting": null,
+      "expected_relevance": "relevant",
+      "expected_identity": "unresolved",
+      "expected_company": null,
+      "expected_identity_candidates": [],
+      "source_ids": [],
+      "expected_facts": [],
+      "forbidden_outcomes": [],
+      "checks": [
+        "relevance"
+      ],
+      "unsupported_checks": [
+        {
+          "name": "identity_resolution",
+          "reason": "The screenshot supplies no owner-confirmed contact-company mapping."
+        },
+        {
+          "name": "claim_reference_integrity",
+          "reason": "The production briefing workflow is not invoked by interpretation replay."
+        },
+        {
+          "name": "source_provenance",
+          "reason": "The website is a sender-supplied URL; no research source snapshot is supplied."
+        },
+        {
+          "name": "usefulness_review",
+          "reason": "No briefing is generated in interpretation replay."
+        }
+      ]
+    },
+    {
+      "id": "viettel-solutions-en",
+      "scenario": "new_company",
+      "language": "en",
+      "status": "candidate",
+      "synthetic": true,
+      "clock": "2026-10-27T07:00:00Z",
+      "timezone": "Asia/Bangkok",
+      "email": {
+        "from_address": "customer-viettel-solutions@example.com",
+        "subject": "Capability profile for reference",
+        "body": "The capability profile is attached for both sides to review.\n\nViettel Solutions\nWebsite: https://solutions.viettel.vn/en"
+      },
+      "meeting": null,
+      "expected_relevance": "uncertain",
+      "expected_identity": "unresolved",
+      "expected_company": null,
+      "expected_identity_candidates": [],
+      "source_ids": [],
+      "expected_facts": [],
+      "forbidden_outcomes": [],
+      "checks": [
+        "relevance"
+      ],
+      "unsupported_checks": [
+        {
+          "name": "identity_resolution",
+          "reason": "The screenshot supplies no owner-confirmed contact-company mapping."
+        },
+        {
+          "name": "claim_reference_integrity",
+          "reason": "The production briefing workflow is not invoked by interpretation replay."
+        },
+        {
+          "name": "source_provenance",
+          "reason": "The website is a sender-supplied URL; no research source snapshot is supplied."
+        },
+        {
+          "name": "usefulness_review",
+          "reason": "No briefing is generated in interpretation replay."
+        },
+        {
+          "name": "attachment_provenance",
+          "reason": "The requested workflow or attachment data is not available in interpretation replay."
+        }
+      ]
+    },
+    {
+      "id": "viettel-solutions-vi",
+      "scenario": "new_company",
+      "language": "vi",
+      "status": "candidate",
+      "synthetic": true,
+      "clock": "2026-10-27T07:00:00Z",
+      "timezone": "Asia/Bangkok",
+      "email": {
+        "from_address": "customer-viettel-solutions@example.com",
+        "subject": "Hồ sơ năng lực để tham khảo",
+        "body": "Đính kèm hồ sơ năng lực để hai bên tham khảo.\n\nViettel Solutions\nWebsite: https://solutions.viettel.vn/en"
+      },
+      "meeting": null,
+      "expected_relevance": "uncertain",
+      "expected_identity": "unresolved",
+      "expected_company": null,
+      "expected_identity_candidates": [],
+      "source_ids": [],
+      "expected_facts": [],
+      "forbidden_outcomes": [],
+      "checks": [
+        "relevance"
+      ],
+      "unsupported_checks": [
+        {
+          "name": "identity_resolution",
+          "reason": "The screenshot supplies no owner-confirmed contact-company mapping."
+        },
+        {
+          "name": "claim_reference_integrity",
+          "reason": "The production briefing workflow is not invoked by interpretation replay."
+        },
+        {
+          "name": "source_provenance",
+          "reason": "The website is a sender-supplied URL; no research source snapshot is supplied."
+        },
+        {
+          "name": "usefulness_review",
+          "reason": "No briefing is generated in interpretation replay."
+        },
+        {
+          "name": "attachment_provenance",
+          "reason": "The requested workflow or attachment data is not available in interpretation replay."
+        }
+      ]
+    },
+    {
+      "id": "bosch-vietnam-en",
+      "scenario": "new_company",
+      "language": "en",
+      "status": "candidate",
+      "synthetic": true,
+      "clock": "2026-10-27T07:00:00Z",
+      "timezone": "Asia/Bangkok",
+      "email": {
+        "from_address": "customer-bosch-vietnam@example.com",
+        "subject": "Discussing AI automation",
+        "body": "We would like to discuss AI automation solutions.\n\nBosch Global Software Technologies Vietnam\nWebsite: https://www.bosch-softwaretechnologies.com/en/locations/vietnam/vechungtoi.html"
+      },
+      "meeting": null,
+      "expected_relevance": "relevant",
+      "expected_identity": "unresolved",
+      "expected_company": null,
+      "expected_identity_candidates": [],
+      "source_ids": [],
+      "expected_facts": [],
+      "forbidden_outcomes": [],
+      "checks": [
+        "relevance"
+      ],
+      "unsupported_checks": [
+        {
+          "name": "identity_resolution",
+          "reason": "The screenshot supplies no owner-confirmed contact-company mapping."
+        },
+        {
+          "name": "claim_reference_integrity",
+          "reason": "The production briefing workflow is not invoked by interpretation replay."
+        },
+        {
+          "name": "source_provenance",
+          "reason": "The website is a sender-supplied URL; no research source snapshot is supplied."
+        },
+        {
+          "name": "usefulness_review",
+          "reason": "No briefing is generated in interpretation replay."
+        },
+        {
+          "name": "workflow_events",
+          "reason": "The requested workflow or attachment data is not available in interpretation replay."
+        }
+      ]
+    },
+    {
+      "id": "bosch-vietnam-vi",
+      "scenario": "new_company",
+      "language": "vi",
+      "status": "candidate",
+      "synthetic": true,
+      "clock": "2026-10-27T07:00:00Z",
+      "timezone": "Asia/Bangkok",
+      "email": {
+        "from_address": "customer-bosch-vietnam@example.com",
+        "subject": "Trao đổi về AI Automation",
+        "body": "Chúng tôi muốn trao đổi về giải pháp AI Automation.\n\nBosch Global Software Technologies Vietnam\nWebsite: https://www.bosch-softwaretechnologies.com/en/locations/vietnam/vechungtoi.html"
+      },
+      "meeting": null,
+      "expected_relevance": "relevant",
+      "expected_identity": "unresolved",
+      "expected_company": null,
+      "expected_identity_candidates": [],
+      "source_ids": [],
+      "expected_facts": [],
+      "forbidden_outcomes": [],
+      "checks": [
+        "relevance"
+      ],
+      "unsupported_checks": [
+        {
+          "name": "identity_resolution",
+          "reason": "The screenshot supplies no owner-confirmed contact-company mapping."
+        },
+        {
+          "name": "claim_reference_integrity",
+          "reason": "The production briefing workflow is not invoked by interpretation replay."
+        },
+        {
+          "name": "source_provenance",
+          "reason": "The website is a sender-supplied URL; no research source snapshot is supplied."
+        },
+        {
+          "name": "usefulness_review",
+          "reason": "No briefing is generated in interpretation replay."
+        },
+        {
+          "name": "workflow_events",
+          "reason": "The requested workflow or attachment data is not available in interpretation replay."
+        }
+      ]
+    },
+    {
+      "id": "viettel-briefing-en",
+      "scenario": "new_company",
+      "language": "en",
+      "status": "candidate",
+      "synthetic": true,
+      "clock": "2026-10-27T07:00:00Z",
+      "timezone": "Asia/Bangkok",
+      "email": {
+        "from_address": "customer-viettel-solutions@example.com",
+        "subject": "Company briefing for upcoming discussion",
+        "body": "Please prepare a company briefing about Viettel Solutions and its AI solutions for our upcoming discussion. The capability profile is attached for reference.\n\nViettel Solutions\nWebsite: https://solutions.viettel.vn/en"
+      },
+      "meeting": null,
+      "expected_relevance": "relevant",
+      "expected_identity": "unresolved",
+      "expected_company": null,
+      "expected_identity_candidates": [],
+      "source_ids": [],
+      "expected_facts": [],
+      "forbidden_outcomes": [],
+      "checks": [
+        "relevance"
+      ],
+      "unsupported_checks": [
+        {
+          "name": "identity_resolution",
+          "reason": "The screenshot supplies no owner-confirmed contact-company mapping."
+        },
+        {
+          "name": "claim_reference_integrity",
+          "reason": "The production briefing workflow is not invoked by interpretation replay."
+        },
+        {
+          "name": "source_provenance",
+          "reason": "The website is a sender-supplied URL; no research source snapshot is supplied."
+        },
+        {
+          "name": "usefulness_review",
+          "reason": "No briefing is generated in interpretation replay."
+        },
+        {
+          "name": "attachment_provenance",
+          "reason": "The requested workflow or attachment data is not available in interpretation replay."
+        }
+      ]
+    },
+    {
+      "id": "viettel-briefing-vi",
+      "scenario": "new_company",
+      "language": "vi",
+      "status": "candidate",
+      "synthetic": true,
+      "clock": "2026-10-27T07:00:00Z",
+      "timezone": "Asia/Bangkok",
+      "email": {
+        "from_address": "customer-viettel-solutions@example.com",
+        "subject": "Chuẩn bị báo cáo doanh nghiệp cho buổi trao đổi",
+        "body": "Nhờ bạn chuẩn bị báo cáo về Viettel Solutions và các giải pháp AI cho buổi trao đổi sắp tới. Đính kèm hồ sơ năng lực để tham khảo.\n\nViettel Solutions\nWebsite: https://solutions.viettel.vn/en"
+      },
+      "meeting": null,
+      "expected_relevance": "relevant",
+      "expected_identity": "unresolved",
+      "expected_company": null,
+      "expected_identity_candidates": [],
+      "source_ids": [],
+      "expected_facts": [],
+      "forbidden_outcomes": [],
+      "checks": [
+        "relevance"
+      ],
+      "unsupported_checks": [
+        {
+          "name": "identity_resolution",
+          "reason": "The screenshot supplies no owner-confirmed contact-company mapping."
+        },
+        {
+          "name": "claim_reference_integrity",
+          "reason": "The production briefing workflow is not invoked by interpretation replay."
+        },
+        {
+          "name": "source_provenance",
+          "reason": "The website is a sender-supplied URL; no research source snapshot is supplied."
+        },
+        {
+          "name": "usefulness_review",
+          "reason": "No briefing is generated in interpretation replay."
+        },
+        {
+          "name": "attachment_provenance",
+          "reason": "The requested workflow or attachment data is not available in interpretation replay."
+        }
+      ]
+    },
+    {
+      "id": "request-our-profile-en",
+      "scenario": "new_company",
+      "language": "en",
+      "status": "candidate",
+      "synthetic": true,
+      "clock": "2026-10-27T07:00:00Z",
+      "timezone": "Asia/Bangkok",
+      "email": {
+        "from_address": "customer-viettel-solutions@example.com",
+        "subject": "Our capability profile requested",
+        "body": "Please send your company capability profile so we can review your services."
+      },
+      "meeting": null,
+      "expected_relevance": "uncertain",
+      "expected_identity": "unresolved",
+      "expected_company": null,
+      "expected_identity_candidates": [],
+      "source_ids": [],
+      "expected_facts": [],
+      "forbidden_outcomes": [],
+      "checks": [
+        "relevance"
+      ],
+      "unsupported_checks": [
+        {
+          "name": "identity_resolution",
+          "reason": "The screenshot supplies no owner-confirmed contact-company mapping."
+        },
+        {
+          "name": "claim_reference_integrity",
+          "reason": "The production briefing workflow is not invoked by interpretation replay."
+        },
+        {
+          "name": "source_provenance",
+          "reason": "The website is a sender-supplied URL; no research source snapshot is supplied."
+        },
+        {
+          "name": "usefulness_review",
+          "reason": "No briefing is generated in interpretation replay."
+        },
+        {
+          "name": "attachment_provenance",
+          "reason": "The requested workflow or attachment data is not available in interpretation replay."
+        }
+      ]
+    },
+    {
+      "id": "request-our-profile-vi",
+      "scenario": "new_company",
+      "language": "vi",
+      "status": "candidate",
+      "synthetic": true,
+      "clock": "2026-10-27T07:00:00Z",
+      "timezone": "Asia/Bangkok",
+      "email": {
+        "from_address": "customer-viettel-solutions@example.com",
+        "subject": "Yêu cầu hồ sơ năng lực",
+        "body": "Vui lòng gửi hồ sơ năng lực của công ty bạn để chúng tôi tham khảo dịch vụ."
+      },
+      "meeting": null,
+      "expected_relevance": "uncertain",
+      "expected_identity": "unresolved",
+      "expected_company": null,
+      "expected_identity_candidates": [],
+      "source_ids": [],
+      "expected_facts": [],
+      "forbidden_outcomes": [],
+      "checks": [
+        "relevance"
+      ],
+      "unsupported_checks": [
+        {
+          "name": "identity_resolution",
+          "reason": "The screenshot supplies no owner-confirmed contact-company mapping."
+        },
+        {
+          "name": "claim_reference_integrity",
+          "reason": "The production briefing workflow is not invoked by interpretation replay."
+        },
+        {
+          "name": "source_provenance",
+          "reason": "The website is a sender-supplied URL; no research source snapshot is supplied."
+        },
+        {
+          "name": "usefulness_review",
+          "reason": "No briefing is generated in interpretation replay."
+        },
+        {
+          "name": "attachment_provenance",
+          "reason": "The requested workflow or attachment data is not available in interpretation replay."
+        }
+      ]
+    },
+    {
+      "id": "meeting-proposed-en",
+      "scenario": "new_company",
+      "language": "en",
+      "status": "candidate",
+      "synthetic": true,
+      "clock": "2026-10-27T07:00:00Z",
+      "timezone": "Asia/Bangkok",
+      "email": {
+        "from_address": "customer-viettel-solutions@example.com",
+        "subject": "Potential discussion",
+        "body": "We are interested in your OCR solution. Would you be available to discuss it next week?"
+      },
+      "meeting": null,
+      "expected_relevance": "relevant",
+      "expected_identity": "unresolved",
+      "expected_company": null,
+      "expected_identity_candidates": [],
+      "source_ids": [],
+      "expected_facts": [],
+      "forbidden_outcomes": [],
+      "checks": [
+        "relevance"
+      ],
+      "unsupported_checks": [
+        {
+          "name": "identity_resolution",
+          "reason": "The screenshot supplies no owner-confirmed contact-company mapping."
+        },
+        {
+          "name": "claim_reference_integrity",
+          "reason": "The production briefing workflow is not invoked by interpretation replay."
+        },
+        {
+          "name": "source_provenance",
+          "reason": "The website is a sender-supplied URL; no research source snapshot is supplied."
+        },
+        {
+          "name": "usefulness_review",
+          "reason": "No briefing is generated in interpretation replay."
+        },
+        {
+          "name": "attachment_provenance",
+          "reason": "The requested workflow or attachment data is not available in interpretation replay."
+        }
+      ]
+    },
+    {
+      "id": "meeting-proposed-vi",
+      "scenario": "new_company",
+      "language": "vi",
+      "status": "candidate",
+      "synthetic": true,
+      "clock": "2026-10-27T07:00:00Z",
+      "timezone": "Asia/Bangkok",
+      "email": {
+        "from_address": "customer-viettel-solutions@example.com",
+        "subject": "Đề xuất trao đổi",
+        "body": "Chúng tôi quan tâm giải pháp OCR. Bạn có thể trao đổi vào tuần tới không?"
+      },
+      "meeting": null,
+      "expected_relevance": "relevant",
+      "expected_identity": "unresolved",
+      "expected_company": null,
+      "expected_identity_candidates": [],
+      "source_ids": [],
+      "expected_facts": [],
+      "forbidden_outcomes": [],
+      "checks": [
+        "relevance"
+      ],
+      "unsupported_checks": [
+        {
+          "name": "identity_resolution",
+          "reason": "The screenshot supplies no owner-confirmed contact-company mapping."
+        },
+        {
+          "name": "claim_reference_integrity",
+          "reason": "The production briefing workflow is not invoked by interpretation replay."
+        },
+        {
+          "name": "source_provenance",
+          "reason": "The website is a sender-supplied URL; no research source snapshot is supplied."
+        },
+        {
+          "name": "usefulness_review",
+          "reason": "No briefing is generated in interpretation replay."
+        },
+        {
+          "name": "attachment_provenance",
+          "reason": "The requested workflow or attachment data is not available in interpretation replay."
+        }
+      ]
+    },
+    {
+      "id": "meeting-agreed-en",
+      "scenario": "new_company",
+      "language": "en",
+      "status": "candidate",
+      "synthetic": true,
+      "clock": "2026-10-27T07:00:00Z",
+      "timezone": "Asia/Bangkok",
+      "email": {
+        "from_address": "customer-viettel-solutions@example.com",
+        "subject": "Confirmed discussion",
+        "body": "We accept your proposed discussion on 3 November 2026 at 10:00 ICT. You already confirmed you are available at that time."
+      },
+      "meeting": null,
+      "expected_relevance": "uncertain",
+      "expected_identity": "unresolved",
+      "expected_company": null,
+      "expected_identity_candidates": [],
+      "source_ids": [],
+      "expected_facts": [],
+      "forbidden_outcomes": [],
+      "checks": [
+        "relevance"
+      ],
+      "unsupported_checks": [
+        {
+          "name": "identity_resolution",
+          "reason": "The screenshot supplies no owner-confirmed contact-company mapping."
+        },
+        {
+          "name": "claim_reference_integrity",
+          "reason": "The production briefing workflow is not invoked by interpretation replay."
+        },
+        {
+          "name": "source_provenance",
+          "reason": "The website is a sender-supplied URL; no research source snapshot is supplied."
+        },
+        {
+          "name": "usefulness_review",
+          "reason": "No briefing is generated in interpretation replay."
+        },
+        {
+          "name": "attachment_provenance",
+          "reason": "The requested workflow or attachment data is not available in interpretation replay."
+        }
+      ]
+    },
+    {
+      "id": "meeting-agreed-vi",
+      "scenario": "new_company",
+      "language": "vi",
+      "status": "candidate",
+      "synthetic": true,
+      "clock": "2026-10-27T07:00:00Z",
+      "timezone": "Asia/Bangkok",
+      "email": {
+        "from_address": "customer-viettel-solutions@example.com",
+        "subject": "Xác nhận trao đổi",
+        "body": "Chúng tôi đồng ý trao đổi vào 10:00 ICT ngày 3 tháng 11 năm 2026 theo đề xuất của bạn. Bạn đã xác nhận có thể tham gia vào giờ này."
+      },
+      "meeting": null,
+      "expected_relevance": "uncertain",
+      "expected_identity": "unresolved",
+      "expected_company": null,
+      "expected_identity_candidates": [],
+      "source_ids": [],
+      "expected_facts": [],
+      "forbidden_outcomes": [],
+      "checks": [
+        "relevance"
+      ],
+      "unsupported_checks": [
+        {
+          "name": "identity_resolution",
+          "reason": "The screenshot supplies no owner-confirmed contact-company mapping."
+        },
+        {
+          "name": "claim_reference_integrity",
+          "reason": "The production briefing workflow is not invoked by interpretation replay."
+        },
+        {
+          "name": "source_provenance",
+          "reason": "The website is a sender-supplied URL; no research source snapshot is supplied."
+        },
+        {
+          "name": "usefulness_review",
+          "reason": "No briefing is generated in interpretation replay."
+        },
+        {
+          "name": "attachment_provenance",
+          "reason": "The requested workflow or attachment data is not available in interpretation replay."
+        }
+      ]
+    },
+    {
+      "id": "store-promotion-en",
+      "scenario": "irrelevant_email",
+      "language": "en",
+      "status": "candidate",
+      "synthetic": true,
+      "clock": "2026-10-27T07:00:00Z",
+      "timezone": "Asia/Bangkok",
+      "email": {
+        "from_address": "store@example.com",
+        "subject": "Weekend sale",
+        "body": "The stationery store is offering a weekend discount on notebooks."
+      },
+      "meeting": null,
+      "expected_relevance": "irrelevant",
+      "expected_identity": "none",
+      "expected_company": null,
+      "expected_identity_candidates": [],
+      "source_ids": [],
+      "expected_facts": [],
+      "forbidden_outcomes": [],
+      "checks": [
+        "relevance"
+      ],
+      "unsupported_checks": [
+        {
+          "name": "identity_resolution",
+          "reason": "No seeded company or owner-confirmed contact mapping is specified for this interpretation-only case."
+        }
+      ]
+    },
+    {
+      "id": "store-promotion-vi",
+      "scenario": "irrelevant_email",
+      "language": "vi",
+      "status": "candidate",
+      "synthetic": true,
+      "clock": "2026-10-27T07:00:00Z",
+      "timezone": "Asia/Bangkok",
+      "email": {
+        "from_address": "store@example.com",
+        "subject": "Khuyến mãi cuối tuần",
+        "body": "Cửa hàng văn phòng phẩm đang giảm giá sổ tay vào cuối tuần."
+      },
+      "meeting": null,
+      "expected_relevance": "irrelevant",
+      "expected_identity": "none",
+      "expected_company": null,
+      "expected_identity_candidates": [],
+      "source_ids": [],
+      "expected_facts": [],
+      "forbidden_outcomes": [],
+      "checks": [
+        "relevance"
+      ],
+      "unsupported_checks": [
+        {
+          "name": "identity_resolution",
+          "reason": "No seeded company or owner-confirmed contact mapping is specified for this interpretation-only case."
+        }
+      ]
+    },
+    {
+      "id": "past-meeting-thanks-en",
+      "scenario": "irrelevant_email",
+      "language": "en",
+      "status": "candidate",
+      "synthetic": true,
+      "clock": "2026-10-27T07:00:00Z",
+      "timezone": "Asia/Bangkok",
+      "email": {
+        "from_address": "thanks@example.net",
+        "subject": "Thank you for last week",
+        "body": "Thank you for attending last week’s Adobe discussion."
+      },
+      "meeting": null,
+      "expected_relevance": "irrelevant",
+      "expected_identity": "none",
+      "expected_company": null,
+      "expected_identity_candidates": [],
+      "source_ids": [],
+      "expected_facts": [],
+      "forbidden_outcomes": [],
+      "checks": [
+        "relevance"
+      ],
+      "unsupported_checks": [
+        {
+          "name": "identity_resolution",
+          "reason": "No seeded company or owner-confirmed contact mapping is specified for this interpretation-only case."
+        }
+      ]
+    },
+    {
+      "id": "past-meeting-thanks-vi",
+      "scenario": "irrelevant_email",
+      "language": "vi",
+      "status": "candidate",
+      "synthetic": true,
+      "clock": "2026-10-27T07:00:00Z",
+      "timezone": "Asia/Bangkok",
+      "email": {
+        "from_address": "thanks@example.net",
+        "subject": "Cảm ơn buổi gặp tuần trước",
+        "body": "Cảm ơn bạn đã tham dự buổi trao đổi về Adobe tuần trước."
+      },
+      "meeting": null,
+      "expected_relevance": "irrelevant",
+      "expected_identity": "none",
+      "expected_company": null,
+      "expected_identity_candidates": [],
+      "source_ids": [],
+      "expected_facts": [],
+      "forbidden_outcomes": [],
+      "checks": [
+        "relevance"
+      ],
+      "unsupported_checks": [
+        {
+          "name": "identity_resolution",
+          "reason": "No seeded company or owner-confirmed contact mapping is specified for this interpretation-only case."
+        }
+      ]
+    }
+  ],
+  "golden_reviews": []
+}
