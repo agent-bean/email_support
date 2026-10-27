@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchHealth } from '../shared/api/health';
+import { AuthPanel } from '../features/auth/AuthPanel';
+import { GoogleConnectionPanel } from '../features/google-connection/GoogleConnectionPanel';
 
 export function App() {
   const healthQuery = useQuery({
@@ -11,6 +13,11 @@ export function App() {
   return (
     <main>
       <h1>Email Support</h1>
+      <AuthPanel
+        ownerContent={(csrfToken) => (
+          <GoogleConnectionPanel csrfToken={csrfToken} />
+        )}
+      />
       {healthQuery.isPending && <p role="status">Checking service health…</p>}
       {healthQuery.isError && (
         <p role="alert">

@@ -1,6 +1,195 @@
 {
   "components": {
     "schemas": {
+      "AuthError": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/AuthErrorCode"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "AuthError",
+        "type": "object"
+      },
+      "AuthErrorCode": {
+        "enum": [
+          "auth_unavailable",
+          "auth_required",
+          "csrf_rejected",
+          "login_rejected",
+          "login_restart"
+        ],
+        "title": "AuthErrorCode",
+        "type": "string"
+      },
+      "GoogleConnectionErrorCode": {
+        "enum": [
+          "partial_scope",
+          "consent_denied",
+          "identity_mismatch",
+          "session_expired",
+          "invalid_callback",
+          "refresh_invalid",
+          "provider_unavailable",
+          "refresh_busy",
+          "credentials_unavailable",
+          "revocation_pending"
+        ],
+        "title": "GoogleConnectionErrorCode",
+        "type": "string"
+      },
+      "GoogleConnectionResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GoogleConnectionErrorCode"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "granted_scopes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Granted Scopes",
+            "type": "array"
+          },
+          "missing_scopes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Missing Scopes",
+            "type": "array"
+          },
+          "reconnect_blocked": {
+            "default": false,
+            "title": "Reconnect Blocked",
+            "type": "boolean"
+          },
+          "revoke_outcome": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RevokeOutcome"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "revoke_recorded_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoke Recorded At"
+          },
+          "status": {
+            "$ref": "#/components/schemas/GoogleConnectionStatus"
+          },
+          "unexpected_scopes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Unexpected Scopes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "GoogleConnectionResponse",
+        "type": "object"
+      },
+      "GoogleConnectionStatus": {
+        "enum": [
+          "connected",
+          "reconnect_required",
+          "disconnected"
+        ],
+        "title": "GoogleConnectionStatus",
+        "type": "string"
+      },
+      "GoogleConsentResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "authorization_url": {
+            "format": "uri",
+            "maxLength": 2083,
+            "minLength": 1,
+            "title": "Authorization Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "authorization_url"
+        ],
+        "title": "GoogleConsentResponse",
+        "type": "object"
+      },
+      "GoogleDisconnectResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "reconnect_blocked": {
+            "title": "Reconnect Blocked",
+            "type": "boolean"
+          },
+          "revoke_outcome": {
+            "$ref": "#/components/schemas/RevokeOutcome"
+          },
+          "revoke_recorded_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoke Recorded At"
+          },
+          "status": {
+            "$ref": "#/components/schemas/GoogleConnectionStatus"
+          }
+        },
+        "required": [
+          "status",
+          "revoke_outcome",
+          "reconnect_blocked"
+        ],
+        "title": "GoogleDisconnectResponse",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
       "HealthResponse": {
         "additionalProperties": false,
         "description": "Credential-free liveness response.",
@@ -22,6 +211,126 @@
         ],
         "title": "HealthStatus",
         "type": "string"
+      },
+      "LoginRequest": {
+        "additionalProperties": false,
+        "properties": {},
+        "title": "LoginRequest",
+        "type": "object"
+      },
+      "LoginResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "authorization_url": {
+            "format": "uri",
+            "maxLength": 2083,
+            "minLength": 1,
+            "title": "Authorization Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "authorization_url"
+        ],
+        "title": "LoginResponse",
+        "type": "object"
+      },
+      "OwnerSession": {
+        "additionalProperties": false,
+        "properties": {
+          "authenticated": {
+            "default": true,
+            "title": "Authenticated",
+            "type": "boolean"
+          },
+          "csrf_token": {
+            "minLength": 32,
+            "title": "Csrf Token",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "expires_at",
+          "csrf_token"
+        ],
+        "title": "OwnerSession",
+        "type": "object"
+      },
+      "PreauthResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "csrf_token": {
+            "minLength": 32,
+            "title": "Csrf Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "csrf_token"
+        ],
+        "title": "PreauthResponse",
+        "type": "object"
+      },
+      "RevokeOutcome": {
+        "enum": [
+          "confirmed",
+          "unknown",
+          "not_attempted"
+        ],
+        "title": "RevokeOutcome",
+        "type": "string"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "OwnerSession": {
+        "in": "cookie",
+        "name": "__Host-owner_session",
+        "type": "apiKey"
       }
     }
   },
@@ -31,6 +340,393 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/auth/google/login": {
+      "post": {
+        "operationId": "start_google_login",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Start Google Login",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "operationId": "logout_owner",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "OwnerSession": []
+          }
+        ],
+        "summary": "Logout",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/preauth": {
+      "get": {
+        "operationId": "get_auth_preauth",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreauthResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Preauth",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/session": {
+      "get": {
+        "operationId": "get_owner_session",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OwnerSession"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "OwnerSession": []
+          }
+        ],
+        "summary": "Get Session",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/google/connection": {
+      "get": {
+        "operationId": "get_google_connection",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoogleConnectionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "503": {
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "OwnerSession": []
+          }
+        ],
+        "summary": "Get Connection",
+        "tags": [
+          "google-connection"
+        ]
+      }
+    },
+    "/api/google/connection/consent": {
+      "post": {
+        "operationId": "start_google_connection_consent",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoogleConsentResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "OwnerSession": []
+          }
+        ],
+        "summary": "Consent",
+        "tags": [
+          "google-connection"
+        ]
+      }
+    },
+    "/api/google/connection/disconnect": {
+      "post": {
+        "operationId": "disconnect_google_connection",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GoogleDisconnectResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "OwnerSession": []
+          }
+        ],
+        "summary": "Disconnect",
+        "tags": [
+          "google-connection"
+        ]
+      }
+    },
     "/api/health": {
       "get": {
         "description": "Return the API's liveness state.",

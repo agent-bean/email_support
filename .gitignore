@@ -5,6 +5,7 @@ __pycache__/
 .ruff_cache/
 .coverage
 .test-database/
+.local-auth/
 # Ignore local environment files while keeping the sample template.
 .[e]nv
 .[e]nv.*

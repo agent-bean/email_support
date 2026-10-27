@@ -5,6 +5,97 @@ export type ClientOptions = {
 };
 
 /**
+ * AuthError
+ */
+export type AuthError = {
+    code: AuthErrorCode;
+    /**
+     * Message
+     */
+    message: string;
+};
+
+/**
+ * AuthErrorCode
+ */
+export type AuthErrorCode = 'auth_unavailable' | 'auth_required' | 'csrf_rejected' | 'login_rejected' | 'login_restart';
+
+/**
+ * GoogleConnectionErrorCode
+ */
+export type GoogleConnectionErrorCode = 'partial_scope' | 'consent_denied' | 'identity_mismatch' | 'session_expired' | 'invalid_callback' | 'refresh_invalid' | 'provider_unavailable' | 'refresh_busy' | 'credentials_unavailable' | 'revocation_pending';
+
+/**
+ * GoogleConnectionResponse
+ */
+export type GoogleConnectionResponse = {
+    error?: GoogleConnectionErrorCode | null;
+    /**
+     * Granted Scopes
+     */
+    granted_scopes?: Array<string>;
+    /**
+     * Missing Scopes
+     */
+    missing_scopes?: Array<string>;
+    /**
+     * Reconnect Blocked
+     */
+    reconnect_blocked?: boolean;
+    revoke_outcome?: RevokeOutcome | null;
+    /**
+     * Revoke Recorded At
+     */
+    revoke_recorded_at?: string | null;
+    status: GoogleConnectionStatus;
+    /**
+     * Unexpected Scopes
+     */
+    unexpected_scopes?: Array<string>;
+};
+
+/**
+ * GoogleConnectionStatus
+ */
+export type GoogleConnectionStatus = 'connected' | 'reconnect_required' | 'disconnected';
+
+/**
+ * GoogleConsentResponse
+ */
+export type GoogleConsentResponse = {
+    /**
+     * Authorization Url
+     */
+    authorization_url: string;
+};
+
+/**
+ * GoogleDisconnectResponse
+ */
+export type GoogleDisconnectResponse = {
+    /**
+     * Reconnect Blocked
+     */
+    reconnect_blocked: boolean;
+    revoke_outcome: RevokeOutcome;
+    /**
+     * Revoke Recorded At
+     */
+    revoke_recorded_at?: string | null;
+    status: GoogleConnectionStatus;
+};
+
+/**
+ * HTTPValidationError
+ */
+export type HttpValidationError = {
+    /**
+     * Detail
+     */
+    detail?: Array<ValidationError>;
+};
+
+/**
  * HealthResponse
  *
  * Credential-free liveness response.
@@ -19,6 +110,337 @@ export type HealthResponse = {
  * Closed health states returned by the API.
  */
 export type HealthStatus = 'ok';
+
+/**
+ * LoginRequest
+ */
+export type LoginRequest = {
+    [key: string]: never;
+};
+
+/**
+ * LoginResponse
+ */
+export type LoginResponse = {
+    /**
+     * Authorization Url
+     */
+    authorization_url: string;
+};
+
+/**
+ * OwnerSession
+ */
+export type OwnerSession = {
+    /**
+     * Authenticated
+     */
+    authenticated?: boolean;
+    /**
+     * Csrf Token
+     */
+    csrf_token: string;
+    /**
+     * Expires At
+     */
+    expires_at: string;
+};
+
+/**
+ * PreauthResponse
+ */
+export type PreauthResponse = {
+    /**
+     * Csrf Token
+     */
+    csrf_token: string;
+};
+
+/**
+ * RevokeOutcome
+ */
+export type RevokeOutcome = 'confirmed' | 'unknown' | 'not_attempted';
+
+/**
+ * ValidationError
+ */
+export type ValidationError = {
+    /**
+     * Context
+     */
+    ctx?: {
+        [key: string]: unknown;
+    };
+    /**
+     * Input
+     */
+    input?: unknown;
+    /**
+     * Location
+     */
+    loc: Array<string | number>;
+    /**
+     * Message
+     */
+    msg: string;
+    /**
+     * Error Type
+     */
+    type: string;
+};
+
+export type StartGoogleLoginData = {
+    body: LoginRequest;
+    headers?: {
+        /**
+         * X-Csrf-Token
+         */
+        'X-CSRF-Token'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/auth/google/login';
+};
+
+export type StartGoogleLoginErrors = {
+    /**
+     * Bad Request
+     */
+    400: AuthError;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+    /**
+     * Service Unavailable
+     */
+    503: AuthError;
+};
+
+export type StartGoogleLoginError = StartGoogleLoginErrors[keyof StartGoogleLoginErrors];
+
+export type StartGoogleLoginResponses = {
+    /**
+     * Successful Response
+     */
+    200: LoginResponse;
+};
+
+export type StartGoogleLoginResponse = StartGoogleLoginResponses[keyof StartGoogleLoginResponses];
+
+export type LogoutOwnerData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Csrf-Token
+         */
+        'X-CSRF-Token'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/auth/logout';
+};
+
+export type LogoutOwnerErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthError;
+    /**
+     * Forbidden
+     */
+    403: AuthError;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type LogoutOwnerError = LogoutOwnerErrors[keyof LogoutOwnerErrors];
+
+export type LogoutOwnerResponses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type LogoutOwnerResponse = LogoutOwnerResponses[keyof LogoutOwnerResponses];
+
+export type GetAuthPreauthData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/auth/preauth';
+};
+
+export type GetAuthPreauthErrors = {
+    /**
+     * Service Unavailable
+     */
+    503: AuthError;
+};
+
+export type GetAuthPreauthError = GetAuthPreauthErrors[keyof GetAuthPreauthErrors];
+
+export type GetAuthPreauthResponses = {
+    /**
+     * Successful Response
+     */
+    200: PreauthResponse;
+};
+
+export type GetAuthPreauthResponse = GetAuthPreauthResponses[keyof GetAuthPreauthResponses];
+
+export type GetOwnerSessionData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/auth/session';
+};
+
+export type GetOwnerSessionErrors = {
+    /**
+     * Unauthorized
+     */
+    401: AuthError;
+    /**
+     * Service Unavailable
+     */
+    503: AuthError;
+};
+
+export type GetOwnerSessionError = GetOwnerSessionErrors[keyof GetOwnerSessionErrors];
+
+export type GetOwnerSessionResponses = {
+    /**
+     * Successful Response
+     */
+    200: OwnerSession;
+};
+
+export type GetOwnerSessionResponse = GetOwnerSessionResponses[keyof GetOwnerSessionResponses];
+
+export type GetGoogleConnectionData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/google/connection';
+};
+
+export type GetGoogleConnectionErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Service Unavailable
+     */
+    503: unknown;
+};
+
+export type GetGoogleConnectionResponses = {
+    /**
+     * Successful Response
+     */
+    200: GoogleConnectionResponse;
+};
+
+export type GetGoogleConnectionResponse = GetGoogleConnectionResponses[keyof GetGoogleConnectionResponses];
+
+export type StartGoogleConnectionConsentData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Csrf-Token
+         */
+        'X-CSRF-Token'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/google/connection/consent';
+};
+
+export type StartGoogleConnectionConsentErrors = {
+    /**
+     * Bad Request
+     */
+    400: unknown;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Conflict
+     */
+    409: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+    /**
+     * Service Unavailable
+     */
+    503: unknown;
+};
+
+export type StartGoogleConnectionConsentError = StartGoogleConnectionConsentErrors[keyof StartGoogleConnectionConsentErrors];
+
+export type StartGoogleConnectionConsentResponses = {
+    /**
+     * Successful Response
+     */
+    200: GoogleConsentResponse;
+};
+
+export type StartGoogleConnectionConsentResponse = StartGoogleConnectionConsentResponses[keyof StartGoogleConnectionConsentResponses];
+
+export type DisconnectGoogleConnectionData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Csrf-Token
+         */
+        'X-CSRF-Token'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/google/connection/disconnect';
+};
+
+export type DisconnectGoogleConnectionErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+    /**
+     * Service Unavailable
+     */
+    503: unknown;
+};
+
+export type DisconnectGoogleConnectionError = DisconnectGoogleConnectionErrors[keyof DisconnectGoogleConnectionErrors];
+
+export type DisconnectGoogleConnectionResponses = {
+    /**
+     * Successful Response
+     */
+    200: GoogleDisconnectResponse;
+};
+
+export type DisconnectGoogleConnectionResponse = DisconnectGoogleConnectionResponses[keyof DisconnectGoogleConnectionResponses];
 
 export type GetHealthData = {
     body?: never;

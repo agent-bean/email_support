@@ -7,4 +7,7 @@ __pycache__/
 .ruff_cache/
 tests/
 scripts/
+!scripts/
+scripts/**
+!scripts/live-google-smoke.py
 openapi.json
