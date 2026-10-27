@@ -143,6 +143,53 @@ def test_consent_accepts_the_empty_post_used_by_generated_client(
     assert response.status_code == 200
 
 
+def test_consent_renews_the_browser_binding_for_the_attempt_lifetime(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    client.cookies.delete("owner_browser")
+    started_with: list[str] = []
+    callback_with: list[str] = []
+
+    async def begin(
+        *_: object, browser_cookie: str, **__: object
+    ) -> GoogleAuthorization:
+        started_with.append(browser_cookie)
+        return GoogleAuthorization(
+            "https://accounts.google.com/o/oauth2/v2/auth", "state", "n", "v"
+        )
+
+    async def consume(*_: object, browser_cookie: str, **__: object) -> None:
+        callback_with.append(browser_cookie)
+        return None
+
+    monkeypatch.setattr(google_api, "begin_google_consent", begin)
+    monkeypatch.setattr(google_api, "consume_google_consent_attempt", consume)
+    response = client.post(
+        "/api/google/connection/consent",
+        json={},
+        headers={
+            "Origin": WEB_ORIGIN,
+            "Content-Type": "application/json",
+            "X-CSRF-Token": CSRF,
+        },
+    )
+
+    assert response.status_code == 200
+    renewed_cookie = response.cookies.get("owner_browser")
+    assert renewed_cookie is not None and len(renewed_cookie) >= 40
+    assert started_with == [renewed_cookie]
+    assert "Max-Age=600" in response.headers["set-cookie"]
+
+    callback = client.get(
+        "/api/google/connection/callback",
+        params={"code": "code", "state": "state"},
+        follow_redirects=False,
+    )
+
+    assert callback.status_code == 303
+    assert callback_with == [renewed_cookie]
+
+
 def test_callback_redirect_does_not_reflect_provider_query_values(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
