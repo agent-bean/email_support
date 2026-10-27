@@ -14,7 +14,7 @@ created: 2026-10-26
 
 # Owner access and Google connection
 
-Accepted phased implementation, `--tdd --yagni`. Planning began on `main`; implementation is on the issue branch recorded above. Phase 1 is complete. A live owner session and Google connection are established, and the Gmail metadata read succeeded. The live smoke found no secondary/shared calendar and stopped before disconnect; revocation evidence and full Issue #6 acceptance remain pending. No production runtime check has run.
+Accepted phased implementation, `--tdd --yagni`. Planning began on `main`; implementation is on the issue branch recorded above. Phases 1–2 are complete. Phase 3's core live acceptance now passes: Gmail metadata and secondary Calendar reads succeeded, local credentials were purged, and Google rejected the pre-disconnect token. Additional detailed test-matrix rows and owner acceptance remain pending. No production runtime check has run.
 
 ## Outcome and boundaries
 
@@ -22,7 +22,7 @@ Deliver [#5](https://github.com/agent-bean/email_support/issues/5): configured-o
 
 [#3](https://github.com/agent-bean/email_support/issues/3) is the closed prerequisite for #5; #6 depends on #5 and remains open. Recheck live dependencies before execution. Preserve credential-free health and default Compose smoke. Logout does not disconnect Google.
 
-Exclude production deployment, real sends (#15), synchronization/jobs (#7), multiuser/accounts, Redis, owner enrollment, a general auth framework and extra infrastructure. OAuth setup/credentials are not provisioned by this plan. Google live verification remains pending until operator setup exists.
+Exclude production deployment, real sends (#15), synchronization/jobs (#7), multiuser/accounts, Redis, owner enrollment, a general auth framework and extra infrastructure. This plan does not provision production OAuth setup or credentials. The owner supplied private local configuration for live verification; production readiness remains unverified.
 
 ## Phases and dependency gates
 
@@ -42,9 +42,9 @@ All phases are sequential. Each phase owns its listed changes only while active;
 - [x] Separate consent validates session, same owner, state/nonce/PKCE and exact required scopes, including secondary/shared Calendar reads.
 - [x] Encrypted token bundles use an external key; tokens never reach web responses or normal logs.
 - [x] Refresh, partial consent, expiry, revocation and transient failure have typed outcomes and actionable UI; concurrent stale results cannot undo disconnect.
-- [ ] Disconnect blocks new operation admissions and purges credentials before revocation; previously admitted work may finish externally but its stale results are discarded. Reconnect waits for revoke resolution; real Google read/revoke smoke evidence exists, or acceptance stays pending with its prerequisite recorded.
+- [x] Disconnect blocks new operation admissions and purges credentials before revocation; previously admitted work may finish externally but its stale results are discarded. Reconnect waits for revoke resolution; real Google read/revoke smoke evidence exists, or acceptance stays pending with its prerequisite recorded.
 
-Phase 3 automated code, database and UI evidence is recorded in [the phase file](phase-03-google-connection-and-verification.md#implementation-and-local-verification-evidence). The owner has configured the private encryption key and reports the Google prerequisites ready. Live owner login, Google consent and Gmail metadata read succeeded; the configured owner account's Calendar list contained no secondary/shared calendar. Disconnect and remote revocation evidence remain pending.
+Phase 3 automated code, database and UI evidence is recorded in [the phase file](phase-03-google-connection-and-verification.md#implementation-and-local-verification-evidence). The owner configured the private encryption key and Google prerequisites. Live owner login, Google consent, Gmail metadata and secondary Calendar reads succeeded; the local disconnect purge and Google's rejection of the saved token were verified. Detailed test-matrix follow-through and owner acceptance remain separate.
 
 ## Review and validation records
 
