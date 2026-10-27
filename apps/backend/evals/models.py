@@ -76,6 +76,7 @@ class Relevance(StrEnum):
 
 
 class CheckName(StrEnum):
+    RELEVANCE = "relevance"
     CLAIM_REFERENCE_INTEGRITY = "claim_reference_integrity"
     SOURCE_PROVENANCE = "source_provenance"
     IDENTITY_RESOLUTION = "identity_resolution"
@@ -286,6 +287,11 @@ class EvaluationCase(Contract):
         check_names = [*self.checks, *(item.name for item in self.unsupported_checks)]
         if len(set(check_names)) != len(check_names):
             raise ValueError("a check can be applicable or unsupported, not both")
+        if (
+            CheckName.RELEVANCE in self.checks
+            and self.expected_relevance is Relevance.UNKNOWN
+        ):
+            raise ValueError("relevance checks require a known expectation")
         return self
 
     def content_hash(self) -> str:

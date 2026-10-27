@@ -9,6 +9,7 @@ from pydantic import ValidationError
 
 from email_support.integrations.provider_http import ProviderCallError, post_json
 from email_support.models.research import (
+    APPROVED_COMPANY_NAMES,
     ApprovedCompany,
     ProviderErrorCategory,
     ProviderUsage,
@@ -18,11 +19,6 @@ from email_support.models.research import (
 )
 from email_support.research_config import ResearchSettings
 
-_COMPANY_NAMES = {
-    ApprovedCompany.MICROSOFT: "Microsoft",
-    ApprovedCompany.SALESFORCE: "Salesforce",
-    ApprovedCompany.ADOBE: "Adobe",
-}
 _TOPIC_TEXT = {
     SearchTopic.COMPANY_OVERVIEW: "company overview",
     SearchTopic.PRODUCTS_AND_SERVICES: "products and services",
@@ -47,7 +43,7 @@ class TavilySearch:
         ):
             raise ProviderCallError(ProviderErrorCategory.INVALID_REQUEST)
         bounded_results = min(max(max_results, 1), self._settings.max_search_results)
-        query = f"{_COMPANY_NAMES[company]} {_TOPIC_TEXT[topic]}"
+        query = f"{APPROVED_COMPANY_NAMES[company]} {_TOPIC_TEXT[topic]}"
         response = await post_json(
             self._client,
             "https://api.tavily.com/search",

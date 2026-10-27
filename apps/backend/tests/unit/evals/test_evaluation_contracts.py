@@ -35,6 +35,7 @@ from evals.runner import (
     build_replay_run,
     load_dataset,
     run_self_check,
+    validate_dataset,
 )
 
 
@@ -418,6 +419,115 @@ def test_missing_identity_capture_stays_unsupported() -> None:
     assert result.status.value == "unsupported_feature"
     assert any(
         item.name.value == "identity_resolution" for item in result.unsupported_checks
+    )
+
+
+@pytest.mark.parametrize(
+    ("observed", "expected_status", "expected_correct"),
+    [
+        (Relevance.RELEVANT, CaseResultStatus.REVIEW_PENDING, True),
+        (Relevance.IRRELEVANT, CaseResultStatus.FAILED, False),
+        (None, CaseResultStatus.UNSUPPORTED_FEATURE, None),
+    ],
+)
+def test_relevance_can_be_evaluated_without_identity(
+    observed: Relevance | None,
+    expected_status: CaseResultStatus,
+    expected_correct: bool | None,
+) -> None:
+    case = _case(checks=["relevance"], expected_relevance="relevant")
+    dataset = EvaluationDataset(version="interpretation-v2", cases=[case], sources=[])
+    capture = ReplayCapture(
+        dataset_version=dataset.version,
+        application_revision="a" * 40,
+        prompt_version="prompt-v1",
+        model_id="model-v1",
+        config_hash="b" * 64,
+        cases=[CapturedCase(case_id=case.id, relevance=observed)],
+    )
+    result = build_replay_run(dataset, capture).case_results[0]
+    assert result.status is expected_status
+    assert result.relevance_correct is expected_correct
+    assert result.identity_correct is None
+
+
+def test_relevance_check_requires_a_known_expectation() -> None:
+    with pytest.raises(ValidationError):
+        _case(checks=["relevance"], expected_relevance="unknown")
+
+
+def test_interpretation_v2_covers_paired_languages_and_declares_limits() -> None:
+    root = Path(__file__).parents[3] / "evals" / "datasets" / "interpretation-v2"
+    dataset = load_dataset(root)
+    assert len(dataset.cases) == 56
+    assert all(case.status is CaseStatus.CANDIDATE for case in dataset.cases)
+    assert all(
+        [item.value for item in case.checks] == ["relevance"] for case in dataset.cases
+    )
+    assert all(
+        any(
+            check.name.value == "identity_resolution"
+            for check in case.unsupported_checks
+        )
+        for case in dataset.cases
+    )
+    by_id = {case.id: case for case in dataset.cases}
+    for case in dataset.cases:
+        counterpart = case.id[:-3] + ("-vi" if case.language.value == "en" else "-en")
+        assert counterpart in by_id
+        assert by_id[counterpart].expected_relevance is case.expected_relevance
+    report = validate_dataset(dataset)
+    assert report["languages"] == {"en": 28, "vi": 28}
+    assert report["relevance_expectations"] == {
+        "irrelevant": 14,
+        "relevant": 32,
+        "uncertain": 10,
+    }
+    assert report["unsupported_checks"] == {
+        "identity_resolution": 56,
+        "workflow_events": 6,
+    }
+    case = dataset.cases[0]
+    capture = ReplayCapture(
+        dataset_version=dataset.version,
+        application_revision="a" * 40,
+        prompt_version="prompt-v1",
+        model_id="model-v1",
+        config_hash="b" * 64,
+        cases=[CapturedCase(case_id=case.id, relevance=case.expected_relevance)],
+    )
+    result = next(
+        r
+        for r in build_replay_run(dataset, capture).case_results
+        if r.case_id == case.id
+    )
+    assert result.relevance_correct is True
+    assert result.identity_correct is None
+    assert result.status is CaseResultStatus.UNSUPPORTED_FEATURE
+
+
+def test_customer_examples_preserve_input_and_report_missing_workflow() -> None:
+    root = Path(__file__).parents[3] / "evals" / "datasets" / "customer-examples-v1"
+    dataset = load_dataset(root)
+    assert len(dataset.cases) == 12
+    assert validate_dataset(dataset)["languages"] == {"en": 6, "vi": 6}
+    assert not dataset.sources
+    assert all(
+        case.synthetic and case.status is CaseStatus.CANDIDATE for case in dataset.cases
+    )
+    for case in dataset.cases:
+        assert case.meeting is None
+        assert "https://" in case.email.body
+        assert {item.name.value for item in case.unsupported_checks} >= {
+            "identity_resolution",
+            "source_provenance",
+            "claim_reference_integrity",
+            "usefulness_review",
+        }
+    viettel = next(case for case in dataset.cases if case.id == "viettel-solutions-vi")
+    assert any(
+        item.name.value == "attachment_provenance"
+        for item in viettel.unsupported_checks
     )
 
 

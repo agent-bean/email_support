@@ -365,6 +365,33 @@ async def test_tavily_search_uses_bounded_typed_public_query() -> None:
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("company", "name"),
+    [
+        ("fpt_software", "FPT Software"),
+        ("vinamilk", "Vinamilk"),
+        ("samsung_vietnam", "Samsung Electronics Vietnam"),
+        ("shopee_vietnam", "Shopee Vietnam"),
+        ("viettel_solutions", "Viettel Solutions"),
+        ("bosch_vietnam", "Bosch Global Software Technologies Vietnam"),
+    ],
+)
+async def test_customer_research_queries_use_approved_public_names(
+    company: str, name: str
+) -> None:
+    from email_support.models.research import ApprovedCompany, SearchTopic
+
+    async def handler(request: httpx2.Request) -> httpx2.Response:
+        assert json.loads(request.content)["query"] == f"{name} company overview"
+        return httpx2.Response(200, json={"results": []})
+
+    async with httpx2.AsyncClient(transport=httpx2.MockTransport(handler)) as client:
+        await TavilySearch(_settings(), client).search(
+            ApprovedCompany(company), SearchTopic.COMPANY_OVERVIEW
+        )
+
+
+@pytest.mark.asyncio
 async def test_provider_http_parses_bounded_retry_after_date() -> None:
     retry_at = format_datetime(datetime.now(UTC) + timedelta(seconds=2), usegmt=True)
 

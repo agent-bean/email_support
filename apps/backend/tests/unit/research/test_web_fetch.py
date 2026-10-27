@@ -151,7 +151,10 @@ def test_fetch_rejects_non_public_ip_addresses(value: str) -> None:
 
 class _FakeAnswers:
     def __init__(self, addresses: list[str]) -> None:
-        self.addresses = addresses
+        self._addresses = addresses
+
+    def addresses(self) -> list[str]:
+        return self._addresses
 
 
 class _FakeResolver:
@@ -185,6 +188,34 @@ async def test_fetch_uses_vetted_literal_ip_and_rejects_redirects() -> None:
     assert request.url.host in {"8.8.8.8", "2001:4860:4860::8888"}
     assert request.headers["host"] == "public.example"
     assert request.extensions["sni_hostname"] == "public.example"
+
+
+@pytest.mark.asyncio
+async def test_fetch_tries_another_vetted_address_after_connection_error() -> None:
+    from email_support.integrations.web_fetch import WebFetcher
+
+    attempted: list[str] = []
+
+    class TextStream(httpx2.AsyncByteStream):
+        async def __aiter__(self) -> AsyncIterator[bytes]:
+            yield b"Public text"
+
+    async def handler(request: httpx2.Request) -> httpx2.Response:
+        attempted.append(request.url.host)
+        if len(attempted) == 1:
+            raise httpx2.ConnectError("unreachable", request=request)
+        return httpx2.Response(
+            200, headers={"content-type": "text/plain"}, stream=TextStream()
+        )
+
+    def client_factory(**kwargs: Any) -> httpx2.AsyncClient:
+        return httpx2.AsyncClient(transport=httpx2.MockTransport(handler), **kwargs)
+
+    result = await WebFetcher(
+        resolver=_FakeResolver(), client_factory=client_factory
+    ).fetch("https://public.example/story")
+    assert result.text == "Public text"
+    assert attempted == ["8.8.8.8", "2001:4860:4860::8888"]
 
 
 @pytest.mark.asyncio

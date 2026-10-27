@@ -9,6 +9,7 @@ from pydantic import BaseModel
 
 from email_support.integrations.provider_http import ProviderCallError
 from email_support.models.research import (
+    APPROVED_COMPANY_NAMES,
     ApprovedCompany,
     ChatCompletionRequest,
     ChatCompletionResult,
@@ -33,11 +34,6 @@ class ResearchGateway(Protocol):
     ) -> ChatCompletionResult: ...
 
 
-_COMPANY_NAMES = {
-    ApprovedCompany.MICROSOFT: "Microsoft",
-    ApprovedCompany.SALESFORCE: "Salesforce",
-    ApprovedCompany.ADOBE: "Adobe",
-}
 _TOPIC_NAMES = {
     SearchTopic.COMPANY_OVERVIEW: "company overview",
     SearchTopic.PRODUCTS_AND_SERVICES: "products and services",
@@ -54,7 +50,7 @@ async def request_public_research(
     run_id: UUID,
 ) -> ChatCompletionResult:
     """Build the research model context only from approved public identifiers."""
-    company = _COMPANY_NAMES[request.company]
+    company = APPROVED_COMPANY_NAMES[request.company]
     topic = _TOPIC_NAMES[request.topic]
     chat_request = ChatCompletionRequest(
         model=model,

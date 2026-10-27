@@ -92,7 +92,6 @@ class WebFetcher:
         remaining_seconds = deadline - time.monotonic()
         if remaining_seconds <= 0:
             raise ProviderCallError(ProviderErrorCategory.FETCH_UNAVAILABLE)
-        literal_url = _replace_host(parsed, addresses[0])
         tls = ssl.create_default_context()
         limits = httpx2.Limits(max_connections=1, max_keepalive_connections=0)
         try:
@@ -104,70 +103,79 @@ class WebFetcher:
                     http2=False,
                     limits=limits,
                 ) as client:
-                    async with client.stream(
-                        "GET",
-                        literal_url,
-                        headers={
-                            "Host": host,
-                            "Accept": "text/html, application/xhtml+xml, text/plain",
-                            "Accept-Encoding": "identity",
-                        },
-                        extensions={"sni_hostname": host},
-                    ) as response:
-                        if response.status_code in {301, 302, 303, 307, 308}:
-                            raise ProviderCallError(
-                                ProviderErrorCategory.FETCH_UNAVAILABLE
-                            )
-                        if response.status_code != 200:
-                            raise ProviderCallError(
-                                ProviderErrorCategory.FETCH_UNAVAILABLE
-                            )
-                        content_type = (
-                            response.headers.get("content-type", "")
-                            .split(";", 1)[0]
-                            .strip()
-                            .lower()
-                        )
-                        if content_type not in {
-                            "text/html",
-                            "application/xhtml+xml",
-                            "text/plain",
-                        }:
-                            raise ProviderCallError(
-                                ProviderErrorCategory.FETCH_UNAVAILABLE
-                            )
-                        encoding = (
-                            response.headers.get("content-encoding", "identity")
-                            .strip()
-                            .lower()
-                        )
-                        if encoding not in {"", "identity"}:
-                            raise ProviderCallError(
-                                ProviderErrorCategory.FETCH_UNAVAILABLE
-                            )
-                        content_length = response.headers.get("content-length")
-                        if content_length is not None:
-                            try:
-                                declared_length = int(content_length)
-                            except ValueError:
-                                raise ProviderCallError(
-                                    ProviderErrorCategory.MALFORMED_RESPONSE
-                                ) from None
-                            if declared_length < 0:
-                                raise ProviderCallError(
-                                    ProviderErrorCategory.MALFORMED_RESPONSE
+                    for address in addresses:
+                        try:
+                            async with client.stream(
+                                "GET",
+                                _replace_host(parsed, address),
+                                headers={
+                                    "Host": host,
+                                    "Accept": (
+                                        "text/html, application/xhtml+xml, text/plain"
+                                    ),
+                                    "Accept-Encoding": "identity",
+                                },
+                                extensions={"sni_hostname": host},
+                            ) as response:
+                                if response.status_code in {301, 302, 303, 307, 308}:
+                                    raise ProviderCallError(
+                                        ProviderErrorCategory.FETCH_UNAVAILABLE
+                                    )
+                                if response.status_code != 200:
+                                    raise ProviderCallError(
+                                        ProviderErrorCategory.FETCH_UNAVAILABLE
+                                    )
+                                content_type = (
+                                    response.headers.get("content-type", "")
+                                    .split(";", 1)[0]
+                                    .strip()
+                                    .lower()
                                 )
-                            if declared_length > self._max_bytes:
-                                raise ProviderCallError(
-                                    ProviderErrorCategory.FETCH_UNAVAILABLE
+                                if content_type not in {
+                                    "text/html",
+                                    "application/xhtml+xml",
+                                    "text/plain",
+                                }:
+                                    raise ProviderCallError(
+                                        ProviderErrorCategory.FETCH_UNAVAILABLE
+                                    )
+                                encoding = (
+                                    response.headers.get("content-encoding", "identity")
+                                    .strip()
+                                    .lower()
                                 )
-                        body = bytearray()
-                        async for chunk in response.aiter_raw():
-                            body.extend(chunk)
-                            if len(body) > self._max_bytes:
-                                raise ProviderCallError(
-                                    ProviderErrorCategory.FETCH_UNAVAILABLE
-                                )
+                                if encoding not in {"", "identity"}:
+                                    raise ProviderCallError(
+                                        ProviderErrorCategory.FETCH_UNAVAILABLE
+                                    )
+                                content_length = response.headers.get("content-length")
+                                if content_length is not None:
+                                    try:
+                                        declared_length = int(content_length)
+                                    except ValueError:
+                                        raise ProviderCallError(
+                                            ProviderErrorCategory.MALFORMED_RESPONSE
+                                        ) from None
+                                    if declared_length < 0:
+                                        raise ProviderCallError(
+                                            ProviderErrorCategory.MALFORMED_RESPONSE
+                                        )
+                                    if declared_length > self._max_bytes:
+                                        raise ProviderCallError(
+                                            ProviderErrorCategory.FETCH_UNAVAILABLE
+                                        )
+                                body = bytearray()
+                                async for chunk in response.aiter_raw():
+                                    body.extend(chunk)
+                                    if len(body) > self._max_bytes:
+                                        raise ProviderCallError(
+                                            ProviderErrorCategory.FETCH_UNAVAILABLE
+                                        )
+                            break
+                        except httpx2.ConnectError:
+                            continue
+                    else:
+                        raise ProviderCallError(ProviderErrorCategory.FETCH_UNAVAILABLE)
         except asyncio.CancelledError:
             raise
         except TimeoutError:
@@ -213,8 +221,11 @@ class WebFetcher:
             raise
         except Exception:
             raise ProviderCallError(ProviderErrorCategory.FETCH_UNAVAILABLE) from None
-        raw_addresses = getattr(answers, "addresses", None)
-        if not isinstance(raw_addresses, list) or not raw_addresses:
+        address_iterator = getattr(answers, "addresses", None)
+        if not callable(address_iterator):
+            raise ProviderCallError(ProviderErrorCategory.FETCH_UNAVAILABLE)
+        raw_addresses = list(address_iterator())
+        if not raw_addresses:
             raise ProviderCallError(ProviderErrorCategory.FETCH_UNAVAILABLE)
         addresses: list[ipaddress.IPv4Address | ipaddress.IPv6Address] = []
         for raw in raw_addresses:

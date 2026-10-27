@@ -25,11 +25,30 @@ class ResearchContract(BaseModel):
 
 
 class ApprovedCompany(StrEnum):
-    """Public company identities approved for the initial synthetic corpus."""
+    """Public company identities eligible for explicitly approved research."""
 
     MICROSOFT = "microsoft"
     SALESFORCE = "salesforce"
     ADOBE = "adobe"
+    FPT_SOFTWARE = "fpt_software"
+    VINAMILK = "vinamilk"
+    SAMSUNG_VIETNAM = "samsung_vietnam"
+    SHOPEE_VIETNAM = "shopee_vietnam"
+    VIETTEL_SOLUTIONS = "viettel_solutions"
+    BOSCH_VIETNAM = "bosch_vietnam"
+
+
+APPROVED_COMPANY_NAMES = {
+    ApprovedCompany.MICROSOFT: "Microsoft",
+    ApprovedCompany.SALESFORCE: "Salesforce",
+    ApprovedCompany.ADOBE: "Adobe",
+    ApprovedCompany.FPT_SOFTWARE: "FPT Software",
+    ApprovedCompany.VINAMILK: "Vinamilk",
+    ApprovedCompany.SAMSUNG_VIETNAM: "Samsung Electronics Vietnam",
+    ApprovedCompany.SHOPEE_VIETNAM: "Shopee Vietnam",
+    ApprovedCompany.VIETTEL_SOLUTIONS: "Viettel Solutions",
+    ApprovedCompany.BOSCH_VIETNAM: "Bosch Global Software Technologies Vietnam",
+}
 
 
 class SearchTopic(StrEnum):

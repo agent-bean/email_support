@@ -39,6 +39,7 @@ from evals.models import (
 DATASET_ROOT = Path(__file__).parent / "datasets" / "briefing-v1"
 ORACLE_PATH = Path(__file__).parent / "fixtures" / "evaluator-oracle.json"
 IMPLEMENTED_CHECKS = {
+    CheckName.RELEVANCE,
     CheckName.CLAIM_REFERENCE_INTEGRITY,
     CheckName.SOURCE_PROVENANCE,
     CheckName.IDENTITY_RESOLUTION,
@@ -98,9 +99,19 @@ def load_dataset(directory: Path) -> EvaluationDataset:
 def validate_dataset(dataset: EvaluationDataset) -> dict[str, object]:
     counts = {status: 0 for status in CaseStatus}
     languages: dict[str, int] = {}
+    relevance: dict[str, int] = {}
+    applicable_checks: dict[str, int] = {}
+    unsupported_checks: dict[str, int] = {}
     for case in dataset.cases:
         counts[case.status] += 1
         languages[case.language.value] = languages.get(case.language.value, 0) + 1
+        label = case.expected_relevance.value
+        relevance[label] = relevance.get(label, 0) + 1
+        for check in case.checks:
+            applicable_checks[check.value] = applicable_checks.get(check.value, 0) + 1
+        for unsupported in case.unsupported_checks:
+            name = unsupported.name.value
+            unsupported_checks[name] = unsupported_checks.get(name, 0) + 1
     return {
         "dataset_version": dataset.version,
         "case_count": len(dataset.cases),
@@ -109,6 +120,9 @@ def validate_dataset(dataset: EvaluationDataset) -> dict[str, object]:
         "reviewed_count": counts[CaseStatus.REVIEWED],
         "unsupported_count": counts[CaseStatus.UNSUPPORTED],
         "languages": dict(sorted(languages.items())),
+        "relevance_expectations": dict(sorted(relevance.items())),
+        "applicable_checks": dict(sorted(applicable_checks.items())),
+        "unsupported_checks": dict(sorted(unsupported_checks.items())),
         "scenarios": sorted({case.scenario.value for case in dataset.cases}),
     }
 
@@ -205,6 +219,16 @@ def build_replay_run(
         unsupported = list(case.unsupported_checks)
         relevance_correct = None
         identity_correct = None
+        if CheckName.RELEVANCE in case.checks:
+            if entry.relevance is None:
+                unsupported.append(
+                    UnsupportedCheck(
+                        name=CheckName.RELEVANCE,
+                        reason="A captured relevance outcome is required.",
+                    )
+                )
+            else:
+                relevance_correct = entry.relevance is case.expected_relevance
         if CheckName.IDENTITY_RESOLUTION in case.checks:
             if entry.relevance is None or entry.identity is None:
                 unsupported.append(
