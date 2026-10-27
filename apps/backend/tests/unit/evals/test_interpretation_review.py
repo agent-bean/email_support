@@ -50,6 +50,13 @@ def test_missing_results_are_not_scored_as_negative_and_pairs_are_pending() -> N
         item["review_status"] == "pending_human_review" for item in report["pairs"]
     )
     assert all(item["relevance_equal"] is None for item in report["pairs"])
+    assert all(
+        item["relevance_check"]["status"] == "not_evaluated" for item in report["cases"]
+    )
+    error = build_review(
+        dataset, rubric, [{"case_id": dataset.cases[0].id, "status": "error"}]
+    )
+    assert error["cases"][0]["relevance_check"]["status"] == "not_evaluated"
 
 
 def test_duplicate_or_unknown_case_results_are_rejected() -> None:
@@ -94,6 +101,16 @@ def test_valid_capture_requires_bound_input_and_validated_output() -> None:
     }
     report = build_review(dataset, rubric, [record])
     assert report["cases"][0]["missing_company_mentions"] == ["FPT Software"]
+    assert report["cases"][0]["relevance_check"]["status"] == "pass"
+    assert report["cases"][0]["unsupported_checks"]
+    assert "input" not in report["cases"][0] and "output" not in report["cases"][0]
+    full = build_review(dataset, rubric, [record], include_content=True)["cases"][0]
+    assert full["normalized_input"] == record["input"]
+    assert full["output"] == record["output"]
+    record["output"]["relevance"] = "uncertain"
+    mismatch = build_review(dataset, rubric, [record])["cases"][0]["relevance_check"]
+    assert mismatch["status"] == "fail" and "uncertain" in mismatch["reason"]
+    record["output"]["relevance"] = "relevant"
     vietnamese = dataset.cases[1]
     vi_record = deepcopy(record)
     vi_record["case_id"] = vietnamese.id
@@ -138,3 +155,21 @@ def test_cli_sanitizes_invalid_private_capture(
     with pytest.raises(SystemExit):
         main()
     assert "PRIVATE-CANARY" not in capsys.readouterr().err
+
+
+def test_v3_distinguishes_profile_sharing_from_explicit_briefing() -> None:
+    v2_path = ROOT.parent / "customer-examples-v2"
+    v3_path = ROOT.parent / "customer-examples-v3"
+    v2 = load_dataset(v2_path)
+    v3 = load_dataset(v3_path)
+    rubric = load_rubric(v3_path / "interpretation-rubric.json", v3)
+    before = {case.id: case for case in v2.cases}
+    after = {case.id: case for case in v3.cases}
+    assert len(after) == 14 and len(rubric.pairs) == 7
+    for language in ("en", "vi"):
+        assert after[f"viettel-solutions-{language}"].expected_relevance == "uncertain"
+        assert after[f"viettel-briefing-{language}"].expected_relevance == "relevant"
+        assert after[f"viettel-briefing-{language}"].meeting is None
+    for case_id in before:
+        if not case_id.startswith("viettel-solutions-"):
+            assert before[case_id].content_hash() == after[case_id].content_hash()

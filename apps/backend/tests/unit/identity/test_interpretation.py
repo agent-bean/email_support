@@ -224,6 +224,7 @@ async def test_email_interpreter_uses_strict_output_without_any_tools() -> None:
             json.dumps(response_schema, ensure_ascii=False)
             in payload["messages"][0]["content"]
         )
+        assert "quote occurs exactly once" in payload["messages"][0]["content"]
         assert "tools" not in payload
         assert "stated_needs must be empty" in payload["messages"][0]["content"]
         assert "past meeting" in payload["messages"][0]["content"]

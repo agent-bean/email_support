@@ -23,7 +23,7 @@ from email_support.models.research import (
 )
 from email_support.tools.execution import ToolExecutor
 
-PROMPT_VERSION = "email-interpretation-v6"
+PROMPT_VERSION = "email-interpretation-v7"
 MAX_INTERPRETATION_INPUT_CHARS = 50_000
 
 
@@ -67,7 +67,10 @@ class EmailInterpretationAgent:
                         "business needs. "
                         "Extract explicit company/contact candidates "
                         "and sender-stated needs. Include an exact quote and character "
-                        "offsets into one supplied field. These are unverified "
+                        "offsets into one supplied field. Make sure each quote occurs "
+                        "exactly once "
+                        "in its field; if a name repeats, include enough surrounding "
+                        "text to make the quote unique. These are unverified "
                         "candidates, not identity decisions. Do not research, approve, "
                         "send, persist corrections, or claim company identity. "
                         f"Return the schema only. Prompt version: {PROMPT_VERSION}. "

@@ -16,7 +16,7 @@ from email_support.models.email_interpretation import (
     MeetingState,
     NormalizedInputCreate,
 )
-from evals.models import EvaluationDataset
+from evals.models import CheckName, EvaluationDataset, Relevance
 from evals.runner import EvaluationInputError, load_dataset
 
 
@@ -77,7 +77,11 @@ def load_rubric(path: Path, dataset: EvaluationDataset) -> Rubric:
 
 
 def build_review(
-    dataset: EvaluationDataset, rubric: Rubric, records: list[dict[str, Any]]
+    dataset: EvaluationDataset,
+    rubric: Rubric,
+    records: list[dict[str, Any]],
+    *,
+    include_content: bool = False,
 ) -> dict[str, Any]:
     cases = {case.id: case for case in dataset.cases}
     captured: dict[str, dict[str, Any]] = {}
@@ -145,8 +149,61 @@ def build_review(
                 else []
             )
             expected = pair.expected_company_mentions
+            case = cases[binding.case_id]
+            expected_relevance = case.expected_relevance.value
+            observed = output.get("relevance") if output else None
+            if (
+                CheckName.RELEVANCE not in case.checks
+                or case.expected_relevance is Relevance.UNKNOWN
+            ):
+                check = {
+                    "status": "not_evaluated",
+                    "reason": "Relevance is not applicable or has no expected label.",
+                }
+            elif output is None:
+                check = {
+                    "status": "not_evaluated",
+                    "reason": "No valid captured output.",
+                }
+            elif observed == expected_relevance:
+                check = {
+                    "status": "pass",
+                    "reason": (
+                        f"Observed '{observed}' matches "
+                        f"expected '{expected_relevance}'."
+                    ),
+                }
+            else:
+                check = {
+                    "status": "fail",
+                    "reason": (
+                        f"Expected '{expected_relevance}'; observed '{observed}'."
+                    ),
+                }
+            content = {}
+            if include_content:
+                content = {
+                    "input": {
+                        "email": case.email.model_dump(mode="json"),
+                        "meeting": case.meeting.model_dump(mode="json")
+                        if case.meeting
+                        else None,
+                    },
+                    "normalized_input": case_record.get("input")
+                    if case_record
+                    else None,
+                    "output": output,
+                    "raw_model_response": case_record.get("model_response")
+                    if case_record
+                    else None,
+                }
             case_reports.append(
                 {
+                    **content,
+                    "relevance_check": check,
+                    "unsupported_checks": [
+                        item.model_dump(mode="json") for item in case.unsupported_checks
+                    ],
                     "case_id": binding.case_id,
                     "status": case_record.get("status") if case_record else "missing",
                     "expected_relevance": cases[
@@ -214,6 +271,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dataset", type=Path, required=True)
     parser.add_argument("--log", type=Path, required=True)
+    parser.add_argument(
+        "--include-content",
+        action="store_true",
+        help="Include private input and output in the report",
+    )
     args = parser.parse_args()
     try:
         dataset = load_dataset(args.dataset)
@@ -226,7 +288,10 @@ def main() -> None:
         if len(runs) != 1 or runs[0].get("dataset_hash") != dataset.content_hash():
             raise EvaluationInputError("Capture does not bind to this dataset")
         report = build_review(
-            dataset, rubric, [row for row in rows if row.get("type") == "case"]
+            dataset,
+            rubric,
+            [row for row in rows if row.get("type") == "case"],
+            include_content=args.include_content,
         )
         report["run"] = {
             key: runs[0].get(key)
