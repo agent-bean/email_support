@@ -6,7 +6,7 @@ from uuid import UUID, uuid4
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from email_support.storage.postgres.persistence.tables.owner_auth import (
+from email_support.storage.postgres.persistence.tables.auth import (
     OAuthAttemptRow,
     OwnerSessionRow,
 )

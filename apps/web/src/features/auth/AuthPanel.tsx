@@ -1,21 +1,21 @@
 import type { ReactNode } from 'react';
-import { isOwnerAuthApiError } from '../../shared/api/owner-auth';
-import { useOwnerAuth } from './use-owner-auth';
+import { isAuthApiError } from '../../shared/api/auth';
+import { useAuth } from './use-auth';
 
-export function OwnerAuthPanel({
+export function AuthPanel({
   ownerContent,
 }: {
   ownerContent?: (csrfToken: string) => ReactNode;
 }) {
-  const { session, login, logout, signInHint } = useOwnerAuth();
-  const failure = isOwnerAuthApiError(session.error)
+  const { session, login, logout, signInHint } = useAuth();
+  const failure = isAuthApiError(session.error)
     ? session.error.code
     : undefined;
   const callbackHint = signInHint;
 
   return (
-    <section aria-labelledby="owner-auth-heading">
-      <h2 id="owner-auth-heading">Owner access</h2>
+    <section aria-labelledby="auth-heading">
+      <h2 id="auth-heading">Owner access</h2>
       {session.isPending && (
         <p role="status" aria-label="Checking owner access">
           Checking owner access…

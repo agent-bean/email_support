@@ -24,15 +24,15 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from email_support.config import AuthSettings
 from email_support.integrations.google_oidc import exchange_code
-from email_support.models.owner_auth import (
+from email_support.models.auth import (
+    AuthError,
+    AuthErrorCode,
     LoginRequest,
     LoginResponse,
-    OwnerAuthError,
-    OwnerAuthErrorCode,
     OwnerSession,
     PreauthResponse,
 )
-from email_support.services.owner_auth import (
+from email_support.services.auth import (
     begin_login,
     consume_login_callback,
     create_preauth,
@@ -46,7 +46,7 @@ from email_support.storage.postgres.persistence.database import (
     dispose_database_engine,
 )
 
-router = APIRouter(prefix="/api/auth", tags=["owner-auth"])
+router = APIRouter(prefix="/api/auth", tags=["auth"])
 logger = logging.getLogger(__name__)
 SESSION_TTL_SECONDS = 12 * 60 * 60
 HTTP_URL_ADAPTER: TypeAdapter[HttpUrl] = TypeAdapter(HttpUrl)
@@ -56,42 +56,42 @@ OWNER_SESSION_COOKIE = APIKeyCookie(
 
 
 @dataclass(slots=True)
-class OwnerAuthRuntime:
+class AuthRuntime:
     settings: AuthSettings | None
     sessions: async_sessionmaker[AsyncSession] | None
     configuration_error: str | None
 
 
 @asynccontextmanager
-async def owner_auth_runtime() -> AsyncIterator[OwnerAuthRuntime]:
+async def auth_runtime() -> AsyncIterator[AuthRuntime]:
     try:
         from email_support.config import load_auth_settings
 
         settings = load_auth_settings()
     except ValueError as exc:
-        yield OwnerAuthRuntime(None, None, str(exc))
+        yield AuthRuntime(None, None, str(exc))
         return
     if settings is None:
-        yield OwnerAuthRuntime(None, None, None)
+        yield AuthRuntime(None, None, None)
         return
     engine = create_database_engine(settings.database_url)
     try:
-        yield OwnerAuthRuntime(settings, create_session_factory(engine), None)
+        yield AuthRuntime(settings, create_session_factory(engine), None)
     finally:
         await dispose_database_engine(engine)
 
 
-def require_owner_auth_runtime(request: Request) -> OwnerAuthRuntime:
-    value = getattr(request.app.state, "owner_auth_runtime", None)
+def require_auth_runtime(request: Request) -> AuthRuntime:
+    value = getattr(request.app.state, "auth_runtime", None)
     if (
-        not isinstance(value, OwnerAuthRuntime)
+        not isinstance(value, AuthRuntime)
         or value.settings is None
         or value.sessions is None
     ):
         raise HTTPException(
             status_code=503,
-            detail=OwnerAuthError(
-                code=OwnerAuthErrorCode.AUTH_UNAVAILABLE,
+            detail=AuthError(
+                code=AuthErrorCode.AUTH_UNAVAILABLE,
                 message="Owner sign-in is not configured.",
             ).model_dump(mode="json"),
         )
@@ -159,34 +159,34 @@ def _cookie(
 
 async def protected_session(
     request: Request,
-    owner_auth: Annotated[OwnerAuthRuntime, Depends(require_owner_auth_runtime)],
+    auth: Annotated[AuthRuntime, Depends(require_auth_runtime)],
     _: Annotated[str | None, Security(OWNER_SESSION_COOKIE)],
 ) -> tuple[str, datetime, str]:
-    assert owner_auth.settings is not None and owner_auth.sessions is not None
-    token = _cookie(request, owner_auth.settings, session=True)
+    assert auth.settings is not None and auth.sessions is not None
+    token = _cookie(request, auth.settings, session=True)
     try:
-        result = await get_valid_session(owner_auth.sessions, token)
+        result = await get_valid_session(auth.sessions, token)
     except Exception as exc:
         raise HTTPException(
             status_code=503,
-            detail=OwnerAuthError(
-                code=OwnerAuthErrorCode.AUTH_UNAVAILABLE,
+            detail=AuthError(
+                code=AuthErrorCode.AUTH_UNAVAILABLE,
                 message="Owner session storage is unavailable.",
             ).model_dump(mode="json"),
         ) from exc
     if result is None:
         headers = None
         if token:
-            _, session_name = cookie_names(owner_auth.settings)
+            _, session_name = cookie_names(auth.settings)
             headers = {
                 "Set-Cookie": expired_cookie_header(
-                    session_name, owner_auth.settings.secure_cookie
+                    session_name, auth.settings.secure_cookie
                 )
             }
         raise HTTPException(
             status_code=401,
-            detail=OwnerAuthError(
-                code=OwnerAuthErrorCode.AUTH_REQUIRED,
+            detail=AuthError(
+                code=AuthErrorCode.AUTH_REQUIRED,
                 message="Sign in to continue.",
             ).model_dump(mode="json"),
             headers=headers,
@@ -197,30 +197,30 @@ async def protected_session(
 @router.get(
     "/preauth",
     response_model=PreauthResponse,
-    responses={503: {"model": OwnerAuthError}},
-    operation_id="get_owner_auth_preauth",
+    responses={503: {"model": AuthError}},
+    operation_id="get_auth_preauth",
 )
 async def preauth(request: Request, response: Response) -> PreauthResponse:
-    owner_auth = require_owner_auth_runtime(request)
-    assert owner_auth.settings is not None and owner_auth.sessions is not None
+    auth = require_auth_runtime(request)
+    assert auth.settings is not None and auth.sessions is not None
     try:
         browser_secret, csrf_secret = await create_preauth(
-            owner_auth.sessions, _cookie(request, owner_auth.settings)
+            auth.sessions, _cookie(request, auth.settings)
         )
     except Exception as exc:
         raise HTTPException(
             status_code=503,
-            detail=OwnerAuthError(
-                code=OwnerAuthErrorCode.AUTH_UNAVAILABLE,
+            detail=AuthError(
+                code=AuthErrorCode.AUTH_UNAVAILABLE,
                 message="Owner sign-in is unavailable.",
             ).model_dump(mode="json"),
         ) from exc
-    browser_name, _ = cookie_names(owner_auth.settings)
+    browser_name, _ = cookie_names(auth.settings)
     set_cookie(
         response,
         name=browser_name,
         value=browser_secret,
-        secure=owner_auth.settings.secure_cookie,
+        secure=auth.settings.secure_cookie,
         max_age=600,
     )
     response.headers["Cache-Control"] = "no-store"
@@ -231,8 +231,8 @@ async def preauth(request: Request, response: Response) -> PreauthResponse:
     "/google/login",
     response_model=LoginResponse,
     responses={
-        400: {"model": OwnerAuthError},
-        503: {"model": OwnerAuthError},
+        400: {"model": AuthError},
+        503: {"model": AuthError},
     },
     operation_id="start_google_login",
 )
@@ -241,43 +241,43 @@ async def start_google_login(
     _payload: LoginRequest,
     csrf_token: str | None = Header(default=None, alias="X-CSRF-Token"),
 ) -> LoginResponse:
-    owner_auth = require_owner_auth_runtime(request)
-    assert owner_auth.settings is not None and owner_auth.sessions is not None
-    if request.headers.get("origin") != owner_auth.settings.web_origin:
+    auth = require_auth_runtime(request)
+    assert auth.settings is not None and auth.sessions is not None
+    if request.headers.get("origin") != auth.settings.web_origin:
         raise HTTPException(
             status_code=400,
-            detail=OwnerAuthError(
-                code=OwnerAuthErrorCode.CSRF_REJECTED,
+            detail=AuthError(
+                code=AuthErrorCode.CSRF_REJECTED,
                 message="Restart sign-in from this application.",
             ).model_dump(mode="json"),
         )
     content_type = request.headers.get("content-type", "").split(";", maxsplit=1)[0]
     if content_type != "application/json":
         raise HTTPException(status_code=415, detail="JSON content type is required")
-    browser_secret = _cookie(request, owner_auth.settings)
+    browser_secret = _cookie(request, auth.settings)
     if not csrf_token or not browser_secret:
         authorization = None
     else:
         try:
             authorization = await begin_login(
-                owner_auth.settings,
-                owner_auth.sessions,
+                auth.settings,
+                auth.sessions,
                 browser_cookie=browser_secret,
                 csrf_secret=csrf_token,
             )
         except Exception as exc:
             raise HTTPException(
                 status_code=503,
-                detail=OwnerAuthError(
-                    code=OwnerAuthErrorCode.AUTH_UNAVAILABLE,
+                detail=AuthError(
+                    code=AuthErrorCode.AUTH_UNAVAILABLE,
                     message="Owner sign-in is unavailable.",
                 ).model_dump(mode="json"),
             ) from exc
     if authorization is None:
         raise HTTPException(
             status_code=400,
-            detail=OwnerAuthError(
-                code=OwnerAuthErrorCode.LOGIN_RESTART,
+            detail=AuthError(
+                code=AuthErrorCode.LOGIN_RESTART,
                 message="Restart sign-in and try again.",
             ).model_dump(mode="json"),
         )
@@ -297,59 +297,59 @@ async def google_callback(
     state: str | None = None,
     error: str | None = None,
 ) -> RedirectResponse:
-    owner_auth = require_owner_auth_runtime(request)
-    assert owner_auth.settings is not None and owner_auth.sessions is not None
-    browser_secret = _cookie(request, owner_auth.settings)
+    auth = require_auth_runtime(request)
+    assert auth.settings is not None and auth.sessions is not None
+    browser_secret = _cookie(request, auth.settings)
     if not browser_secret or not state:
-        return _auth_redirect(owner_auth.settings, "restart")
+        return _auth_redirect(auth.settings, "restart")
     try:
         attempt = await consume_login_callback(
-            owner_auth.sessions, browser_cookie=browser_secret, state=state
+            auth.sessions, browser_cookie=browser_secret, state=state
         )
     except Exception as exc:
         logger.warning(
             "Google login callback failed during attempt consumption (%s)",
             _safe_failure_category(exc),
         )
-        return _auth_redirect(owner_auth.settings, "unavailable")
+        return _auth_redirect(auth.settings, "unavailable")
     if attempt is None:
-        return _auth_redirect(owner_auth.settings, "restart")
+        return _auth_redirect(auth.settings, "restart")
     if error or not code or not attempt.nonce or not attempt.code_verifier:
-        return _auth_redirect(owner_auth.settings, "rejected")
+        return _auth_redirect(auth.settings, "rejected")
     failure_stage = "token exchange"
     try:
         identity = await exchange_code(
             code,
-            client_id=owner_auth.settings.google_client_id,
-            client_secret=owner_auth.settings.google_client_secret,
-            callback_uri=owner_auth.settings.callback_uri,
+            client_id=auth.settings.google_client_id,
+            client_secret=auth.settings.google_client_secret,
+            callback_uri=auth.settings.callback_uri,
             code_verifier=attempt.code_verifier,
             expected_nonce=attempt.nonce,
         )
         failure_stage = "session issuance"
-        old_token = _cookie(request, owner_auth.settings, session=True)
+        old_token = _cookie(request, auth.settings, session=True)
         credentials = await issue_owner_session(
-            owner_auth.sessions,
+            auth.sessions,
             identity=identity,
-            owner_sub=owner_auth.settings.owner_sub,
+            owner_sub=auth.settings.owner_sub,
             old_token=old_token,
         )
     except PermissionError:
-        return _auth_redirect(owner_auth.settings, "rejected")
+        return _auth_redirect(auth.settings, "rejected")
     except Exception as exc:
         logger.warning(
             "Google login callback failed during %s (%s)",
             failure_stage,
             _safe_failure_category(exc),
         )
-        return _auth_redirect(owner_auth.settings, "unavailable")
-    _, session_name = cookie_names(owner_auth.settings)
-    response = _auth_redirect(owner_auth.settings, "ok")
+        return _auth_redirect(auth.settings, "unavailable")
+    _, session_name = cookie_names(auth.settings)
+    response = _auth_redirect(auth.settings, "ok")
     set_cookie(
         response,
         name=session_name,
         value=credentials.raw_token,
-        secure=owner_auth.settings.secure_cookie,
+        secure=auth.settings.secure_cookie,
         max_age=SESSION_TTL_SECONDS,
     )
     return response
@@ -358,7 +358,7 @@ async def google_callback(
 @router.get(
     "/session",
     response_model=OwnerSession,
-    responses={401: {"model": OwnerAuthError}, 503: {"model": OwnerAuthError}},
+    responses={401: {"model": AuthError}, 503: {"model": AuthError}},
     operation_id="get_owner_session",
 )
 async def get_session(
@@ -374,7 +374,7 @@ async def get_session(
 @router.post(
     "/logout",
     status_code=204,
-    responses={401: {"model": OwnerAuthError}, 403: {"model": OwnerAuthError}},
+    responses={401: {"model": AuthError}, 403: {"model": AuthError}},
     operation_id="logout_owner",
 )
 async def logout(
@@ -383,28 +383,28 @@ async def logout(
     identity: tuple[str, datetime, str] = Depends(protected_session),
     csrf_token: str | None = Header(default=None, alias="X-CSRF-Token"),
 ) -> Response:
-    owner_auth = require_owner_auth_runtime(request)
-    assert owner_auth.settings is not None and owner_auth.sessions is not None
-    if request.headers.get("origin") != owner_auth.settings.web_origin:
+    auth = require_auth_runtime(request)
+    assert auth.settings is not None and auth.sessions is not None
+    if request.headers.get("origin") != auth.settings.web_origin:
         raise HTTPException(
             status_code=403,
-            detail=OwnerAuthError(
-                code=OwnerAuthErrorCode.CSRF_REJECTED,
+            detail=AuthError(
+                code=AuthErrorCode.CSRF_REJECTED,
                 message="This request could not be verified.",
             ).model_dump(mode="json"),
         )
-    _, session_name = cookie_names(owner_auth.settings)
-    raw_token = _cookie(request, owner_auth.settings, session=True)
+    _, session_name = cookie_names(auth.settings)
+    raw_token = _cookie(request, auth.settings, session=True)
     # protected_session already validated the row; compare the synchronizer token.
     if not csrf_token or not hmac.compare_digest(csrf_token, identity[2]):
         raise HTTPException(
             status_code=403,
-            detail=OwnerAuthError(
-                code=OwnerAuthErrorCode.CSRF_REJECTED,
+            detail=AuthError(
+                code=AuthErrorCode.CSRF_REJECTED,
                 message="This request could not be verified.",
             ).model_dump(mode="json"),
         )
-    await logout_session(owner_auth.sessions, raw_token or "")
-    clear_cookie(response, session_name, owner_auth.settings.secure_cookie)
+    await logout_session(auth.sessions, raw_token or "")
+    clear_cookie(response, session_name, auth.settings.secure_cookie)
     response.status_code = 204
     return response

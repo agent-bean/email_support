@@ -5,6 +5,22 @@ export type ClientOptions = {
 };
 
 /**
+ * AuthError
+ */
+export type AuthError = {
+    code: AuthErrorCode;
+    /**
+     * Message
+     */
+    message: string;
+};
+
+/**
+ * AuthErrorCode
+ */
+export type AuthErrorCode = 'auth_unavailable' | 'auth_required' | 'csrf_rejected' | 'login_rejected' | 'login_restart';
+
+/**
  * GoogleConnectionErrorCode
  */
 export type GoogleConnectionErrorCode = 'partial_scope' | 'consent_denied' | 'identity_mismatch' | 'session_expired' | 'invalid_callback' | 'refresh_invalid' | 'provider_unavailable' | 'refresh_busy' | 'credentials_unavailable' | 'revocation_pending';
@@ -113,22 +129,6 @@ export type LoginResponse = {
 };
 
 /**
- * OwnerAuthError
- */
-export type OwnerAuthError = {
-    code: OwnerAuthErrorCode;
-    /**
-     * Message
-     */
-    message: string;
-};
-
-/**
- * OwnerAuthErrorCode
- */
-export type OwnerAuthErrorCode = 'auth_unavailable' | 'auth_required' | 'csrf_rejected' | 'login_rejected' | 'login_restart';
-
-/**
  * OwnerSession
  */
 export type OwnerSession = {
@@ -206,7 +206,7 @@ export type StartGoogleLoginErrors = {
     /**
      * Bad Request
      */
-    400: OwnerAuthError;
+    400: AuthError;
     /**
      * Validation Error
      */
@@ -214,7 +214,7 @@ export type StartGoogleLoginErrors = {
     /**
      * Service Unavailable
      */
-    503: OwnerAuthError;
+    503: AuthError;
 };
 
 export type StartGoogleLoginError = StartGoogleLoginErrors[keyof StartGoogleLoginErrors];
@@ -245,11 +245,11 @@ export type LogoutOwnerErrors = {
     /**
      * Unauthorized
      */
-    401: OwnerAuthError;
+    401: AuthError;
     /**
      * Forbidden
      */
-    403: OwnerAuthError;
+    403: AuthError;
     /**
      * Validation Error
      */
@@ -267,30 +267,30 @@ export type LogoutOwnerResponses = {
 
 export type LogoutOwnerResponse = LogoutOwnerResponses[keyof LogoutOwnerResponses];
 
-export type GetOwnerAuthPreauthData = {
+export type GetAuthPreauthData = {
     body?: never;
     path?: never;
     query?: never;
     url: '/api/auth/preauth';
 };
 
-export type GetOwnerAuthPreauthErrors = {
+export type GetAuthPreauthErrors = {
     /**
      * Service Unavailable
      */
-    503: OwnerAuthError;
+    503: AuthError;
 };
 
-export type GetOwnerAuthPreauthError = GetOwnerAuthPreauthErrors[keyof GetOwnerAuthPreauthErrors];
+export type GetAuthPreauthError = GetAuthPreauthErrors[keyof GetAuthPreauthErrors];
 
-export type GetOwnerAuthPreauthResponses = {
+export type GetAuthPreauthResponses = {
     /**
      * Successful Response
      */
     200: PreauthResponse;
 };
 
-export type GetOwnerAuthPreauthResponse = GetOwnerAuthPreauthResponses[keyof GetOwnerAuthPreauthResponses];
+export type GetAuthPreauthResponse = GetAuthPreauthResponses[keyof GetAuthPreauthResponses];
 
 export type GetOwnerSessionData = {
     body?: never;
@@ -303,11 +303,11 @@ export type GetOwnerSessionErrors = {
     /**
      * Unauthorized
      */
-    401: OwnerAuthError;
+    401: AuthError;
     /**
      * Service Unavailable
      */
-    503: OwnerAuthError;
+    503: AuthError;
 };
 
 export type GetOwnerSessionError = GetOwnerSessionErrors[keyof GetOwnerSessionErrors];

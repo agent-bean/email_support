@@ -51,10 +51,10 @@ from email_support.storage.postgres.persistence.google_connection import (
     release_refresh_lease,
     save_refreshed_bundle,
 )
+from email_support.storage.postgres.persistence.tables.auth import OAuthAttemptRow
 from email_support.storage.postgres.persistence.tables.google_connection import (
     GoogleConnectionRow,
 )
-from email_support.storage.postgres.persistence.tables.owner_auth import OAuthAttemptRow
 
 ATTEMPT_TTL = timedelta(minutes=10)
 REFRESH_LEASE_TTL = timedelta(seconds=30)

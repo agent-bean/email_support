@@ -6,7 +6,7 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 
 
-class OwnerAuthErrorCode(StrEnum):
+class AuthErrorCode(StrEnum):
     AUTH_UNAVAILABLE = "auth_unavailable"
     AUTH_REQUIRED = "auth_required"
     CSRF_REJECTED = "csrf_rejected"
@@ -14,9 +14,9 @@ class OwnerAuthErrorCode(StrEnum):
     LOGIN_RESTART = "login_restart"
 
 
-class OwnerAuthError(BaseModel):
+class AuthError(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    code: OwnerAuthErrorCode
+    code: AuthErrorCode
     message: str
 
 
