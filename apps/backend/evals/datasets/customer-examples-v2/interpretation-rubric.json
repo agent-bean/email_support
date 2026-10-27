@@ -1,0 +1,115 @@
+{
+  "dataset_version": "customer-examples-v2",
+  "dataset_hash": "f1301da6ad3b1ac1c1e7b68fc275f809e0f663aeebe5a377134f6dbc24e93058",
+  "pairs": [
+    {
+      "id": "fpt-software",
+      "expected_company_mentions": [
+        "FPT Software"
+      ],
+      "expected_need": "Learn about enterprise AI solutions",
+      "unknowns_and_forbidden": "Company identity is unverified; meeting not supplied",
+      "cases": {
+        "en": {
+          "case_id": "fpt-software-en",
+          "case_hash": "0e94f074dde22677950c9da56ac888750cc401668f684a19060a375b9aff62e8"
+        },
+        "vi": {
+          "case_id": "fpt-software-vi",
+          "case_hash": "e3740e2de405fcada77d855b3d9f44ac36e927d9d4fad878d5f188c15b8802f6"
+        }
+      }
+    },
+    {
+      "id": "vinamilk",
+      "expected_company_mentions": [
+        "Vinamilk"
+      ],
+      "expected_need": "Discuss AI for document management",
+      "unknowns_and_forbidden": "Company identity is unverified; meeting not supplied",
+      "cases": {
+        "en": {
+          "case_id": "vinamilk-en",
+          "case_hash": "968934076dc70d0602ed4bb146f9a7db29b024947c124c9f3b20f732a7e5d00c"
+        },
+        "vi": {
+          "case_id": "vinamilk-vi",
+          "case_hash": "b3438f7c5c7270ddd00191bc9f4f38bc636c8bc5f1cb085b8ae6932e36f33031"
+        }
+      }
+    },
+    {
+      "id": "samsung-vietnam",
+      "expected_company_mentions": [
+        "Samsung Electronics Vietnam"
+      ],
+      "expected_need": "Schedule solution introduction next week",
+      "unknowns_and_forbidden": "No exact date or calendar event supplied",
+      "cases": {
+        "en": {
+          "case_id": "samsung-vietnam-en",
+          "case_hash": "9900cd0e18d14ba0cc2789e5978ec09d27754427df12876b78a6ef84eee89669"
+        },
+        "vi": {
+          "case_id": "samsung-vietnam-vi",
+          "case_hash": "a411cbc4cf58a57a9497820ffa589d8402a6163261f6b85e52e91d1358fc2746"
+        }
+      }
+    },
+    {
+      "id": "shopee-vietnam",
+      "expected_company_mentions": [
+        "Shopee Vietnam"
+      ],
+      "expected_need": "Explore OCR solutions",
+      "unknowns_and_forbidden": "Company identity is unverified; meeting not supplied",
+      "cases": {
+        "en": {
+          "case_id": "shopee-vietnam-en",
+          "case_hash": "d46446d72809f8c40c734dcb383fcc61b7f0663607c050e6fe09d45fd41ad541"
+        },
+        "vi": {
+          "case_id": "shopee-vietnam-vi",
+          "case_hash": "ff0d4ef2b7e2156c0ea43b364e044d9c2314b116eaf3d34571a29f6caf043a05"
+        }
+      }
+    },
+    {
+      "id": "viettel-solutions",
+      "expected_company_mentions": [
+        "Viettel Solutions"
+      ],
+      "expected_need": "Share capability profile for reference",
+      "unknowns_and_forbidden": "Attachment content is unavailable; no explicit next step or meeting",
+      "cases": {
+        "en": {
+          "case_id": "viettel-solutions-en",
+          "case_hash": "f4d7bd5d0d6ef87560036fd17dffaf2bd5c4d6c2f0d567c693d14b22aa4125fc"
+        },
+        "vi": {
+          "case_id": "viettel-solutions-vi",
+          "case_hash": "7fb01c2efa995d09cadf44a313db99fc20af5ec8357abc53b0bed8e45248d724"
+        }
+      },
+      "relevance_review": "Consider uncertain: message shares a profile but gives no concrete next step; candidate relevant reflects the wider owner scenario, which is absent from email input."
+    },
+    {
+      "id": "bosch-vietnam",
+      "expected_company_mentions": [
+        "Bosch Global Software Technologies Vietnam"
+      ],
+      "expected_need": "Discuss AI automation",
+      "unknowns_and_forbidden": "Company identity is unverified; meeting not supplied",
+      "cases": {
+        "en": {
+          "case_id": "bosch-vietnam-en",
+          "case_hash": "beca4be73a91895e296567933294d6674fc438762e833fd5de9414f8e1122438"
+        },
+        "vi": {
+          "case_id": "bosch-vietnam-vi",
+          "case_hash": "69d023e9cfd3e24c979ed2412b44da3cf24e51fe86f270feb812ff553748d604"
+        }
+      }
+    }
+  ]
+}

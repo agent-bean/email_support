@@ -531,6 +531,39 @@ def test_customer_examples_preserve_input_and_report_missing_workflow() -> None:
     )
 
 
+def test_current_customer_websites_preserve_historical_cases_and_review_bindings() -> (
+    None
+):
+    from evals.interpretation_review import load_rubric
+
+    root = Path(__file__).parents[3] / "evals" / "datasets"
+    old = load_dataset(root / "customer-examples-v1")
+    current_dir = root / "customer-examples-v2"
+    current = load_dataset(current_dir)
+    assert current.version == "customer-examples-v2"
+    assert (
+        len(load_rubric(current_dir / "interpretation-rubric.json", current).pairs) == 6
+    )
+    assert current.content_hash() != old.content_hash()
+    replacements = {
+        "https://viettelsolutions.vn": "https://solutions.viettel.vn/en",
+        "https://www.bosch.com/vn": (
+            "https://www.bosch-softwaretechnologies.com/en/locations/vietnam/vechungtoi.html"
+        ),
+    }
+    for before, after in zip(old.cases, current.cases, strict=True):
+        expected_body = before.email.body
+        for old_url, new_url in replacements.items():
+            expected_body = expected_body.replace(old_url, new_url)
+        expected = before.model_dump(mode="json")
+        expected["email"]["body"] = expected_body
+        assert after.model_dump(mode="json") == expected
+        if before.id.startswith(("viettel-solutions-", "bosch-vietnam-")):
+            assert after.content_hash() != before.content_hash()
+        else:
+            assert after.content_hash() == before.content_hash()
+
+
 def test_dataset_loads_bilingual_candidate_scenarios_and_verified_sources() -> None:
     root = Path(__file__).parents[3] / "evals" / "datasets" / "briefing-v1"
     dataset = load_dataset(root)

@@ -41,6 +41,8 @@ The separate [`interpretation-v2` corpus](../apps/backend/evals/datasets/interpr
 
 The [`customer-examples-v1` corpus](../apps/backend/evals/datasets/customer-examples-v1/README.md) contains six owner-supplied customer situations as 12 bilingual candidate cases. Their company URLs are input claims rather than research evidence. The read-only research adapters can search these six named public companies when explicitly permitted for an invocation, but the replay does not yet score research or briefing quality. The screenshot does not provide Viettel's attachment or a Samsung calendar event, so neither is invented.
 
+The [`customer-examples-v2` corpus](../apps/backend/evals/datasets/customer-examples-v2/README.md) preserves those situations while refreshing two synthetic sender-supplied website URLs against [documented company and official sources](../apps/backend/evals/datasets/customer-examples-v2/website-verification.md). The original corpus and its run bindings remain available. URL checks do not turn sender claims into verified identity, source snapshots or approved expectations.
+
 Both interpretation corpora include a case-hash-bound `interpretation-rubric.json` covering each English/Vietnamese pair. It records candidate company mentions, needs, unknowns and forbidden inferences for review. The review aid checks exact company-name presence and compares relevance and need presence across pairs; these are diagnostics, not semantic correctness or approved golden labels. It validates captured inputs and evidence spans against the dataset, and marks every semantic assessment pending human review. The Viettel rubric flags that the email alone does not clearly state the wider intended workflow, so its relevance expectation needs a decision rather than an automatic label change.
 
 ## Measures and decisions
@@ -67,6 +69,7 @@ uv run --locked python -m evals self-check
 uv run --locked python -m evals validate --dataset evals/datasets/briefing-v1
 uv run --locked python -m evals validate --dataset evals/datasets/interpretation-v2
 uv run --locked python -m evals validate --dataset evals/datasets/customer-examples-v1
+uv run --locked python -m evals validate --dataset evals/datasets/customer-examples-v2
 uv run --locked python -m evals replay --dataset evals/datasets/briefing-v1 --results PATH_TO_CAPTURED_RESULTS --output evals/results/run.json
 uv run --locked python -m evals replay --dataset evals/datasets/briefing-v1 --results PATH_TO_CAPTURED_RESULTS --review PATH_TO_HUMAN_REVIEW --output evals/results/reviewed-run.json
 uv run --locked python -m evals review --run evals/results/run.json --review PATH_TO_HUMAN_REVIEW
@@ -77,8 +80,8 @@ The validation report lists expected relevance distribution and applicable and u
 For a bounded live interpretation run and its review aid, run from `apps/backend`:
 
 ```sh
-uv run --env-file ../../.env --locked python -m scripts.evaluate_interpretation --dataset evals/datasets/customer-examples-v1 --output evals/results/customer-run.jsonl
-uv run --locked python -m evals.interpretation_review --dataset evals/datasets/customer-examples-v1 --log evals/results/customer-run.jsonl
+uv run --env-file ../../.env --locked python -m scripts.evaluate_interpretation --dataset evals/datasets/customer-examples-v2 --output evals/results/customer-run.jsonl
+uv run --locked python -m evals.interpretation_review --dataset evals/datasets/customer-examples-v2 --log evals/results/customer-run.jsonl
 ```
 
 The live command creates a new mode-0600 file with complete normalized inputs, raw model responses when available, validated outputs, provider events, application revision and hashes of the interpretation implementation. It invokes only the Email Interpretation Agent; it does not run identity, research or a briefing workflow. A provider error remains an error rather than a failed or passed quality judgment. Repeat `--case-id CASE_ID` to rerun selected cases into a separate output file; the original run stays intact. The review aid prints candidate diagnostics and does not replace a review of needs, unknowns, relevance or evidence.
