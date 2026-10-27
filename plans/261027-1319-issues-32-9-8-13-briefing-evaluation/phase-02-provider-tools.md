@@ -1,6 +1,6 @@
 ---
 title: "Phase 2: Bounded research tools and adapters — Issue #9"
-status: todo
+status: done
 priority: P1
 effort: "5–7 engineering days"
 dependencies: [1]
@@ -40,6 +40,7 @@ No deletions; standard package `__init__.py` files are owned with their package.
 |---|---|---|
 | Create | `apps/backend/src/email_support/models/research.py` | Provider/tool/budget/error/trace contracts, public research input/source references and ToolName. |
 | Create | `apps/backend/src/email_support/research_config.py` | Explicit private settings, limits and capability requirements. |
+| Create | `apps/backend/src/email_support/integrations/provider_http.py` | Shared bounded JSON transport and sanitized provider error/retry metadata. |
 | Create | `apps/backend/src/email_support/integrations/llm_gateway.py` | Typed direct gateway adapter. |
 | Create | `apps/backend/src/email_support/integrations/openrouter_embeddings.py` | Typed embedding adapter, dimension/finite-value validation. |
 | Create | `apps/backend/src/email_support/integrations/tavily.py` | Typed bounded search adapter. |
@@ -48,9 +49,11 @@ No deletions; standard package `__init__.py` files are owned with their package.
 | Create | `apps/backend/src/email_support/tools/research.py` | Search/fetch callable implementations and metadata registry. |
 | Create | `apps/backend/src/email_support/tools/execution.py` | Validation, permissions, shared budgets/retries and metadata events. |
 | Create | `apps/backend/scripts/smoke_research_providers.py` | Explicit opt-in live capability smoke using production adapters. |
-| Create | `apps/backend/tests/unit/research/test_provider_contracts.py` | Controlled transport protocol, normalization and settings failures. |
+| Create | `apps/backend/tests/unit/research/test_provider_contracts.py` | Closed tool identities, public-only inputs, usage and config validation. |
+| Create | `apps/backend/tests/unit/research/test_provider_adapters.py` | Controlled gateway, embeddings and search request/response contracts. |
 | Create | `apps/backend/tests/unit/research/test_tool_execution.py` | Permissions, total budgets, retries/cancellation and trace privacy. |
 | Create | `apps/backend/tests/unit/research/test_web_fetch.py` | DNS connection, redirects, streaming and destination safety. |
+| Create | `apps/backend/tests/unit/research/test_provider_smoke.py` | Missing-config behavior and private sanitized output guarantees. |
 | Modify | `apps/backend/pyproject.toml` | Declare direct bounded async DNS dependency. |
 | Modify | `apps/backend/uv.lock` | Resolve tested DNS/HTTP dependency set. |
 | Modify | `docs/03-codebase-summary.md` | Actual provider/tool navigation. |
@@ -105,11 +108,18 @@ Credentials come from validated private environment/configuration, never command
 
 ## Acceptance mapping — Issue #9
 
-- [ ] AC1: centralized identities/schema metadata, validated IO and unknown/malformed/denied dispatch tests pass.
-- [ ] AC2: actual adapters authenticate; timeout/retry/cancel/errors/budgets pass; connection-safe fetch rejects private/redirect/oversize inputs.
-- [ ] AC3: read-only registry cannot approve/send/promote; captured default logs exclude secrets/full mailbox content. Public input/query/source-reference checks and canary tests prevent private context reaching research searches or fetch destinations.
-- [ ] AC4: correlated event metadata includes duration/outcome and reported usage, with honest missing values and retry totals.
-- [ ] AC5: genuine gateway tools/structured output/usage, embeddings and search smoke records capabilities and failures; deterministic contract tests separately pass.
+- [x] AC1: centralized identities/schema metadata, validated IO and unknown/malformed/denied dispatch tests pass.
+- [x] AC2: actual adapters authenticate; timeout/retry/cancel/errors/budgets pass; connection-safe fetch rejects private/redirect/oversize inputs.
+- [x] AC3: read-only registry cannot approve/send/promote; captured default logs exclude secrets/full mailbox content. Public input/query/source-reference checks and canary tests prevent private context reaching research searches or fetch destinations.
+- [x] AC4: correlated event metadata includes duration/outcome and reported usage, with honest missing values and retry totals.
+- [x] AC5: genuine gateway tools/structured output/usage, embeddings and search smoke records capabilities and failures; deterministic contract tests separately pass.
+
+## Execution evidence — 2026-10-27
+
+- `make backend-check` passed: lock check, 187 unit/integration/contract tests, Ruff lint and format checks, and strict mypy over source/scripts/tests/migrations/evals.
+- `uv run --locked pytest -q tests/unit/research` passed: 49 tests, including public-context exclusion and shared provider-call budget/trace coverage.
+- The 2026-10-27 configured live smoke passed: `cd apps/backend && uv run --env-file ../../.env --locked python scripts/smoke_research_providers.py --live --output evals/results/research-provider-smoke-20261027-configured.json`. Gateway tool call, strict output, gateway usage, embeddings and Tavily search all passed. Report mode is 0600 and the file is ignored by Git; reported provider usage is retained while unknown cost stays null.
+- Phase 2 local gate passed with `make backend-check`: lock check, 187 unit/integration/contract tests, Ruff lint and format, and strict mypy. The 49 focused research tests passed. Phase 2 is complete; Phase 3 may proceed.
 
 ## Risk, compatibility, rollback and handoff
 

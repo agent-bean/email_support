@@ -1,7 +1,7 @@
 ---
 title: "Briefing evaluation, research tools, company identity and resumable workflow"
 description: "Deliver Issues #32, #9, #8 and #13 through four sequential reviewed PRs."
-status: pending
+status: in_progress
 priority: P1
 effort: "22–33 engineering days; excludes owner review and credential wait"
 branch: fix/issue-6-verification
@@ -24,7 +24,7 @@ The owner added full #8: relevance interpretation, stable contact/company resolu
 | # | Phase | Status |
 |---|-------|--------|
 | 1 | [Evaluation contracts and runner — #32](./phase-01-start.md) | Done |
-| 2 | [Bounded provider tools — #9](./phase-02-provider-tools.md) | Pending |
+| 2 | [Bounded provider tools — #9](./phase-02-provider-tools.md) | Done |
 | 3 | [Email interpretation and identity — #8](./phase-03-email-interpretation-and-identity.md) | Pending |
 | 4 | [Resumable briefing and live evaluation — #13](./phase-04-resumable-briefing-and-live-evaluation.md) | Pending |
 
@@ -39,7 +39,7 @@ Phase files own executable steps, repo-relative file inventories, RED/GREEN scen
 ## Acceptance
 
 - [x] #32: validated runnable corpus/runner represents all ten scenarios, verifies source provenance, separates candidate/golden/unsupported statuses, and passes its evaluator oracle self-check.
-- [ ] #9: typed read-only tools enforce permissions, budgets and public-only query/source provenance; fetch fails closed unless the actual connection is vetted; genuine smoke records gateway/tools/schema/usage and search/embedding capabilities.
+- [x] #9: typed read-only tools enforce permissions, budgets and public-only query/source provenance; fetch fails closed unless the actual connection is vetted; genuine smoke records gateway/tools/schema/usage and search/embedding capabilities.
 - [ ] #8: typed interpretation separates relevance/needs/candidates; repeated identities stay stable, ambiguity never silently merges, and durable owner corrections control future lookups.
 - [ ] #13: the shared production graph persists one sealed version and pending review per run; restart, concurrent ownership and revoked-knowledge recovery/binding ordering are proven; private synthesis context stays outside web research; reviewed applicable live cases record support and human usefulness.
 - [ ] No replay, unreviewed claim or unsupported feature is counted as a live-quality pass; missing usage/cost remains unknown; no full-release claim is made.
@@ -63,6 +63,6 @@ Re-read all five files after propagation; reconciled requirements, steps, tests,
 
 ## Open evidence
 
-Gateway capabilities, address-pinning compatibility, exact dependency pins, verified corpus sources and human baseline reviews must be established during their specified phase gates. These are execution evidence requirements, not a new scope decision.
+Gateway capabilities and address-pinning compatibility passed their Phase 2 gates. Verified corpus sources and human baseline reviews remain for the specified later gates. These are execution evidence requirements, not a new scope decision.
 
 <!-- slug: issues-32-9-8-13-briefing-evaluation -->
