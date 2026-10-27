@@ -23,7 +23,7 @@ The owner added full #8: relevance interpretation, stable contact/company resolu
 
 | # | Phase | Status |
 |---|-------|--------|
-| 1 | [Evaluation contracts and runner — #32](./phase-01-start.md) | Pending |
+| 1 | [Evaluation contracts and runner — #32](./phase-01-start.md) | Done |
 | 2 | [Bounded provider tools — #9](./phase-02-provider-tools.md) | Pending |
 | 3 | [Email interpretation and identity — #8](./phase-03-email-interpretation-and-identity.md) | Pending |
 | 4 | [Resumable briefing and live evaluation — #13](./phase-04-resumable-briefing-and-live-evaluation.md) | Pending |

@@ -1,6 +1,6 @@
 ---
 title: "Phase 1: Evaluation contracts and runner — Issue #32"
-status: todo
+status: done
 priority: P1
 effort: "4–6 engineering days"
 dependencies: []
@@ -110,12 +110,12 @@ Run narrow tests first, then existing root `make backend-check`; it must include
 
 ## Acceptance mapping — Issue #32
 
-- [ ] AC1: typed case/evaluator/result models and a runnable documented entry point pass validation/subprocess tests.
-- [ ] AC2: inventory proves all ten scenario groups have English and Vietnamese inputs, facts/evidence, forbidden outcomes and applicable checks.
-- [ ] AC3: real source verification evidence, fixed clocks, hashed snapshots, synthetic labels and non-deliverable addresses are inspected.
-- [ ] AC4: review binding rejects auto-golden/stale expectations; unreviewed and unsupported cases never pass.
-- [ ] AC5: replay/live modes and result identities/metrics exist; unavailable live adapter reports unsupported, unknown usage remains null.
-- [ ] AC6: production evaluator self-check distinguishes oracle labels; deterministic safety checks cannot authorize effects; tracked artifacts contain no credentials/private content.
+- [x] AC1: typed case/evaluator/result models and a runnable documented entry point pass validation/subprocess tests.
+- [x] AC2: inventory proves all ten scenario groups have English and Vietnamese inputs, facts/evidence, forbidden outcomes and applicable checks.
+- [x] AC3: real source verification evidence, fixed clocks, hashed snapshots, synthetic labels and non-deliverable addresses are inspected.
+- [x] AC4: review binding rejects auto-golden/stale expectations; unreviewed and unsupported cases never pass.
+- [x] AC5: replay/live modes and result identities/metrics exist; unavailable live adapter reports unsupported, unknown usage remains null.
+- [x] AC6: production evaluator self-check distinguishes oracle labels; deterministic safety checks cannot authorize effects; tracked artifacts contain no credentials/private content.
 
 ## Risks, security, compatibility and rollback
 
