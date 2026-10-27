@@ -19,7 +19,7 @@ Existing command roots are explicit in `Makefile:30–39` and `apps/backend/pypr
 ## Data flow and minimal contracts
 
 1. A versioned dataset manifest loads candidate cases and verified permitted public source excerpts. Pydantic validates unknown JSON once, with closed statuses, `extra="forbid"`, aware timestamps, UUIDs and bounded values.
-2. Cases record fixed clock/timezone, synthetic labels, explicit normalized email/meeting inputs with expected identity or unresolved ambiguity, source snapshot hashes/URLs/retrieval/publication time, expected atomic facts/evidence, forbidden outcomes and applicable feature checks. Unknown publication time stays null.
+2. Cases record fixed clock/timezone, synthetic labels, English and Vietnamese email/meeting inputs with expected identity or unresolved ambiguity, source snapshot hashes/URLs/retrieval/publication time, expected atomic facts/evidence, forbidden outcomes and applicable feature checks. Every scenario group has one case per language. Unknown publication time stays null.
 3. Replay loads previously captured typed outputs; an injected live invocation seam will later call the same production graph factory. Until phase 4 supplies it, live graph evaluation explicitly reports unsupported; no evaluation-only assistant is built.
 4. Evaluators emit deterministic contract/safety outcomes and separate semantic review tasks. A model's fact ID, citation, confidence or support label is untrusted. IDs and source existence prove reference integrity, never arbitrary prose entailment.
 5. A reviewer supplies claim/evidence support labels and meeting-usefulness/task-outcome assessments against the exact result/source hashes. New live claims stay `pending_human_review`. Golden expectations require an explicit owner-reviewed record bound to case/dataset/source hashes; generated output never promotes itself.
@@ -68,13 +68,13 @@ Write unit and subprocess tests first; execute and retain failures caused by abs
 | Unsupported, unreviewed, missing usage, retry usage | Unit | Correct denominator/statuses; unknown remains unknown; attempted totals differ from terminal usage. |
 | Injection/approval/delivery claims in a replay file | Unit | An artifact cannot grant authority; evaluators check observed events only and never dispatch effects. |
 | Repeat replay with fixed clocks/sources | Subprocess | Same substantive results/config identity; wall-clock performance fields remain observational. |
-| Full corpus inventory | Integration | All ten scenarios load, including unsupported later capabilities. |
+| Full corpus inventory | Integration | All ten scenarios load in English and Vietnamese, including unsupported later capabilities. |
 
 ## Implementation steps and refactor
 
 1. Define dataset/result/review contracts and a minimal typed invocation interface without importing planned graph code. Keep business types in product models, evaluation bookkeeping in evals.
 2. Verify real public company source URLs manually during corpus authoring, record retrieval time and publication time only if known, retain permitted minimal excerpts with cryptographic hashes and source version. Do not fill the corpus with invented company facts or claim URLs were checked when they were not. Source retrieval is read-only; synthetic meetings/needs remain explicitly fictional.
-3. Populate all ten scenario groups below. Variants may share sources but must isolate intended failures. Each has inputs, expected facts/evidence, forbidden outcomes and applicable checks. Start as candidate; collect owner review before golden designation. Use reserved example.com/net/org synthetic addresses compatible with the unchanged canonical email validator; the runner has no send capability, credentials or mapping to operational inboxes. Validate that exact reserved-domain set at the corpus boundary; do not relax production address validation.
+3. Populate all ten scenario groups below in English and Vietnamese (20 candidate case records). Language variants may share sources but must isolate intended failures. Each has inputs, expected facts/evidence, forbidden outcomes and applicable checks. Start as candidate; collect owner review before golden designation. Use reserved example.com/net/org synthetic addresses compatible with the unchanged canonical email validator; the runner has no send capability, credentials or mapping to operational inboxes. Validate that exact reserved-domain set at the corpus boundary; do not relax production address validation.
 4. Implement reference integrity and event-based deterministic checks; keep semantic support/usefulness pending human review unless bound review annotations exist. The evaluator oracle uses developer-authored contract labels and exact records, labelled `evaluator-oracle`, not owner-golden company data or evidence of model quality.
 5. Implement runnable self-check and offline captured-output replay. The self-check runs production evaluators and aggregators, not a special function returning fixed success. Keep live invocation opt-in and unsupported until its production adapter exists.
 6. Implement versioned structured output and explicit review ingestion. Reject review files bound to another run/source/content hash. Keep full inputs/source contents in protected isolated storage; default tracked summaries contain sanitized aggregate metrics, IDs and hashes only.
@@ -111,7 +111,7 @@ Run narrow tests first, then existing root `make backend-check`; it must include
 ## Acceptance mapping — Issue #32
 
 - [ ] AC1: typed case/evaluator/result models and a runnable documented entry point pass validation/subprocess tests.
-- [ ] AC2: inventory proves all ten scenario groups, inputs, facts/evidence, forbidden outcomes and applicable checks exist.
+- [ ] AC2: inventory proves all ten scenario groups have English and Vietnamese inputs, facts/evidence, forbidden outcomes and applicable checks.
 - [ ] AC3: real source verification evidence, fixed clocks, hashed snapshots, synthetic labels and non-deliverable addresses are inspected.
 - [ ] AC4: review binding rejects auto-golden/stale expectations; unreviewed and unsupported cases never pass.
 - [ ] AC5: replay/live modes and result identities/metrics exist; unavailable live adapter reports unsupported, unknown usage remains null.

@@ -48,5 +48,5 @@ select = ["B", "E", "F", "I", "UP"]
 [tool.mypy]
 python_version = "3.13"
 strict = true
-files = ["src", "scripts", "tests", "migrations"]
+files = ["src", "scripts", "tests", "migrations", "evals"]
 show_error_codes = true

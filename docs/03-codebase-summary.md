@@ -30,9 +30,9 @@ Use the architecture page for dependency direction and cross-boundary decisions.
 
 ## Evaluation boundary
 
-The planned `apps/backend/evals/` owns versioned datasets, evaluators and a runner for agent quality. `datasets/` holds labelled scenarios and source provenance; `evaluators/` holds factual-support, retrieval and task-outcome scoring. Keep typed evaluation contracts here unless they are genuine product contracts. Evaluation invokes production workflows and tools rather than implementing a second assistant.
+`apps/backend/evals/` owns versioned datasets, typed evaluation contracts, deterministic reference checks and the repository-local CLI. `datasets/` holds labelled scenarios and hashed source snapshots; `fixtures/` holds the evaluator oracle. The current runner validates datasets, checks evaluator behavior, and replays captured output without provider or product side effects. Keep genuine shared product claim/evidence contracts in `src/email_support/models/`; evaluation bookkeeping stays in `evals/`.
 
-`tests/` continues to own deterministic correctness, security and integration checks. Dataset validation and evaluator correctness belong in tests; quality measurements belong in evals. Live evaluation uses explicit credentials, controlled recipients and isolated data. These modules and their execution commands are not implemented yet; [evaluation design](09-evaluation.md) defines the target contract.
+`tests/` continues to own deterministic correctness, security and integration checks. Dataset validation and evaluator correctness belong in tests; quality measurements belong in evals. The current corpus is candidate-only and live workflow invocation is unsupported pending the production graph adapter. See [evaluation design](09-evaluation.md) for commands and review boundaries.
 
 ## Web entry points
 

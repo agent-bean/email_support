@@ -4,7 +4,7 @@
 
 Evaluate whether a sales or business-development reader can prepare for a meeting using accurate, relevant and traceable information. Report length, citation count and fluent prose are not substitutes for usefulness or factual support.
 
-This is the target design. The dataset, runner and role baselines are not implemented yet. The planned `apps/backend/evals/` owns quality evaluation; `apps/backend/tests/` owns deterministic correctness and integration checks. Each feature adds its cases and measurements as it is built. Final integrated evaluation verifies the complete release rather than introducing evaluation for the first time.
+The repository-local `apps/backend/evals/` package owns quality evaluation; `apps/backend/tests/` owns deterministic correctness and integration checks. The initial `briefing-v1` corpus is candidate data: no case has owner-reviewed golden expectations and no assistant-quality result is established. Later features add behavior-specific cases and measurements. Final integrated evaluation verifies the complete release rather than introducing evaluation for the first time.
 
 ## Dataset contract
 
@@ -18,7 +18,7 @@ Each case needs:
 - Expected company identity, supported facts and their evidence, required meeting context, allowed unknowns and forbidden claims/actions.
 - Applicable role/retrieval/workflow checks and human review status.
 
-Generated cases are candidates until the owner reviews their evidence and expected outcomes. Unreviewed cases cannot establish a golden baseline. Do not use a model's own answer as unquestioned ground truth. Keep a held-out subset once the corpus is large enough; record changes to expectations instead of silently rewriting them to make a run pass.
+Generated cases are candidates until the owner reviews their evidence and expected outcomes. `GoldenExpectationReview` binds a reviewed case to its dataset version, case hash, source hashes, reviewer and timestamp. Unreviewed cases cannot establish a golden baseline. Do not use a model's own answer as unquestioned ground truth. Keep a held-out subset once the corpus is large enough; record changes to expectations instead of silently rewriting them to make a run pass.
 
 ## Initial scenarios
 
@@ -35,7 +35,7 @@ Generated cases are candidates until the owner reviews their evidence and expect
 | Lost delivery confirmation or restart | Uncertain delivery is reconciled before retry; completed effects are not repeated. |
 | Supported attachment and report export | Attachment facts retain provenance; Markdown, PDF and Word represent the same selected version. |
 
-These are scenario requirements, not completed dataset records. Concrete source verification and owner review occur during dataset implementation. Expand cases where one input cannot isolate a failure clearly.
+The `briefing-v1` dataset includes 20 synthetic candidate cases: one English and one Vietnamese case for each scenario. Product behavior for unsupported later features remains explicitly unsupported in the case record. Expand cases where one input cannot isolate a failure clearly.
 
 ## Measures and decisions
 
@@ -53,4 +53,14 @@ Authorization, approval invalidation, input isolation and delivery deduplication
 - Every workflow role exposes enough trace evidence to identify its inputs, permitted operations and result without default logging of full mailbox contents or credentials. Basic correlation begins with tools and the first workflow; Grafana dashboards build on it.
 - Evaluation storage and delivery targets are isolated from operational data. Fixtures never create production approval authority. Reuse production contracts and execution paths; do not build a separate evaluation-only assistant.
 
-Use implementation-owned scripts and manifests for commands once they exist. No evaluation command is available merely because it is described here.
+Run the evaluator from `apps/backend`:
+
+```sh
+uv run --locked python -m evals self-check
+uv run --locked python -m evals validate --dataset evals/datasets/briefing-v1
+uv run --locked python -m evals replay --dataset evals/datasets/briefing-v1 --results PATH_TO_CAPTURED_RESULTS --output evals/results/run.json
+uv run --locked python -m evals replay --dataset evals/datasets/briefing-v1 --results PATH_TO_CAPTURED_RESULTS --review PATH_TO_HUMAN_REVIEW --output evals/results/reviewed-run.json
+uv run --locked python -m evals review --run evals/results/run.json --review PATH_TO_HUMAN_REVIEW
+```
+
+The CLI does not invoke providers. Replay consumes a captured output file; results contain hashes, identifiers and evaluations, not email bodies, source excerpts or claim text. Keep captured outputs and review inputs private. `evals/results/` is ignored by Git. Live evaluation reports unsupported until an adapter calls the production workflow through the defined seam.

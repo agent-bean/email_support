@@ -6,6 +6,7 @@ __pycache__/
 .coverage
 .test-database/
 .local-auth/
+apps/backend/evals/results/
 # Ignore local environment files while keeping the sample template.
 .[e]nv
 .[e]nv.*
