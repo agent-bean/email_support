@@ -68,6 +68,16 @@ def test_normalized_input_preserves_local_part_and_hashes_canonical_content() ->
     assert first.content_hash != changed.content_hash
 
 
+def test_contact_evidence_can_anchor_to_the_actual_sender_address() -> None:
+    payload = _input().payload
+    span = EvidenceSpan.model_validate(
+        {"field": "sender_email", "start": 0, "end": 17, "quote": "Sales@example.com"}
+    )
+    assert span.validate_against(payload) == payload.sender_email
+    with pytest.raises(ValueError):
+        span.validate_against(_input(sender_email=None).payload)
+
+
 def test_normalized_meeting_absence_and_cancellation_are_explicit() -> None:
     with pytest.raises(ValidationError):
         NormalizedEmailInput.model_validate(
@@ -215,6 +225,9 @@ async def test_email_interpreter_uses_strict_output_without_any_tools() -> None:
             in payload["messages"][0]["content"]
         )
         assert "tools" not in payload
+        assert "stated_needs must be empty" in payload["messages"][0]["content"]
+        assert "past meeting" in payload["messages"][0]["content"]
+        assert "must not be stated business needs" in payload["messages"][0]["content"]
         assert "PRIVATE-EMAIL-CONTENT" in payload["messages"][1]["content"]
         return httpx2.Response(
             200,

@@ -46,6 +46,7 @@ class MeetingState(StrEnum):
 
 
 class InputField(StrEnum):
+    SENDER_EMAIL = "sender_email"
     SENDER_NAME = "sender_display_name"
     EMAIL_SUBJECT = "subject"
     EMAIL_BODY = "body"
@@ -297,6 +298,8 @@ class EmailInterpretation(PersistenceContract):
 
 
 def _input_text(payload: NormalizedEmailInput, field: InputField) -> str | None:
+    if field is InputField.SENDER_EMAIL:
+        return payload.sender_email
     if field is InputField.SENDER_NAME:
         return payload.sender_display_name
     if field is InputField.EMAIL_SUBJECT:

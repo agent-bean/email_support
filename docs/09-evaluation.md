@@ -41,6 +41,8 @@ The separate [`interpretation-v2` corpus](../apps/backend/evals/datasets/interpr
 
 The [`customer-examples-v1` corpus](../apps/backend/evals/datasets/customer-examples-v1/README.md) contains six owner-supplied customer situations as 12 bilingual candidate cases. Their company URLs are input claims rather than research evidence. The read-only research adapters can search these six named public companies when explicitly permitted for an invocation, but the replay does not yet score research or briefing quality. The screenshot does not provide Viettel's attachment or a Samsung calendar event, so neither is invented.
 
+Both interpretation corpora include a case-hash-bound `interpretation-rubric.json` covering each English/Vietnamese pair. It records candidate company mentions, needs, unknowns and forbidden inferences for review. The review aid checks exact company-name presence and compares relevance and need presence across pairs; these are diagnostics, not semantic correctness or approved golden labels. It validates captured inputs and evidence spans against the dataset, and marks every semantic assessment pending human review. The Viettel rubric flags that the email alone does not clearly state the wider intended workflow, so its relevance expectation needs a decision rather than an automatic label change.
+
 ## Measures and decisions
 
 Measure email relevance, company identity, retrieval relevance, factual support, meeting usefulness and task completion separately. Replay compares captured relevance and identity status/company/candidates against case expectations; a wrong identity fails independently of briefing claim quality. For each factual claim, identify supporting evidence or mark it unsupported; a valid URL alone does not establish support. Meeting usefulness includes stated needs, relevant history, meeting details and useful questions while distinguishing suggestions from facts.
@@ -71,3 +73,12 @@ uv run --locked python -m evals review --run evals/results/run.json --review PAT
 ```
 
 The validation report lists expected relevance distribution and applicable and unsupported check counts. A replay with a relevance-only capture records whether relevance matches, while the case remains unsupported when another declared check is unavailable. The evaluation CLI does not invoke providers. Replay consumes a captured output file; results contain hashes, identifiers and evaluations, not email bodies, source excerpts or claim text. Keep captured outputs and review inputs private. `evals/results/` is ignored by Git. Local email interpretation is available separately with `uv run --env-file ../../.env --locked python scripts/interpret_email.py interpret --input PATH_TO_NORMALIZED_INPUT --output PATH_TO_PRIVATE_OUTPUT`; an owner correction uses `correct-company --request PATH_TO_CORRECTION --output PATH_TO_PRIVATE_OUTPUT`. Both commands write mode-0600 outputs and require `EMAIL_SUPPORT_DATABASE_URL`; interpretation also needs gateway settings listed in `.env.example`. Interpretation output includes the normalized input, validated interpretation, identity snapshot and provider events, so it contains mailbox content and must remain private. Neither command adds an unauthenticated HTTP endpoint or submits the full workflow for live evaluation.
+
+For a bounded live interpretation run and its review aid, run from `apps/backend`:
+
+```sh
+uv run --env-file ../../.env --locked python -m scripts.evaluate_interpretation --dataset evals/datasets/customer-examples-v1 --output evals/results/customer-run.jsonl
+uv run --locked python -m evals.interpretation_review --dataset evals/datasets/customer-examples-v1 --log evals/results/customer-run.jsonl
+```
+
+The live command creates a new mode-0600 file with complete normalized inputs, raw model responses when available, validated outputs, provider events, application revision and hashes of the interpretation implementation. It invokes only the Email Interpretation Agent; it does not run identity, research or a briefing workflow. A provider error remains an error rather than a failed or passed quality judgment. Repeat `--case-id CASE_ID` to rerun selected cases into a separate output file; the original run stays intact. The review aid prints candidate diagnostics and does not replace a review of needs, unknowns, relevance or evidence.
