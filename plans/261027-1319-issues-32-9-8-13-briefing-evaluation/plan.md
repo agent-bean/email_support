@@ -15,7 +15,7 @@ created: 2026-10-27
 
 A developer runs explicit normalized email/meeting inputs, resolves company identity, and proceeds through bounded real research, obtains a cited immutable Markdown briefing paused for review, and measures support/usefulness with honest coverage. Flags: `--tdd --hard --yagni`. The owner explicitly approved this plan on 2026-10-27. Implementation has not started; issue acceptance, merge and release remain separately authorized gates.
 
-The owner accepted one plan and four sequential PRs, #32 → #9 → #8 → #13. Each requires its own review, checks, explicit owner acceptance and merge authorization before the next PR proceeds. Use new issue branches from updated `main`; the frontmatter branch records planning provenance only.
+The owner accepted one plan and four sequential PRs, #32 → #9 → #8 → #13. Each requires its own review, checks, explicit owner acceptance and merge authorization before the next PR proceeds. Use new issue branches from updated `main`; the frontmatter branch records planning provenance only. Phases 1 and 2 are complete; phase 3 implementation is in progress on the owner-directed current branch.
 
 The owner added full #8: relevance interpretation, stable contact/company resolution and persistent explicit owner corrections precede #13 research. This supersedes the earlier proposal to stage #13 before #8. Ambiguity stops. No UI/API routes, scheduler, synchronization, sending, promotion, projections, attachments/exports, or full #10/#14/#15/#19/#20 implementation enters this slice. #13 ends at pending review; authenticated decision/resume belongs to #14.
 
@@ -25,7 +25,7 @@ The owner added full #8: relevance interpretation, stable contact/company resolu
 |---|-------|--------|
 | 1 | [Evaluation contracts and runner — #32](./phase-01-start.md) | Done |
 | 2 | [Bounded provider tools — #9](./phase-02-provider-tools.md) | Done |
-| 3 | [Email interpretation and identity — #8](./phase-03-email-interpretation-and-identity.md) | Pending |
+| 3 | [Email interpretation and identity — #8](./phase-03-email-interpretation-and-identity.md) | In Progress |
 | 4 | [Resumable briefing and live evaluation — #13](./phase-04-resumable-briefing-and-live-evaluation.md) | Pending |
 
 Phase files own executable steps, repo-relative file inventories, RED/GREEN scenarios, risks, rollback and criterion mappings. Estimates: 4–6, 5–7, 5–8 and 8–12 engineering days respectively. Files are owned sequentially; no parallel edits or migration allocation.
@@ -63,6 +63,6 @@ Re-read all five files after propagation; reconciled requirements, steps, tests,
 
 ## Open evidence
 
-Gateway capabilities and address-pinning compatibility passed their Phase 2 gates. Verified corpus sources and human baseline reviews remain for the specified later gates. These are execution evidence requirements, not a new scope decision.
+Gateway capabilities and address-pinning compatibility passed their Phase 2 gates. Phase 3 implementation and automated verification are complete, but its bilingual cases remain candidates pending owner review; phase 4 also requires accepted/merged #8. Verified corpus sources and human baseline reviews remain for the specified later gates. These are execution evidence requirements, not a new scope decision.
 
 <!-- slug: issues-32-9-8-13-briefing-evaluation -->

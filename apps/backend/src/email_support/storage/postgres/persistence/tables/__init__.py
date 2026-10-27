@@ -21,6 +21,7 @@ from .decisions import (
     PreferenceRow,
 )
 from .google_connection import GoogleConnectionRow
+from .identity import NormalizedInputRow
 from .projections import ProjectionMetadataRow
 
 __all__ = [
@@ -40,6 +41,7 @@ __all__ = [
     "OAuthAttemptRow",
     "OwnerSessionRow",
     "MeetingRow",
+    "NormalizedInputRow",
     "PreferenceRow",
     "ProjectionMetadataRow",
     "ProviderAccountRow",

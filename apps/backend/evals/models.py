@@ -39,7 +39,9 @@ class Scenario(StrEnum):
     NEW_COMPANY = "new_company"
     RETURNING_COMPANY = "returning_company"
     IRRELEVANT_EMAIL = "irrelevant_email"
+    UNCERTAIN_RELEVANCE = "uncertain_relevance"
     AMBIGUOUS_IDENTITY = "ambiguous_identity"
+    INCORRECT_PRIOR_ASSOCIATION = "incorrect_prior_association"
     MISSING_MEETING = "missing_meeting"
     STALE_SOURCES = "stale_sources"
     INJECTION = "injection"
@@ -70,6 +72,7 @@ class Relevance(StrEnum):
     RELEVANT = "relevant"
     IRRELEVANT = "irrelevant"
     UNKNOWN = "unknown"
+    UNCERTAIN = "uncertain"
 
 
 class CheckName(StrEnum):
@@ -96,13 +99,15 @@ class ExpectedFact(Contract):
 
 
 class EmailInput(Contract):
-    from_address: EmailStr
+    from_address: EmailStr | None
     subject: str = Field(min_length=1, max_length=500)
     body: str = Field(max_length=20_000)
 
     @field_validator("from_address")
     @classmethod
-    def use_reserved_synthetic_domain(cls, value: EmailStr) -> EmailStr:
+    def use_reserved_synthetic_domain(cls, value: EmailStr | None) -> EmailStr | None:
+        if value is None:
+            return None
         domain = str(value).rsplit("@", 1)[-1].lower()
         if domain not in {"example.com", "example.net", "example.org"}:
             raise ValueError(
@@ -454,6 +459,10 @@ class CapturedCase(Contract):
     events: list[ObservedEvent] = Field(default_factory=list, max_length=100)
     elapsed_ms: StrictInt | None = Field(default=None, ge=0)
     attempts: list[AttemptUsage] = Field(default_factory=list, max_length=100)
+    relevance: Relevance | None = None
+    identity: IdentityStatus | None = None
+    identity_company: str | None = Field(default=None, max_length=200)
+    identity_candidates: list[str] = Field(default_factory=list, max_length=10)
 
     @model_validator(mode="after")
     def attempts_are_sequential(self) -> Self:
@@ -501,6 +510,8 @@ class CaseResult(Contract):
     )
     task_outcome: TaskOutcome | None = None
     usefulness: StrictInt | None = Field(default=None, ge=1, le=5)
+    relevance_correct: bool | None = None
+    identity_correct: bool | None = None
 
     @model_validator(mode="after")
     def attempts_are_sequential(self) -> Self:

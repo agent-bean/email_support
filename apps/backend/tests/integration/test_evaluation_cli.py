@@ -32,13 +32,13 @@ def test_cli_self_check_runs_and_reports_oracle_result() -> None:
     assert "oracle: passed" in result.stdout
 
 
-def test_cli_validate_loads_all_ten_scenarios_without_provider_credentials() -> None:
+def test_cli_validate_loads_bilingual_scenarios_without_provider_credentials() -> None:
     result = _run("validate", "--dataset", str(DATASET))
     assert result.returncode == 0, result.stderr
     report = json.loads(result.stdout)
-    assert report["case_count"] == 20
-    assert report["candidate_count"] == 20
-    assert report["languages"] == {"en": 10, "vi": 10}
+    assert report["case_count"] == 24
+    assert report["candidate_count"] == 24
+    assert report["languages"] == {"en": 12, "vi": 12}
     assert report["source_count"] >= 1
 
 
@@ -100,6 +100,9 @@ def test_replay_is_repeatable_and_output_omits_claim_text(tmp_path: Path) -> Non
                 "cases": [
                     {
                         "case_id": "stale-sources-en",
+                        "relevance": "relevant",
+                        "identity": "resolved",
+                        "identity_company": "Adobe",
                         "claims": [
                             {
                                 "id": "adobe-mission",

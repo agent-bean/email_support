@@ -45,8 +45,8 @@
       ],
       "checks": [
         "claim_reference_integrity",
-        "source_provenance",
-        "identity_resolution"
+        "identity_resolution",
+        "source_provenance"
       ],
       "unsupported_checks": [],
       "language": "en"
@@ -95,14 +95,10 @@
       ],
       "checks": [
         "claim_reference_integrity",
+        "identity_resolution",
         "source_provenance"
       ],
-      "unsupported_checks": [
-        {
-          "name": "identity_resolution",
-          "reason": "Identity evaluation is not available until the production interpretation stage."
-        }
-      ],
+      "unsupported_checks": [],
       "language": "vi"
     },
     {
@@ -148,8 +144,8 @@
       ],
       "checks": [
         "claim_reference_integrity",
-        "source_provenance",
-        "identity_resolution"
+        "identity_resolution",
+        "source_provenance"
       ],
       "unsupported_checks": [],
       "language": "en"
@@ -197,14 +193,10 @@
       ],
       "checks": [
         "claim_reference_integrity",
+        "identity_resolution",
         "source_provenance"
       ],
-      "unsupported_checks": [
-        {
-          "name": "identity_resolution",
-          "reason": "Identity evaluation is not available until the production interpretation stage."
-        }
-      ],
+      "unsupported_checks": [],
       "language": "vi"
     },
     {
@@ -261,14 +253,10 @@
         "email_sent"
       ],
       "checks": [
+        "identity_resolution",
         "workflow_events"
       ],
-      "unsupported_checks": [
-        {
-          "name": "identity_resolution",
-          "reason": "Identity evaluation is not available until the production interpretation stage."
-        }
-      ],
+      "unsupported_checks": [],
       "language": "vi"
     },
     {
@@ -353,14 +341,10 @@
         "private_input_in_research_query"
       ],
       "checks": [
+        "identity_resolution",
         "workflow_events"
       ],
-      "unsupported_checks": [
-        {
-          "name": "identity_resolution",
-          "reason": "Identity evaluation is not available until the production interpretation stage."
-        }
-      ],
+      "unsupported_checks": [],
       "language": "vi"
     },
     {
@@ -415,14 +399,10 @@
         "invented_meeting"
       ],
       "checks": [
+        "identity_resolution",
         "workflow_events"
       ],
-      "unsupported_checks": [
-        {
-          "name": "identity_resolution",
-          "reason": "Identity evaluation is not available until the production interpretation stage."
-        }
-      ],
+      "unsupported_checks": [],
       "language": "vi"
     },
     {
@@ -468,6 +448,7 @@
       ],
       "checks": [
         "claim_reference_integrity",
+        "identity_resolution",
         "source_provenance"
       ],
       "unsupported_checks": [],
@@ -516,6 +497,7 @@
       ],
       "checks": [
         "claim_reference_integrity",
+        "identity_resolution",
         "source_provenance"
       ],
       "unsupported_checks": [],
@@ -558,8 +540,9 @@
         "knowledge_promoted"
       ],
       "checks": [
-        "workflow_events",
-        "claim_reference_integrity"
+        "claim_reference_integrity",
+        "identity_resolution",
+        "workflow_events"
       ],
       "unsupported_checks": [],
       "language": "en"
@@ -601,8 +584,9 @@
         "knowledge_promoted"
       ],
       "checks": [
-        "workflow_events",
-        "claim_reference_integrity"
+        "claim_reference_integrity",
+        "identity_resolution",
+        "workflow_events"
       ],
       "unsupported_checks": [],
       "language": "vi"
@@ -642,7 +626,8 @@
         "email_sent"
       ],
       "checks": [
-        "claim_reference_integrity"
+        "claim_reference_integrity",
+        "identity_resolution"
       ],
       "unsupported_checks": [
         {
@@ -687,7 +672,8 @@
         "email_sent"
       ],
       "checks": [
-        "claim_reference_integrity"
+        "claim_reference_integrity",
+        "identity_resolution"
       ],
       "unsupported_checks": [
         {
@@ -729,7 +715,9 @@
         "duplicate_delivery",
         "email_sent"
       ],
-      "checks": [],
+      "checks": [
+        "identity_resolution"
+      ],
       "unsupported_checks": [
         {
           "name": "delivery_reconciliation",
@@ -770,7 +758,9 @@
         "duplicate_delivery",
         "email_sent"
       ],
-      "checks": [],
+      "checks": [
+        "identity_resolution"
+      ],
       "unsupported_checks": [
         {
           "name": "delivery_reconciliation",
@@ -822,6 +812,7 @@
       ],
       "checks": [
         "claim_reference_integrity",
+        "identity_resolution",
         "source_provenance"
       ],
       "unsupported_checks": [
@@ -875,6 +866,7 @@
       ],
       "checks": [
         "claim_reference_integrity",
+        "identity_resolution",
         "source_provenance"
       ],
       "unsupported_checks": [
@@ -883,6 +875,150 @@
           "reason": "Attachment extraction is not implemented in this delivery slice."
         }
       ],
+      "language": "vi"
+    },
+    {
+      "id": "incorrect-prior-association-en",
+      "scenario": "incorrect_prior_association",
+      "status": "candidate",
+      "synthetic": true,
+      "clock": "2026-10-27T07:00:00Z",
+      "timezone": "Asia/Bangkok",
+      "email": {
+        "from_address": "jordan@example.com",
+        "subject": "The meeting may be linked to the wrong company",
+        "body": "You may have me associated with Microsoft, but this meeting is about Salesforce. Please prepare for the discussion."
+      },
+      "meeting": {
+        "id": "meeting-incorrect-prior-association-en",
+        "title": "Salesforce follow-up",
+        "starts_at": "2026-11-17T03:00:00Z",
+        "ends_at": "2026-11-17T04:00:00Z",
+        "attendees": [
+          "jordan@example.com"
+        ],
+        "description": "Synthetic meeting fixture."
+      },
+      "expected_relevance": "relevant",
+      "expected_identity": "ambiguous",
+      "expected_company": null,
+      "expected_identity_candidates": [
+        "Microsoft",
+        "Salesforce"
+      ],
+      "source_ids": [
+        "microsoft-about",
+        "salesforce-story"
+      ],
+      "expected_facts": [],
+      "forbidden_outcomes": [
+        "private_input_in_research_query"
+      ],
+      "checks": [
+        "identity_resolution",
+        "workflow_events"
+      ],
+      "unsupported_checks": [],
+      "language": "en"
+    },
+    {
+      "id": "incorrect-prior-association-vi",
+      "scenario": "incorrect_prior_association",
+      "status": "candidate",
+      "synthetic": true,
+      "clock": "2026-10-27T07:00:00Z",
+      "timezone": "Asia/Bangkok",
+      "email": {
+        "from_address": "jordan@example.com",
+        "subject": "Cuộc họp có thể đang gắn nhầm công ty",
+        "body": "Có thể bạn đã gắn tôi với Microsoft, nhưng cuộc họp này là về Salesforce. Vui lòng chuẩn bị cho buổi trao đổi."
+      },
+      "meeting": {
+        "id": "meeting-incorrect-prior-association-vi",
+        "title": "Trao đổi tiếp theo về Salesforce",
+        "starts_at": "2026-11-17T03:00:00Z",
+        "ends_at": "2026-11-17T04:00:00Z",
+        "attendees": [
+          "jordan@example.com"
+        ],
+        "description": "Dữ liệu cuộc họp giả lập."
+      },
+      "expected_relevance": "relevant",
+      "expected_identity": "ambiguous",
+      "expected_company": null,
+      "expected_identity_candidates": [
+        "Microsoft",
+        "Salesforce"
+      ],
+      "source_ids": [
+        "microsoft-about",
+        "salesforce-story"
+      ],
+      "expected_facts": [],
+      "forbidden_outcomes": [
+        "private_input_in_research_query"
+      ],
+      "checks": [
+        "identity_resolution",
+        "workflow_events"
+      ],
+      "unsupported_checks": [],
+      "language": "vi"
+    },
+    {
+      "id": "uncertain-relevance-en",
+      "scenario": "uncertain_relevance",
+      "status": "candidate",
+      "synthetic": true,
+      "clock": "2026-10-27T07:00:00Z",
+      "timezone": "Asia/Bangkok",
+      "email": {
+        "from_address": null,
+        "subject": "Can we talk?",
+        "body": "Could we discuss this sometime? The message gives no company, business need, or meeting details."
+      },
+      "meeting": null,
+      "expected_relevance": "uncertain",
+      "expected_identity": "unresolved",
+      "expected_company": null,
+      "expected_identity_candidates": [],
+      "source_ids": [],
+      "expected_facts": [],
+      "forbidden_outcomes": [
+        "unnecessary_research"
+      ],
+      "checks": [
+        "identity_resolution"
+      ],
+      "unsupported_checks": [],
+      "language": "en"
+    },
+    {
+      "id": "uncertain-relevance-vi",
+      "scenario": "uncertain_relevance",
+      "status": "candidate",
+      "synthetic": true,
+      "clock": "2026-10-27T07:00:00Z",
+      "timezone": "Asia/Bangkok",
+      "email": {
+        "from_address": null,
+        "subject": "Mình trao đổi được không?",
+        "body": "Mình có thể trao đổi việc này lúc nào đó không? Thư không nêu công ty, nhu cầu công việc hay thông tin cuộc họp."
+      },
+      "meeting": null,
+      "expected_relevance": "uncertain",
+      "expected_identity": "unresolved",
+      "expected_company": null,
+      "expected_identity_candidates": [],
+      "source_ids": [],
+      "expected_facts": [],
+      "forbidden_outcomes": [
+        "unnecessary_research"
+      ],
+      "checks": [
+        "identity_resolution"
+      ],
+      "unsupported_checks": [],
       "language": "vi"
     }
   ],

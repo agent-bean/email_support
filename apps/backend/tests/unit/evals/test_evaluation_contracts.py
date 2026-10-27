@@ -14,6 +14,7 @@ from evals.models import (
     CapturedCase,
     CaseAssessment,
     CaseResult,
+    CaseResultStatus,
     CaseStatus,
     ClaimReview,
     EvaluationCase,
@@ -23,6 +24,7 @@ from evals.models import (
     ExecutionMode,
     GoldenExpectationReview,
     HumanReview,
+    IdentityStatus,
     Relevance,
     ReplayCapture,
     ReviewLabel,
@@ -286,6 +288,10 @@ def test_wrong_kind_expected_fact_does_not_duplicate_result_ids() -> None:
         cases=[
             CapturedCase(
                 case_id=case.id,
+                relevance=case.expected_relevance,
+                identity=case.expected_identity,
+                identity_company=case.expected_company,
+                identity_candidates=case.expected_identity_candidates,
                 claims=[
                     BriefingClaim(
                         id="adobe-mission",
@@ -350,6 +356,10 @@ def test_human_can_reject_claim_misclassified_as_nonfactual() -> None:
         cases=[
             CapturedCase(
                 case_id=case.id,
+                relevance=case.expected_relevance,
+                identity=case.expected_identity,
+                identity_company=case.expected_company,
+                identity_candidates=case.expected_identity_candidates,
                 claims=[
                     BriefingClaim(
                         id="misclassified",
@@ -387,7 +397,7 @@ def test_human_can_reject_claim_misclassified_as_nonfactual() -> None:
     )
 
 
-def test_unimplemented_identity_check_stays_unsupported() -> None:
+def test_missing_identity_capture_stays_unsupported() -> None:
     dataset = load_dataset(
         Path(__file__).parents[3] / "evals" / "datasets" / "briefing-v1"
     )
@@ -411,10 +421,10 @@ def test_unimplemented_identity_check_stays_unsupported() -> None:
     )
 
 
-def test_dataset_loads_all_ten_candidate_scenarios_and_verified_sources() -> None:
+def test_dataset_loads_bilingual_candidate_scenarios_and_verified_sources() -> None:
     root = Path(__file__).parents[3] / "evals" / "datasets" / "briefing-v1"
     dataset = load_dataset(root)
-    assert len(dataset.cases) == 20
+    assert len(dataset.cases) == 24
     assert len(dataset.sources) >= 1
     assert all(case.synthetic for case in dataset.cases)
     assert all(source.published_at is None for source in dataset.sources)
@@ -422,7 +432,9 @@ def test_dataset_loads_all_ten_candidate_scenarios_and_verified_sources() -> Non
         "new_company",
         "returning_company",
         "irrelevant_email",
+        "uncertain_relevance",
         "ambiguous_identity",
+        "incorrect_prior_association",
         "missing_meeting",
         "stale_sources",
         "injection",
@@ -438,9 +450,42 @@ def test_dataset_loads_all_ten_candidate_scenarios_and_verified_sources() -> Non
     )
     assert all(case.expected_relevance is not None for case in dataset.cases)
     assert all(
+        "identity_resolution" in {check.value for check in case.checks}
+        for case in dataset.cases
+    )
+    assert all(
         case.forbidden_outcomes and case.checks or case.unsupported_checks
         for case in dataset.cases
     )
+
+
+def test_identity_mismatch_fails_independently_of_briefing_claims() -> None:
+    dataset = load_dataset(
+        Path(__file__).parents[3] / "evals" / "datasets" / "briefing-v1"
+    )
+    case = next(item for item in dataset.cases if item.id == "irrelevant-email-en")
+    capture = ReplayCapture(
+        dataset_version=dataset.version,
+        application_revision="a" * 40,
+        prompt_version="prompt-v1",
+        model_id="model-v1",
+        config_hash="b" * 64,
+        cases=[
+            CapturedCase(
+                case_id=case.id,
+                relevance=Relevance.IRRELEVANT,
+                identity=IdentityStatus.RESOLVED,
+            )
+        ],
+    )
+    result = next(
+        item
+        for item in build_replay_run(dataset, capture).case_results
+        if item.case_id == case.id
+    )
+    assert result.relevance_correct is True
+    assert result.identity_correct is False
+    assert result.status is CaseResultStatus.FAILED
 
 
 def test_reviewed_case_requires_bound_golden_record_and_human_run_review() -> None:

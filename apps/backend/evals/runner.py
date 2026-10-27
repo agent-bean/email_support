@@ -29,6 +29,7 @@ from evals.models import (
     EvaluationRun,
     ExecutionMode,
     HumanReview,
+    IdentityStatus,
     ReplayCapture,
     ReviewLabel,
     TaskOutcome,
@@ -40,6 +41,7 @@ ORACLE_PATH = Path(__file__).parent / "fixtures" / "evaluator-oracle.json"
 IMPLEMENTED_CHECKS = {
     CheckName.CLAIM_REFERENCE_INTEGRITY,
     CheckName.SOURCE_PROVENANCE,
+    CheckName.IDENTITY_RESOLUTION,
     CheckName.WORKFLOW_EVENTS,
     CheckName.USEFULNESS_REVIEW,
 }
@@ -201,6 +203,28 @@ def build_replay_run(
             )
         )
         unsupported = list(case.unsupported_checks)
+        relevance_correct = None
+        identity_correct = None
+        if CheckName.IDENTITY_RESOLUTION in case.checks:
+            if entry.relevance is None or entry.identity is None:
+                unsupported.append(
+                    UnsupportedCheck(
+                        name=CheckName.IDENTITY_RESOLUTION,
+                        reason="Captured relevance and identity outcomes are required.",
+                    )
+                )
+            else:
+                relevance_correct = entry.relevance is case.expected_relevance
+                identity_correct = entry.identity is case.expected_identity
+                if case.expected_identity is IdentityStatus.RESOLVED:
+                    identity_correct = identity_correct and (
+                        entry.identity_company == case.expected_company
+                    )
+                if case.expected_identity_candidates:
+                    identity_correct = identity_correct and (
+                        set(entry.identity_candidates)
+                        == set(case.expected_identity_candidates)
+                    )
         unsupported.extend(
             UnsupportedCheck(
                 name=check,
@@ -215,7 +239,12 @@ def build_replay_run(
         forbidden_event = bool(
             set(case.forbidden_outcomes) & {event.value for event in entry.events}
         )
-        if invalid_reference or forbidden_event:
+        if (
+            invalid_reference
+            or forbidden_event
+            or relevance_correct is False
+            or identity_correct is False
+        ):
             status = CaseResultStatus.FAILED
         elif case.status is CaseStatus.UNSUPPORTED or unsupported:
             status = CaseResultStatus.UNSUPPORTED_FEATURE
@@ -239,6 +268,8 @@ def build_replay_run(
                 elapsed_ms=entry.elapsed_ms,
                 attempts=entry.attempts,
                 unsupported_checks=unsupported,
+                relevance_correct=relevance_correct,
+                identity_correct=identity_correct,
             )
         )
 

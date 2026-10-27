@@ -1,6 +1,6 @@
 ---
 title: "Phase 3: Email interpretation and stable company identity — Issue #8"
-status: todo
+status: in_progress
 priority: P1
 effort: "5–8 engineering days"
 dependencies: [1, 2]
@@ -111,10 +111,16 @@ The correction file contains expected revision and explicit company/null selecti
 
 ## Acceptance mapping — Issue #8
 
-- [ ] AC1: relevant/irrelevant/uncertain outputs expose validated candidates/needs/evidence/ambiguity; sender claims stay unverified.
-- [ ] AC2: repeated/concurrent inputs preserve stable IDs; shared domains, similar names and missing identity never silently merge.
-- [ ] AC3: explicit typed owner corrections persist and control later lookup, including clear; local command works without adding unauthenticated HTTP. Stale revision cannot overwrite a correction.
+- [x] AC1: relevant/irrelevant/uncertain outputs expose validated candidates/needs/evidence/ambiguity; sender claims stay unverified.
+- [x] AC2: repeated/concurrent inputs preserve stable IDs; shared domains, similar names and missing identity never silently merge.
+- [x] AC3: explicit typed owner corrections persist and control later lookup, including clear; local command works without adding unauthenticated HTTP. Stale revision cannot overwrite a correction.
 - [ ] AC4: reviewed cases cover relevance, ambiguity and incorrect old associations; identity outcomes are separate from report quality.
+
+## Implementation evidence and pending owner input
+
+Implemented normalized provenance, strict no-tool Email interpretation, deterministic Company Info resolution, revision-checked owner correction, local-only commands, identity-scoped mail history and separate relevance/identity replay outcomes. Added 24 synthetic English/Vietnamese cases across 12 paired scenarios. The cases are candidates, not owner-reviewed baselines; AC4 and phase acceptance remain pending owner review. Phase 4 must also wait for the separate #8 review, acceptance and merge gate. No live interpretation was run against an operational database.
+
+Verification passed: `make backend-check` (198 tests, Ruff, formatting, strict mypy); `./scripts/check-database.sh local tests/database/identity tests/database/migrations` (14 passed, including migrations); `python -m evals validate --dataset evals/datasets/briefing-v1` (24 candidate cases, 12 English and 12 Vietnamese); `python -m evals self-check`; local CLI help. Provider-backed interpretation was not run because no isolated evaluation database and owner-reviewed cases are available yet.
 
 ## Risks, compatibility and rollback
 
