@@ -191,6 +191,40 @@ async def test_calendar_chooses_secondary_calendar_and_limits_event_fields(
 
 
 @pytest.mark.asyncio
+async def test_calendar_treats_omitted_primary_flag_as_secondary(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[dict[str, Any]] = []
+    monkeypatch.setattr(
+        google_workspace,
+        "AsyncClient",
+        fake_client_factory(
+            [
+                FakeResponse(
+                    200,
+                    {
+                        "items": [
+                            {"id": "primary-id", "primary": True},
+                            {"id": "shared@example.test"},
+                        ]
+                    },
+                ),
+                FakeResponse(200, {"items": []}),
+            ],
+            calls,
+        ),
+    )
+
+    result = await google_workspace.GoogleWorkspaceClient().read_secondary_calendar(
+        "private-access-token", now=datetime(2026, 10, 26, tzinfo=UTC)
+    )
+
+    assert result.secondary_calendar_found
+    assert result.event is None
+    assert calls[1]["url"].endswith("/calendars/shared%40example.test/events")
+
+
+@pytest.mark.asyncio
 async def test_refresh_invalid_grant_is_typed_without_echoing_token(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
