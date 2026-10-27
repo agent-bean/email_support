@@ -251,7 +251,7 @@ class GoogleWorkspaceClient:
                         item.get("id")
                         for item in items
                         if isinstance(item, dict)
-                        and item.get("primary") is False
+                        and item.get("primary", False) is False
                         and isinstance(item.get("id"), str)
                     ),
                     None,
