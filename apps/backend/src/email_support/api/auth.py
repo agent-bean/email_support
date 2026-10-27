@@ -174,7 +174,18 @@ async def protected_session(
                 message="Owner session storage is unavailable.",
             ).model_dump(mode="json"),
         ) from exc
-    if result is None:
+    if result is None or not hmac.compare_digest(result[0], auth.settings.owner_sub):
+        if result is not None and token:
+            try:
+                await logout_session(auth.sessions, token)
+            except Exception as exc:
+                raise HTTPException(
+                    status_code=503,
+                    detail=AuthError(
+                        code=AuthErrorCode.AUTH_UNAVAILABLE,
+                        message="Owner session storage is unavailable.",
+                    ).model_dump(mode="json"),
+                ) from exc
         headers = None
         if token:
             _, session_name = cookie_names(auth.settings)
