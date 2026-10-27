@@ -15,7 +15,10 @@ from email_support.integrations.google_workspace import (
     GoogleWorkspaceClient,
     TokenProbeOutcome,
 )
-from email_support.models.google_connection import GoogleConnectionFailure
+from email_support.models.google_connection import (
+    GoogleConnectionErrorCode,
+    GoogleConnectionFailure,
+)
 from email_support.services.google_connection import (
     prepare_live_google_smoke,
     read_gmail_metadata,
@@ -104,8 +107,11 @@ async def _verify_local_disconnect(
             settings=settings,
             workspace=workspace,
         )
-    except GoogleConnectionFailure:
-        return True
+    except GoogleConnectionFailure as failure:
+        return failure.code in {
+            GoogleConnectionErrorCode.CREDENTIALS_UNAVAILABLE,
+            GoogleConnectionErrorCode.REVOCATION_PENDING,
+        }
     return False
 
 

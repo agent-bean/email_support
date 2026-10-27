@@ -5,10 +5,12 @@ import importlib.util
 import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
 from email_support.integrations.google_workspace import TokenProbeOutcome
+from email_support.models.google_connection import GoogleConnectionFailure
 
 SCRIPT = Path(__file__).resolve().parents[3] / "scripts/live-google-smoke.py"
 SPEC = importlib.util.spec_from_file_location("live_google_smoke", SCRIPT)
@@ -113,3 +115,55 @@ async def test_probe_is_cancelled_at_the_observation_deadline() -> None:
 
     assert result is False
     assert cancelled is True
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("failure_code", "expected"),
+    [
+        ("credentials_unavailable", True),
+        ("revocation_pending", True),
+        ("provider_unavailable", False),
+    ],
+)
+async def test_provider_failure_does_not_prove_local_disconnect_blocked_reads(
+    monkeypatch: pytest.MonkeyPatch,
+    failure_code: str,
+    expected: bool,
+) -> None:
+    row = SimpleNamespace(
+        status="disconnected",
+        encrypted_token_bundle=None,
+        generation=2,
+    )
+
+    class Session:
+        async def __aenter__(self) -> "Session":
+            return self
+
+        async def __aexit__(self, *args: object) -> None:
+            del args
+
+        async def scalar(self, query: object) -> SimpleNamespace:
+            del query
+            return row
+
+    class Sessions:
+        def __call__(self) -> Session:
+            return Session()
+
+    async def provider_failure(*args: object, **kwargs: object) -> None:
+        del args, kwargs
+        raise GoogleConnectionFailure(failure_code)
+
+    monkeypatch.setattr(LIVE_GOOGLE_SMOKE, "read_gmail_metadata", provider_failure)
+
+    result = await LIVE_GOOGLE_SMOKE._verify_local_disconnect(
+        Sessions(),
+        settings=SimpleNamespace(),
+        owner_sub="owner-subject",
+        previous_generation=1,
+        workspace=SimpleNamespace(),
+    )
+
+    assert result is expected

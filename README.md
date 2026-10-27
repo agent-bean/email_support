@@ -4,7 +4,7 @@ A single-owner assistant for preparing sourced company briefings from business e
 
 ## Current status
 
-The repository has a credential-free FastAPI health endpoint, typed PostgreSQL persistence for canonical records, approvals, knowledge, and projection metadata, and an owner Google sign-in flow with PostgreSQL-backed sessions when explicitly configured. The web client includes owner access states and keeps health public. Default Compose and CI remain credential-free; Google access is unavailable there until the opt-in local runtime is configured. Provider connections, the worker, and production deployment are not implemented.
+The repository has a credential-free FastAPI health endpoint, typed PostgreSQL persistence for canonical records, approvals, knowledge, and projection metadata, and owner Google sign-in plus Google Workspace connection flows with PostgreSQL-backed state when explicitly configured. The web client includes owner access and connection states while keeping health public. Default Compose and CI remain credential-free; Google access is unavailable there until the opt-in local runtime is configured. Automated Gmail/Calendar workflows, the worker, and production deployment are not implemented.
 
 ## Local development
 
