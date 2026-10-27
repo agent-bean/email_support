@@ -67,7 +67,14 @@ elif 'ps' in args and '--status' in args:
 elif 'heads' in args:
     print('3c0f6a9b21e8 (head)')
 elif 'psql' in ' '.join(args):
-    query = args[-1]
+    if '-f -' in ' '.join(args):
+        query = sys.stdin.read()
+        stdin_log = os.environ.get('FAKE_DOCKER_STDIN_LOG')
+        if stdin_log:
+            with open(stdin_log, 'a', encoding='utf-8') as sql_log:
+                sql_log.write(query)
+    else:
+        query = args[-1]
     if mode == 'recovery' and 'SELECT revoke_operation_id' in query:
         print('5e93b29f-ff68-40ea-98e8-6078c7010078')
     elif mode == 'recovery' and 'UPDATE google_connections' in query:
@@ -392,6 +399,7 @@ def test_resolve_revoke_requires_exact_operation_and_updates_only_purged_unknown
         {
             "PATH": f"{bin_dir}{os.pathsep}{env['PATH']}",
             "FAKE_DOCKER_LOG": str(log),
+            "FAKE_DOCKER_STDIN_LOG": str(tmp_path / "docker-stdin.log"),
             "FAKE_DOCKER_MODE": "recovery",
         }
     )
@@ -409,10 +417,14 @@ def test_resolve_revoke_requires_exact_operation_and_updates_only_purged_unknown
     assert result.returncode == 0, result.stderr
     assert "revoke marker resolved" in result.stdout
     calls = log.read_text(encoding="utf-8").splitlines()
-    update = next(call for call in calls if "UPDATE google_connections" in call)
-    assert "revoke_operation_id" in update
-    assert "revoke_state IN ('in_progress', 'unknown')" in update
-    assert "encrypted_token_bundle IS NULL" in update
+    assert any("-Atq -f -" in call for call in calls)
+    supplied_sql = (tmp_path / "docker-stdin.log").read_text(encoding="utf-8")
+    assert ":'owner_sub'" in supplied_sql
+    assert ":'operation_id'" in supplied_sql
+    assert "UPDATE google_connections" in supplied_sql
+    assert "revoke_operation_id" in supplied_sql
+    assert "revoke_state IN ('in_progress', 'unknown')" in supplied_sql
+    assert "encrypted_token_bundle IS NULL" in supplied_sql
 
 
 def test_resolve_revoke_stops_when_operator_does_not_confirm_cleanup(

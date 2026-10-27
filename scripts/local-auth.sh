@@ -88,10 +88,10 @@ db_query() {
 
 db_owner_query() {
   local query=$1 operation_id=${2:-}
-  compose exec --no-TTY \
+  printf '%s\n' "$query" | compose exec --no-TTY \
     --env "LOCAL_AUTH_OWNER_SUB=$EMAIL_SUPPORT_OWNER_SUB" \
     --env "LOCAL_AUTH_REVOKE_OPERATION_ID=$operation_id" \
-    auth-postgres sh -ec 'PGPASSWORD="$POSTGRES_PASSWORD" psql -v ON_ERROR_STOP=1 -v owner_sub="$LOCAL_AUTH_OWNER_SUB" -v operation_id="$LOCAL_AUTH_REVOKE_OPERATION_ID" -U email_support_auth -d email_support_auth -Atqc "$1"' sh "$query"
+    auth-postgres sh -ec 'PGPASSWORD="$POSTGRES_PASSWORD" psql -v ON_ERROR_STOP=1 -v owner_sub="$LOCAL_AUTH_OWNER_SUB" -v operation_id="$LOCAL_AUTH_REVOKE_OPERATION_ID" -U email_support_auth -d email_support_auth -Atq -f -'
 }
 
 run_alembic() {
