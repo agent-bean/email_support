@@ -15,7 +15,7 @@ from email_support.integrations.google_oidc import (
     create_authorization,
     exchange_code,
 )
-from email_support.services.owner_auth import require_owner_subject
+from email_support.services.auth import require_owner_subject
 
 
 def test_authorization_uses_fixed_callback_openid_email_and_s256_pkce() -> None:

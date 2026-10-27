@@ -9,7 +9,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from email_support.api import owner_auth as owner_auth_api
+from email_support.api import auth as auth_api
 from email_support.config import AuthSettings
 from email_support.integrations.google_oidc import GoogleAuthorization
 from email_support.main import app
@@ -48,7 +48,7 @@ def test_health_and_openapi_do_not_require_auth_configuration(
         ("post", "/api/auth/logout"),
     ],
 )
-def test_owner_auth_endpoints_fail_closed_without_auth_configuration(
+def test_auth_endpoints_fail_closed_without_auth_configuration(
     client: TestClient, method: str, path: str
 ) -> None:
     if path == "/api/auth/google/login":
@@ -101,11 +101,11 @@ def test_google_login_accepts_json_request(
 
     sessions = cast(async_sessionmaker[AsyncSession], object())
     monkeypatch.setattr(
-        owner_auth_api,
-        "require_owner_auth_runtime",
-        lambda _request: owner_auth_api.OwnerAuthRuntime(settings, sessions, None),
+        auth_api,
+        "require_auth_runtime",
+        lambda _request: auth_api.AuthRuntime(settings, sessions, None),
     )
-    monkeypatch.setattr(owner_auth_api, "begin_login", begin_login_stub)
+    monkeypatch.setattr(auth_api, "begin_login", begin_login_stub)
     client.cookies.set("owner_browser", "browser-secret")
 
     response = client.post(
@@ -144,9 +144,9 @@ def test_google_callback_redirects_to_web_origin_and_logs_only_safe_failure_data
     )
     sessions = cast(async_sessionmaker[AsyncSession], object())
     monkeypatch.setattr(
-        owner_auth_api,
-        "require_owner_auth_runtime",
-        lambda _request: owner_auth_api.OwnerAuthRuntime(settings, sessions, None),
+        auth_api,
+        "require_auth_runtime",
+        lambda _request: auth_api.AuthRuntime(settings, sessions, None),
     )
 
     async def consume_attempt(*_: object, **__: object) -> object:
@@ -160,10 +160,10 @@ def test_google_callback_redirects_to_web_origin_and_logs_only_safe_failure_data
             error.error = "invalid_grant"  # type: ignore[attr-defined]
         raise error
 
-    monkeypatch.setattr(owner_auth_api, "consume_login_callback", consume_attempt)
-    monkeypatch.setattr(owner_auth_api, "exchange_code", exchange)
+    monkeypatch.setattr(auth_api, "consume_login_callback", consume_attempt)
+    monkeypatch.setattr(auth_api, "exchange_code", exchange)
     client.cookies.set("owner_browser", "browser-secret")
-    caplog.set_level(logging.WARNING, logger=owner_auth_api.__name__)
+    caplog.set_level(logging.WARNING, logger=auth_api.__name__)
 
     response = client.get(
         "/api/auth/google/callback",

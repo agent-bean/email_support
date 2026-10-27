@@ -2,8 +2,8 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { DisconnectGoogleConnectionData, DisconnectGoogleConnectionErrors, DisconnectGoogleConnectionResponses, GetGoogleConnectionData, GetGoogleConnectionErrors, GetGoogleConnectionResponses, GetHealthData, GetHealthResponses, GetOwnerAuthPreauthData, GetOwnerAuthPreauthErrors, GetOwnerAuthPreauthResponses, GetOwnerSessionData, GetOwnerSessionErrors, GetOwnerSessionResponses, LogoutOwnerData, LogoutOwnerErrors, LogoutOwnerResponses, StartGoogleConnectionConsentData, StartGoogleConnectionConsentErrors, StartGoogleConnectionConsentResponses, StartGoogleLoginData, StartGoogleLoginErrors, StartGoogleLoginResponses } from './types.gen';
-import { zDisconnectGoogleConnectionResponse, zGetGoogleConnectionResponse, zGetHealthResponse, zGetOwnerAuthPreauthResponse, zGetOwnerSessionResponse, zLogoutOwnerResponse, zStartGoogleConnectionConsentResponse, zStartGoogleLoginResponse } from './zod.gen';
+import type { DisconnectGoogleConnectionData, DisconnectGoogleConnectionErrors, DisconnectGoogleConnectionResponses, GetAuthPreauthData, GetAuthPreauthErrors, GetAuthPreauthResponses, GetGoogleConnectionData, GetGoogleConnectionErrors, GetGoogleConnectionResponses, GetHealthData, GetHealthResponses, GetOwnerSessionData, GetOwnerSessionErrors, GetOwnerSessionResponses, LogoutOwnerData, LogoutOwnerErrors, LogoutOwnerResponses, StartGoogleConnectionConsentData, StartGoogleConnectionConsentErrors, StartGoogleConnectionConsentResponses, StartGoogleLoginData, StartGoogleLoginErrors, StartGoogleLoginResponses } from './types.gen';
+import { zDisconnectGoogleConnectionResponse, zGetAuthPreauthResponse, zGetGoogleConnectionResponse, zGetHealthResponse, zGetOwnerSessionResponse, zLogoutOwnerResponse, zStartGoogleConnectionConsentResponse, zStartGoogleLoginResponse } from './zod.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -49,8 +49,8 @@ export const logoutOwner = <ThrowOnError extends boolean = false>(options?: Opti
 /**
  * Preauth
  */
-export const getOwnerAuthPreauth = <ThrowOnError extends boolean = false>(options?: Options<GetOwnerAuthPreauthData, ThrowOnError>): RequestResult<GetOwnerAuthPreauthResponses, GetOwnerAuthPreauthErrors, ThrowOnError> => (options?.client ?? client).get<GetOwnerAuthPreauthResponses, GetOwnerAuthPreauthErrors, ThrowOnError>({
-    responseValidator: async (data) => await zGetOwnerAuthPreauthResponse.parseAsync(data),
+export const getAuthPreauth = <ThrowOnError extends boolean = false>(options?: Options<GetAuthPreauthData, ThrowOnError>): RequestResult<GetAuthPreauthResponses, GetAuthPreauthErrors, ThrowOnError> => (options?.client ?? client).get<GetAuthPreauthResponses, GetAuthPreauthErrors, ThrowOnError>({
+    responseValidator: async (data) => await zGetAuthPreauthResponse.parseAsync(data),
     url: '/api/auth/preauth',
     ...options
 });

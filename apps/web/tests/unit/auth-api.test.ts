@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const sdk = vi.hoisted(() => ({
   getOwnerSession: vi.fn(),
-  getOwnerAuthPreauth: vi.fn(),
+  getAuthPreauth: vi.fn(),
   startGoogleLogin: vi.fn(),
   logoutOwner: vi.fn(),
 }));
@@ -13,7 +13,7 @@ import {
   beginOwnerLogin,
   fetchOwnerSession,
   logoutOwnerSession,
-} from '../../src/shared/api/owner-auth';
+} from '../../src/shared/api/auth';
 
 afterEach(() => {
   vi.clearAllMocks();
@@ -56,7 +56,7 @@ describe('owner access API', () => {
   });
 
   it('uses in-memory preauth CSRF for login and sends same-origin credentials', async () => {
-    sdk.getOwnerAuthPreauth.mockResolvedValue({
+    sdk.getAuthPreauth.mockResolvedValue({
       data: { csrf_token: 'p'.repeat(40) },
     });
     sdk.startGoogleLogin.mockResolvedValue({

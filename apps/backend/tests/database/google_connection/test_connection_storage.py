@@ -30,6 +30,7 @@ from email_support.models.google_connection import (
     GoogleConnectionStatus,
     GoogleTokenBundle,
 )
+from email_support.services.auth import SESSION_TTL
 from email_support.services.google_connection import (
     begin_google_consent,
     consume_google_consent_attempt,
@@ -42,12 +43,11 @@ from email_support.services.google_connection_crypto import (
     decrypt_token_bundle,
     encrypt_token_bundle,
 )
-from email_support.services.owner_auth import SESSION_TTL
-from email_support.storage.postgres.persistence.owner_auth import create_owner_session
+from email_support.storage.postgres.persistence.auth import create_owner_session
+from email_support.storage.postgres.persistence.tables.auth import OwnerSessionRow
 from email_support.storage.postgres.persistence.tables.google_connection import (
     GoogleConnectionRow,
 )
-from email_support.storage.postgres.persistence.tables.owner_auth import OwnerSessionRow
 
 OWNER_SUB = "configured-owner-subject"
 SESSION_TOKEN = "owner-session-token"

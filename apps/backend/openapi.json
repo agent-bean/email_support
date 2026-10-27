@@ -1,6 +1,35 @@
 {
   "components": {
     "schemas": {
+      "AuthError": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/AuthErrorCode"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "AuthError",
+        "type": "object"
+      },
+      "AuthErrorCode": {
+        "enum": [
+          "auth_unavailable",
+          "auth_required",
+          "csrf_rejected",
+          "login_rejected",
+          "login_restart"
+        ],
+        "title": "AuthErrorCode",
+        "type": "string"
+      },
       "GoogleConnectionErrorCode": {
         "enum": [
           "partial_scope",
@@ -206,35 +235,6 @@
         "title": "LoginResponse",
         "type": "object"
       },
-      "OwnerAuthError": {
-        "additionalProperties": false,
-        "properties": {
-          "code": {
-            "$ref": "#/components/schemas/OwnerAuthErrorCode"
-          },
-          "message": {
-            "title": "Message",
-            "type": "string"
-          }
-        },
-        "required": [
-          "code",
-          "message"
-        ],
-        "title": "OwnerAuthError",
-        "type": "object"
-      },
-      "OwnerAuthErrorCode": {
-        "enum": [
-          "auth_unavailable",
-          "auth_required",
-          "csrf_rejected",
-          "login_rejected",
-          "login_restart"
-        ],
-        "title": "OwnerAuthErrorCode",
-        "type": "string"
-      },
       "OwnerSession": {
         "additionalProperties": false,
         "properties": {
@@ -386,7 +386,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/OwnerAuthError"
+                  "$ref": "#/components/schemas/AuthError"
                 }
               }
             },
@@ -406,7 +406,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/OwnerAuthError"
+                  "$ref": "#/components/schemas/AuthError"
                 }
               }
             },
@@ -415,7 +415,7 @@
         },
         "summary": "Start Google Login",
         "tags": [
-          "owner-auth"
+          "auth"
         ]
       }
     },
@@ -448,7 +448,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/OwnerAuthError"
+                  "$ref": "#/components/schemas/AuthError"
                 }
               }
             },
@@ -458,7 +458,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/OwnerAuthError"
+                  "$ref": "#/components/schemas/AuthError"
                 }
               }
             },
@@ -482,13 +482,13 @@
         ],
         "summary": "Logout",
         "tags": [
-          "owner-auth"
+          "auth"
         ]
       }
     },
     "/api/auth/preauth": {
       "get": {
-        "operationId": "get_owner_auth_preauth",
+        "operationId": "get_auth_preauth",
         "responses": {
           "200": {
             "content": {
@@ -504,7 +504,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/OwnerAuthError"
+                  "$ref": "#/components/schemas/AuthError"
                 }
               }
             },
@@ -513,7 +513,7 @@
         },
         "summary": "Preauth",
         "tags": [
-          "owner-auth"
+          "auth"
         ]
       }
     },
@@ -535,7 +535,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/OwnerAuthError"
+                  "$ref": "#/components/schemas/AuthError"
                 }
               }
             },
@@ -545,7 +545,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/OwnerAuthError"
+                  "$ref": "#/components/schemas/AuthError"
                 }
               }
             },
@@ -559,7 +559,7 @@
         ],
         "summary": "Get Session",
         "tags": [
-          "owner-auth"
+          "auth"
         ]
       }
     },

@@ -3,8 +3,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../../src/app/App';
 
-vi.mock('../../src/shared/api/owner-auth', () => ({
-  isOwnerAuthApiError: (value: unknown) =>
+vi.mock('../../src/shared/api/auth', () => ({
+  isAuthApiError: (value: unknown) =>
     typeof value === 'object' && value !== null && 'code' in value,
   fetchOwnerSession: vi
     .fn()
@@ -13,7 +13,7 @@ vi.mock('../../src/shared/api/owner-auth', () => ({
     ),
   beginOwnerLogin: vi.fn(),
   logoutOwnerSession: vi.fn(),
-  clearOwnerAuthMemory: vi.fn(),
+  clearAuthMemory: vi.fn(),
   navigateToAuthorization: vi.fn(),
 }));
 
@@ -26,11 +26,11 @@ vi.mock('../../src/shared/api/google-connection', () => ({
     typeof value === 'object' && value !== null && 'code' in value,
 }));
 
-import { fetchOwnerSession } from '../../src/shared/api/owner-auth';
+import { fetchOwnerSession } from '../../src/shared/api/auth';
 import { fetchGoogleConnection } from '../../src/shared/api/google-connection';
 
-vi.mock('../../src/shared/api/owner-auth', () => ({
-  isOwnerAuthApiError: (value: unknown) =>
+vi.mock('../../src/shared/api/auth', () => ({
+  isAuthApiError: (value: unknown) =>
     typeof value === 'object' && value !== null && 'code' in value,
   fetchOwnerSession: vi
     .fn()
@@ -39,7 +39,7 @@ vi.mock('../../src/shared/api/owner-auth', () => ({
     ),
   beginOwnerLogin: vi.fn(),
   logoutOwnerSession: vi.fn(),
-  clearOwnerAuthMemory: vi.fn(),
+  clearAuthMemory: vi.fn(),
 }));
 
 function jsonResponse(payload: unknown): Response {

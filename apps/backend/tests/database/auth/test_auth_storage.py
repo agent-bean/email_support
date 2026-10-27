@@ -11,15 +11,15 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from email_support.integrations.google_oidc import GoogleIdentity
-from email_support.services.owner_auth import issue_owner_session
-from email_support.storage.postgres.persistence.owner_auth import (
+from email_support.services.auth import issue_owner_session
+from email_support.storage.postgres.persistence.auth import (
     consume_attempt,
     create_attempt,
     create_owner_session,
     delete_owner_session,
     get_owner_session,
 )
-from email_support.storage.postgres.persistence.tables.owner_auth import (
+from email_support.storage.postgres.persistence.tables.auth import (
     OwnerSessionRow,
 )
 

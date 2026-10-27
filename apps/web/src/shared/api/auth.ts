@@ -1,13 +1,13 @@
 import {
-  getOwnerAuthPreauth,
+  getAuthPreauth,
   getOwnerSession,
   logoutOwner,
   startGoogleLogin,
-  type OwnerAuthErrorCode,
+  type AuthErrorCode,
   type OwnerSession,
 } from '@api-generated';
 import {
-  zOwnerAuthError,
+  zAuthError,
   zOwnerSession,
   zPreauthResponse,
   zLoginResponse,
@@ -18,20 +18,18 @@ const REQUEST_DEADLINE_MS = 5_000;
 const strictOwnerSession = z.strictObject(zOwnerSession.shape);
 const strictPreauth = z.strictObject(zPreauthResponse.shape);
 const strictLogin = z.strictObject(zLoginResponse.shape);
-const strictOwnerAuthError = z.strictObject(zOwnerAuthError.shape);
+const strictAuthError = z.strictObject(zAuthError.shape);
 
-export class OwnerAuthApiError extends Error {
-  constructor(readonly code: OwnerAuthErrorCode | 'network_error') {
+export class AuthApiError extends Error {
+  constructor(readonly code: AuthErrorCode | 'network_error') {
     super(code);
-    this.name = 'OwnerAuthApiError';
+    this.name = 'AuthApiError';
   }
 }
 
-export function isOwnerAuthApiError(
-  value: unknown,
-): value is OwnerAuthApiError {
+export function isAuthApiError(value: unknown): value is AuthApiError {
   return (
-    value instanceof OwnerAuthApiError ||
+    value instanceof AuthApiError ||
     (typeof value === 'object' &&
       value !== null &&
       'code' in value &&
@@ -71,10 +69,10 @@ async function withRequest<T>(
       typeof error === 'object' && error !== null && 'detail' in error
         ? (error as { detail?: unknown }).detail
         : undefined;
-    const parsed = strictOwnerAuthError.safeParse(detail);
-    if (parsed.success) throw new OwnerAuthApiError(parsed.data.code);
+    const parsed = strictAuthError.safeParse(detail);
+    if (parsed.success) throw new AuthApiError(parsed.data.code);
     if (controller.signal.aborted) throw controller.signal.reason ?? error;
-    throw new OwnerAuthApiError('network_error');
+    throw new AuthApiError('network_error');
   } finally {
     window.clearTimeout(timeout);
     signal.removeEventListener('abort', forwardAbort);
@@ -96,7 +94,7 @@ export function fetchOwnerSession(signal: AbortSignal): Promise<OwnerSession> {
 
 export function beginOwnerLogin(signal: AbortSignal): Promise<string> {
   return withRequest(signal, async (requestSignal) => {
-    const preauth = await getOwnerAuthPreauth({
+    const preauth = await getAuthPreauth({
       baseUrl: window.location.origin,
       credentials: 'same-origin',
       signal: requestSignal,
@@ -131,7 +129,7 @@ export function beginOwnerLogin(signal: AbortSignal): Promise<string> {
   });
 }
 
-export function clearOwnerAuthMemory(): void {
+export function clearAuthMemory(): void {
   preauthCsrf = undefined;
 }
 
@@ -143,7 +141,7 @@ export function logoutOwnerSession(
   csrfToken: string,
   signal: AbortSignal,
 ): Promise<void> {
-  clearOwnerAuthMemory();
+  clearAuthMemory();
   return withRequest(signal, async (requestSignal) => {
     await logoutOwner({
       baseUrl: window.location.origin,

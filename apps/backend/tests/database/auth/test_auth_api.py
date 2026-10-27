@@ -8,11 +8,11 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from email_support.api.owner_auth import SESSION_TTL_SECONDS
+from email_support.api.auth import SESSION_TTL_SECONDS
 from email_support.integrations.google_oidc import GoogleIdentity
 from email_support.main import app
-from email_support.services.owner_auth import digest
-from email_support.storage.postgres.persistence.owner_auth import create_owner_session
+from email_support.services.auth import digest
+from email_support.storage.postgres.persistence.auth import create_owner_session
 
 OWNER_SUB = "configured-owner-subject"
 WEB_ORIGIN = "http://localhost:5173"
@@ -141,13 +141,13 @@ def test_callback_rejects_non_owner_subject_and_consumes_state(
     configured_client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from email_support.api import owner_auth as owner_auth_api
+    from email_support.api import auth as auth_api
 
     async def exchange(*args: object, **kwargs: object) -> GoogleIdentity:
         del args, kwargs
         return GoogleIdentity(sub="attacker-subject", email="owner@example.com")
 
-    monkeypatch.setattr(owner_auth_api, "exchange_code", exchange)
+    monkeypatch.setattr(auth_api, "exchange_code", exchange)
     preauth = configured_client.get("/api/auth/preauth")
     login = configured_client.post(
         "/api/auth/google/login",
@@ -221,13 +221,13 @@ def test_owner_login_issues_https_session_cookie(
     secure_client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from email_support.api import owner_auth as owner_auth_api
+    from email_support.api import auth as auth_api
 
     async def exchange(*args: object, **kwargs: object) -> GoogleIdentity:
         del args, kwargs
         return GoogleIdentity(sub=OWNER_SUB, email="changed@example.com")
 
-    monkeypatch.setattr(owner_auth_api, "exchange_code", exchange)
+    monkeypatch.setattr(auth_api, "exchange_code", exchange)
     preauth = secure_client.get("/api/auth/preauth")
     login = secure_client.post(
         "/api/auth/google/login",

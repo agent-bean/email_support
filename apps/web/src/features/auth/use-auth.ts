@@ -2,16 +2,16 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import {
   beginOwnerLogin,
-  clearOwnerAuthMemory,
+  clearAuthMemory,
   fetchOwnerSession,
-  isOwnerAuthApiError,
+  isAuthApiError,
   navigateToAuthorization,
   logoutOwnerSession,
-} from '../../shared/api/owner-auth';
+} from '../../shared/api/auth';
 
 export const ownerSessionKey = ['owner-session'] as const;
 
-export function useOwnerAuth() {
+export function useAuth() {
   const queryClient = useQueryClient();
   const [signInHint, setSignInHint] = useState<string | undefined>(() => {
     const hint = new URLSearchParams(window.location.search).get('auth');
@@ -26,10 +26,10 @@ export function useOwnerAuth() {
   });
   useEffect(() => {
     if (
-      isOwnerAuthApiError(session.error) &&
+      isAuthApiError(session.error) &&
       session.error.code === 'auth_required'
     ) {
-      clearOwnerAuthMemory();
+      clearAuthMemory();
       queryClient.removeQueries({
         predicate: (query) => query.queryKey[0] === 'owner-data',
       });

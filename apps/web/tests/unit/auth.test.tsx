@@ -9,17 +9,17 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../../src/app/App';
 
-vi.mock('../../src/shared/api/owner-auth', () => ({
-  isOwnerAuthApiError: (value: unknown) =>
+vi.mock('../../src/shared/api/auth', () => ({
+  isAuthApiError: (value: unknown) =>
     typeof value === 'object' && value !== null && 'code' in value,
   fetchOwnerSession: vi.fn(),
   beginOwnerLogin: vi.fn(),
   logoutOwnerSession: vi.fn(),
-  clearOwnerAuthMemory: vi.fn(),
+  clearAuthMemory: vi.fn(),
   navigateToAuthorization: vi.fn(),
 }));
 
-import { fetchOwnerSession } from '../../src/shared/api/owner-auth';
+import { fetchOwnerSession } from '../../src/shared/api/auth';
 
 function installHealthyApi() {
   vi.stubGlobal(
@@ -136,7 +136,7 @@ describe('owner auth panel', () => {
     vi.mocked(fetchOwnerSession).mockRejectedValue(
       Object.assign(new Error('required'), { code: 'auth_required' }),
     );
-    const { beginOwnerLogin } = await import('../../src/shared/api/owner-auth');
+    const { beginOwnerLogin } = await import('../../src/shared/api/auth');
     vi.mocked(beginOwnerLogin).mockResolvedValue(
       'https://accounts.google.com/o/oauth2/auth',
     );
@@ -148,7 +148,7 @@ describe('owner auth panel', () => {
       expect(beginOwnerLogin).toHaveBeenCalledWith(expect.any(AbortSignal)),
     );
     const { navigateToAuthorization } =
-      await import('../../src/shared/api/owner-auth');
+      await import('../../src/shared/api/auth');
     await waitFor(() =>
       expect(navigateToAuthorization).toHaveBeenCalledWith(
         'https://accounts.google.com/o/oauth2/auth',
@@ -167,8 +167,7 @@ describe('owner auth panel', () => {
       .mockRejectedValueOnce(
         Object.assign(new Error('signed out'), { code: 'auth_required' }),
       );
-    const { logoutOwnerSession } =
-      await import('../../src/shared/api/owner-auth');
+    const { logoutOwnerSession } = await import('../../src/shared/api/auth');
     vi.mocked(logoutOwnerSession).mockResolvedValue(undefined);
     renderApp();
     fireEvent.click(await screen.findByRole('button', { name: 'Sign out' }));
