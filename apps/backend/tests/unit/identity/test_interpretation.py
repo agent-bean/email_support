@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime
+from typing import Any
 from uuid import uuid4
 
 import httpx2
@@ -226,6 +227,7 @@ async def test_email_interpreter_uses_strict_output_without_any_tools() -> None:
             in payload["messages"][0]["content"]
         )
         assert "quote occurs exactly once" in payload["messages"][0]["content"]
+        assert "not irrelevant" in payload["messages"][0]["content"]
         assert "tools" not in payload
         assert "stated_needs must be empty" in payload["messages"][0]["content"]
         assert "past meeting" in payload["messages"][0]["content"]
@@ -374,3 +376,73 @@ def test_follow_up_intent_is_separate_from_meeting_relevance() -> None:
     old = interpretation.model_dump()
     old.pop("follow_up_intent")
     assert EmailInterpretation.model_validate(old).follow_up_intent is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("max_calls", [1, 2])
+async def test_interpreter_retries_invalid_evidence_within_budget(
+    max_calls: int,
+) -> None:
+    attempts = 0
+
+    async def handler(request: httpx2.Request) -> httpx2.Response:
+        nonlocal attempts
+        attempts += 1
+        if attempts == 2:
+            retry = json.loads(request.content)
+            assert (
+                "previous response failed validation"
+                in retry["messages"][-1]["content"]
+            )
+            assert "unique exact quote" in retry["messages"][-1]["content"]
+        body: dict[str, Any] = {
+            "relevance": "relevant",
+            "follow_up_intent": "reply",
+            "company_candidates": [],
+            "contact_candidates": [],
+            "stated_needs": [],
+            "ambiguity_reasons": [],
+            "unknowns": [],
+        }
+        if attempts == 1:
+            body["company_candidates"] = [
+                {
+                    "name": "Microsoft",
+                    "domain": None,
+                    "evidence": [
+                        {"field": "body", "start": 1, "end": 10, "quote": "Microsoft"}
+                    ],
+                }
+            ]
+        return httpx2.Response(
+            200,
+            json={
+                "choices": [
+                    {
+                        "finish_reason": "stop",
+                        "message": {"content": json.dumps(body), "tool_calls": []},
+                    }
+                ]
+            },
+        )
+
+    budget = RunBudget(
+        max_calls=max_calls, max_attempts=1, max_concurrency=1, deadline_seconds=5
+    )
+    executor = ToolExecutor([], budget)
+    async with httpx2.AsyncClient(transport=httpx2.MockTransport(handler)) as client:
+        agent = EmailInterpretationAgent(
+            GatewayClient(_settings(), client), "configured-chat-model", executor
+        )
+        if max_calls == 1:
+            with pytest.raises(ProviderCallError) as failure:
+                await agent.interpret(
+                    _input(body="Microsoft met Microsoft."), run_id=uuid4()
+                )
+            assert failure.value.category is ProviderErrorCategory.BUDGET_EXHAUSTED
+        else:
+            result = await agent.interpret(
+                _input(body="Microsoft met Microsoft."), run_id=uuid4()
+            )
+            assert result.relevance is EmailRelevance.RELEVANT
+    assert attempts == max_calls and budget.calls_used == max_calls

@@ -1,6 +1,6 @@
 ---
 title: "Phase 4: Resumable briefing and live evaluation — Issue #13"
-status: todo
+status: in_progress
 priority: P1
 effort: "8–12 engineering days"
 dependencies: [1, 2, 3]
@@ -14,7 +14,7 @@ dependencies: [1, 2, 3]
 
 Use one production LangGraph factory from bounded CLI and evaluation. Full #8 now resolves identity before research: irrelevant mail exits, ambiguity stops, selected/new companies obtain only their own eligible context. Real research and synthesis persist a cited sealed Markdown version and pending review; PostgreSQL checkpoints survive process restart. No send, promotion, authenticated approval/resume, UI/API route or scheduler is implemented.
 
-Begin after separately reviewed, owner-accepted and authorized merges of #32 → #9 → #8. Read [workflow research including #8 follow-up](../reports/researcher-261027-1322-workflow-evaluation.md), [source map](../reports/scout-261027-1319-briefing-evaluation.md), [architecture](../../docs/02-system-architecture.md), [deployment prerequisites](../../docs/06-deployment-guide.md) and [evaluation rules](../../docs/09-evaluation.md).
+The owner authorized continuing with the local #32, #9 and #8 implementations on the same branch and one combined PR on 2026-10-28; acceptance and merge remain separate gates. Read [workflow research including #8 follow-up](../reports/researcher-261027-1322-workflow-evaluation.md), [source map](../reports/scout-261027-1319-briefing-evaluation.md), [architecture](../../docs/02-system-architecture.md), [deployment prerequisites](../../docs/06-deployment-guide.md) and [evaluation rules](../../docs/09-evaluation.md).
 
 Verified existing behavior:
 
@@ -74,7 +74,7 @@ Checkpoint state may contain private normalized text. Keep the database/result s
 
 ## File inventory
 
-Inventory paths are relative to the repository root. Phase 4 owns sequential extensions only after earlier PRs merge. No deletion or unrelated module scaffolding.
+Inventory paths are relative to the repository root. Phase 4 extends the existing local implementations on the combined branch. No deletion or unrelated module scaffolding.
 
 | Action | Repo-relative path | Responsibility |
 |---|---|---|
@@ -205,3 +205,33 @@ Bootstrap validates explicit owned target/backup through the existing lifecycle;
 Migrations are additive; preserve canonical data and sealed versions. Roll back code only to a revision that understands stored run/checkpoint state, or disable new CLI starts while inspecting/recovering preserved data. Never drop saver/run tables or downgrade source/run schema to make tests green. Before incompatible rollback, stop owned processes, verify a whole-DB backup and restore into an isolated target; retain source evidence and review state. A checkpoint restore cannot reverse external provider usage, and no send/promotion exists to undo. Production deployment and release remain separately authorized work.
 
 Finish only with concrete check/live/restart/restore evidence, reviewer disposition, explicit owner acceptance and authorized merge. This slice does not accept the complete release: synchronization, protected approval/effects and other unsupported scenarios remain owned by their issues. Open evidence: exact installed dependency/connection behavior, actual live source/model quality and human baseline reviews are required execution gates.
+
+## Compatibility preflight — 2026-10-28
+
+The owner authorized one combined PR and continuation through #13. Dependency resolution locked LangGraph and its PostgreSQL checkpointer; import and an in-memory async interrupt using synchronous durability passed. A guarded real-PostgreSQL compatibility test was added for repeatable saver setup and reading a pause through a fresh connection, using a dedicated schema and strict serializer. Ruff, format and strict mypy pass for the test. This does not prove process restart, ownership, recovery, migration, or production behavior.
+
+`./scripts/check-database.sh local tests/database/workflows/test_checkpoint_compatibility.py` stopped before database operations because the Docker daemon was unavailable. Starting Docker with noninteractive sudo failed because a password is required. Resume the guarded test once Docker is available; complete saver/schema/lock compatibility before wiring the workflow. No database mutation was attempted.
+
+## Compatibility follow-up — 2026-10-28
+
+After Docker was started, the guarded PostgreSQL runner passed two tests: repeatable saver setup and re-reading an interrupted checkpoint through a fresh connection; and session advisory-lock ownership across SQLAlchemy autocommit/transaction transitions. The harness backed up the isolated test database and removed its container and network. This is not yet a fresh-process crash/recovery or ownership-loss proof.
+
+Added a deterministic workflow record merge that rejects conflicting IDs and preserves identical records; two focused tests pass. `make backend-check` passes 232 tests, lint, formatting and strict mypy. The production graph, canonical run binding, bootstrap and live workflow remain unimplemented.
+
+## Run ownership progress — 2026-10-28
+
+Added a session advisory-lock ownership primitive with nonblocking acquisition and a transaction bound to the same SQLAlchemy connection. Guarded PostgreSQL tests pass for contention, release and invalidated connection rejection. These tests do not yet prove cancellation of in-flight provider work, canonical binding, lock-loss during a write or stale saver recovery. Focused simplification review made no changes. `make backend-check` passes 232 tests, lint, formatting and strict mypy.
+
+Canonical run storage, durable attempt ledger, actual graph, guarded bootstrap, subprocess recovery, live review and PR remain open.
+
+A further guarded PostgreSQL test terminates the owned connection during a write, then confirms the write rolled back and another owner can acquire the run. All three ownership tests passed. This does not yet test cancellation of an in-flight provider call. The full backend check remains green (232 tests, lint, formatting and strict mypy).
+
+## Implementation progress — 2026-10-28
+
+The local production graph now composes interpretation, identity, exact-company eligible knowledge, operator-approved public research, no-tool synthesis, canonical evidence/version binding and a review interrupt. Attempt reservations are durable and the owned PostgreSQL session is monitored for loss. A guard reconstructs a missing pause from a still-current canonical binding without creating another version. The local CLI has run, inspect and recover operations; it has no decision or sending operation.
+
+The controlled PostgreSQL graph test, new-connection checkpoint check, checkpoint backup/restore and missing-checkpoint repair passed. A live synthetic Microsoft run reached pending review through the real gateway, search and fetch adapters; its private source snapshots and output are unreviewed and do not establish quality. Earlier live attempts failed schema validation and are not counted as passes. The schema prompt was clarified, validation retained and retries remain budgeted.
+
+The explicit live-evaluation capture invokes the same local production graph for manifest-selected cases on a guarded, backed-up test database. It validates inputs against the dataset, retains source snapshots and reports unrun cases and unreviewed claims/usefulness. The live integration test passed for one synthetic case; it is not a quality pass.
+
+Seven focused PostgreSQL tests passed, including a real subprocess crash after canonical binding, recovery to the same version and checkpoint backup/restore. A separate three-test PostgreSQL run passed the concurrent invalidation/binding ordering and stale-history checks. The full database suite passed 93 tests with one opt-in live test skipped; the live tests were run separately. Open: owner-reviewed claim support/usefulness and combined PR. Do not mark this phase or Issue #13 accepted on the smoke result.

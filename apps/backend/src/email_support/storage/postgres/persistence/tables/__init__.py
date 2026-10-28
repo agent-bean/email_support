@@ -2,6 +2,7 @@
 
 from .auth import OAuthAttemptRow, OwnerSessionRow
 from .base import Base
+from .briefing_runs import BriefingRunRow
 from .core import (
     BriefingRow,
     BriefingVersionEvidenceRow,
@@ -29,6 +30,7 @@ __all__ = [
     "ApprovalRow",
     "Base",
     "BriefingRow",
+    "BriefingRunRow",
     "BriefingVersionEvidenceRow",
     "BriefingVersionRow",
     "CompanyRow",

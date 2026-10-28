@@ -1,6 +1,6 @@
 ---
 title: "Briefing evaluation, research tools, company identity and resumable workflow"
-description: "Deliver Issues #32, #9, #8 and #13 through four sequential reviewed PRs."
+description: "Deliver Issues #32, #9, #8 and #13 through one combined PR."
 status: in_progress
 priority: P1
 effort: "22–33 engineering days; excludes owner review and credential wait"
@@ -13,9 +13,9 @@ created: 2026-10-27
 
 ## Outcome and contract
 
-A developer runs explicit normalized email/meeting inputs, resolves company identity, and proceeds through bounded real research, obtains a cited immutable Markdown briefing paused for review, and measures support/usefulness with honest coverage. Flags: `--tdd --hard --yagni`. The owner explicitly approved this plan on 2026-10-27. Implementation has not started; issue acceptance, merge and release remain separately authorized gates.
+A developer runs explicit normalized email/meeting inputs, resolves company identity, and proceeds through bounded real research, obtains a cited immutable Markdown briefing paused for review, and measures support/usefulness with honest coverage. Flags: `--tdd --hard --yagni`. The owner explicitly approved this plan on 2026-10-27. Implementation has reached phase 3; issue acceptance, merge and release remain separately authorized gates.
 
-The owner accepted one plan and four sequential PRs, #32 → #9 → #8 → #13. Each requires its own review, checks, explicit owner acceptance and merge authorization before the next PR proceeds. Use new issue branches from updated `main`; the frontmatter branch records planning provenance only. Phases 1 and 2 are complete; phase 3 implementation is in progress on the owner-directed current branch.
+On 2026-10-28 the owner authorized one combined PR covering #32, #9, #8 and #13, and continuation through the end-to-end workflow before review. All four require verification; acceptance, issue closure and merge remain separately authorized gates. Phases 1–3 have local implementations, but their issues remain open and their changes have not been merged. Phase 4 proceeds on the current branch.
 
 The owner added full #8: relevance interpretation, stable contact/company resolution and persistent explicit owner corrections precede #13 research. This supersedes the earlier proposal to stage #13 before #8. Ambiguity stops. No UI/API routes, scheduler, synchronization, sending, promotion, projections, attachments/exports, or full #10/#14/#15/#19/#20 implementation enters this slice. #13 ends at pending review; authenticated decision/resume belongs to #14.
 
@@ -25,15 +25,15 @@ The owner added full #8: relevance interpretation, stable contact/company resolu
 |---|-------|--------|
 | 1 | [Evaluation contracts and runner — #32](./phase-01-start.md) | Done |
 | 2 | [Bounded provider tools — #9](./phase-02-provider-tools.md) | Done |
-| 3 | [Email interpretation and identity — #8](./phase-03-email-interpretation-and-identity.md) | In Progress |
-| 4 | [Resumable briefing and live evaluation — #13](./phase-04-resumable-briefing-and-live-evaluation.md) | Pending |
+| 3 | [Email interpretation and identity — #8](./phase-03-email-interpretation-and-identity.md) | Implemented; owner review pending |
+| 4 | [Resumable briefing and live evaluation — #13](./phase-04-resumable-briefing-and-live-evaluation.md) | In Progress |
 
 Phase files own executable steps, repo-relative file inventories, RED/GREEN scenarios, risks, rollback and criterion mappings. Estimates: 4–6, 5–7, 5–8 and 8–12 engineering days respectively. Files are owned sequentially; no parallel edits or migration allocation.
 
 ## Dependencies
 
 - #32 native blockers #2/#31 and #9 blocker #2 are closed. #9 depends on accepted #32 contracts in this delivery sequence.
-- #8 depends on #9/#32 and closed #3. #13 depends on #8/#32. The four-PR sequence satisfies existing native blockers naturally; no dependency bypass or GitHub mutation is needed.
+- #8 depends on #9/#32 and closed #3. #13 depends on #8/#32. The owner authorized a single combined PR; the dependencies remain visible and no issue is treated as accepted or closed by the combined delivery.
 - Phase 2 needs configured gateway/OpenRouter/Tavily credentials and connection-safe fetching proof. Phase 4 needs compatible locked LangGraph/Psycopg/Python 3.13 APIs, guarded PostgreSQL bootstrap and reviewed applicable evaluation cases. Missing prerequisites remain visible blockers to the corresponding evidence gate.
 
 ## Acceptance
@@ -63,6 +63,8 @@ Re-read all five files after propagation; reconciled requirements, steps, tests,
 
 ## Open evidence
 
-Gateway capabilities and address-pinning compatibility passed their Phase 2 gates. Phase 3 implementation and automated verification are complete, but its bilingual cases remain candidates pending owner review; phase 4 also requires accepted/merged #8. Verified corpus sources and human baseline reviews remain for the specified later gates. These are execution evidence requirements, not a new scope decision.
+Gateway capabilities and address-pinning compatibility passed their Phase 2 gates. Phase 3 implementation and automated verification are complete, but its bilingual cases remain candidates pending owner review; Phase 4 proceeds on the same branch per the owner’s combined-PR decision. Verified corpus sources and human baseline reviews remain for the specified later gates. These are execution evidence requirements, not a new scope decision.
 
 <!-- slug: issues-32-9-8-13-briefing-evaluation -->
+
+Latest verification: [phase-3 resumption report](../reports/implementation-261027-1919-briefing-evaluation-resumption.md).

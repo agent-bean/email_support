@@ -100,7 +100,9 @@ def test_valid_capture_requires_bound_input_and_validated_output() -> None:
             "unknowns": [],
         },
     }
+    record["model_responses"] = ["PRIVATE-RETRY-CONTENT"]
     report = build_review(dataset, rubric, [record])
+    assert "PRIVATE-RETRY-CONTENT" not in json.dumps(report)
     assert report["cases"][0]["missing_company_mentions"] == ["FPT Software"]
     assert report["cases"][0]["relevance_check"]["status"] == "pass"
     assert report["cases"][0]["unsupported_checks"]
@@ -108,6 +110,7 @@ def test_valid_capture_requires_bound_input_and_validated_output() -> None:
     full = build_review(dataset, rubric, [record], include_content=True)["cases"][0]
     assert full["normalized_input"] == record["input"]
     assert full["output"] == record["output"]
+    assert full["raw_model_responses"] == record["model_responses"]
     record["output"]["relevance"] = "uncertain"
     mismatch = build_review(dataset, rubric, [record])["cases"][0]["relevance_check"]
     assert mismatch["status"] == "fail" and "uncertain" in mismatch["reason"]

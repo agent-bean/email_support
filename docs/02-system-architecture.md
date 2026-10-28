@@ -36,6 +36,8 @@ Normalized inputs retain their local, evaluation or verified provider origin and
 
 Persist the briefing before pausing for review. The owner can return much later; an HTTP request is never held open while awaiting a decision. Use PostgreSQL-backed LangGraph checkpoints and stable workflow identifiers. Checkpoints support resume, not authorization.
 
+The local briefing workflow records a run's input and configuration hashes, contact revision, knowledge dependencies, attempt reservations and version binding in PostgreSQL. A session advisory lock limits one local invocation per run; the saver uses a separate connection and its checkpoint is subordinate to canonical run and eligibility checks. Research receives only an operator-selected public company and topics; private email, meeting and knowledge context is supplied separately to synthesis. A pending review is not an approval and the local CLI does not expose an approval or action command.
+
 Approval and an action record are committed together in PostgreSQL. The worker rechecks their exact binding before acting. Nodes that can resume must not repeat external effects merely because their execution restarted. LangGraph documents that interrupted nodes restart on resume; side effects need application-owned idempotency. [Interrupt guidance](https://docs.langchain.com/oss/python/langgraph/interrupts).
 
 Email delivery is not an exactly-once transaction across PostgreSQL and Gmail. Persist an attempt before sending. If the provider may have accepted a message but confirmation was lost, mark the attempt as uncertain and reconcile against Gmail evidence before a retry. A deterministic message identifier is useful reconciliation evidence, not a guarantee that Gmail deduplicates sends.

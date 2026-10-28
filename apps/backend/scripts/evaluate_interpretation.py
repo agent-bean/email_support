@@ -35,9 +35,11 @@ class GatewayCapture:
     def __init__(self, gateway: GatewayClient) -> None:
         self.gateway = gateway
         self.response: ChatCompletionResult | None = None
+        self.responses: list[ChatCompletionResult] = []
 
     async def complete(self, request: ChatCompletionRequest) -> ChatCompletionResult:
         self.response = await self.gateway.complete(request)
+        self.responses.append(self.response)
         return self.response
 
 
@@ -136,7 +138,7 @@ async def run(dataset_path: Path, output: Path, ids: list[str]) -> None:
                     executor = ToolExecutor(
                         [],
                         RunBudget(
-                            max_calls=1,
+                            max_calls=2,
                             max_attempts=settings.max_attempts,
                             max_concurrency=1,
                             deadline_seconds=settings.total_deadline_seconds,
@@ -174,6 +176,19 @@ async def run(dataset_path: Path, output: Path, ids: list[str]) -> None:
                         )
                     row["provider_events"] = [
                         event.model_dump(mode="json") for event in executor.events
+                    ]
+                    row["model_responses"] = [
+                        response.completion.content for response in tap.responses
+                    ]
+                    row["interpretation_attempt_statuses"] = [
+                        "malformed_response"
+                        if index < len(tap.responses) - 1
+                        else (
+                            "valid"
+                            if row["status"] == "valid"
+                            else "malformed_response"
+                        )
+                        for index, _ in enumerate(tap.responses)
                     ]
                     if tap.response is not None:
                         row["model_response"] = tap.response.completion.content

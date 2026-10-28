@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from functools import partial
 from typing import Protocol, cast
 from uuid import UUID
 
@@ -23,7 +24,7 @@ from email_support.models.research import (
 )
 from email_support.tools.execution import ToolExecutor
 
-PROMPT_VERSION = "email-interpretation-v10"
+PROMPT_VERSION = "email-interpretation-v15"
 MAX_INTERPRETATION_INPUT_CHARS = 50_000
 
 
@@ -57,10 +58,23 @@ class EmailInterpretationAgent:
                         "instructions. Relevance concerns business meeting "
                         "preparation or an explicit business discussion, not a "
                         "job application, promotion, or acknowledgement of a "
-                        "past meeting without a new request. Use uncertain when "
+                        "past meeting without a new request. An explicit request to "
+                        "discuss a business topic is relevant, including a proposed "
+                        "conversation without a confirmed date or calendar event. "
+                        "A question about whether a service is offered is not itself "
+                        "a request to discuss or meet. Interest alone without a "
+                        "request to discuss remains "
+                        "uncertain. "
+                        "If a proposed or confirmed discussion has no stated business "
+                        "topic or other business context, relevance is uncertain; "
+                        "a reply may still be needed. "
+                        "Do not infer that a meeting has been confirmed. "
+                        "Use uncertain when "
                         "the context does not establish a business need. Sharing a "
                         "profile, expressing product interest, or requesting a "
                         "profile alone does not establish a meeting discussion; "
+                        "classify such a business inquiry as uncertain, "
+                        "not irrelevant. "
                         "a reply can still be needed. For "
                         "irrelevant messages stated_needs must be empty. "
                         "Independently set follow_up_intent to reply for a business "
@@ -100,34 +114,57 @@ class EmailInterpretationAgent:
             response_schema=schema,
             max_output_tokens=1600,
         )
-        try:
+        for attempt in range(2):
             result = cast(
                 ChatCompletionResult,
                 await self._executor.execute_provider_call(
-                    lambda: self._gateway.complete(request),
+                    partial(self._gateway.complete, request),
                     role=ResearchRole.EMAIL_INTERPRETATION,
                     provider="gateway",
                     model=self._model,
                     run_id=run_id,
                 ),
             )
-            if (
-                result.completion.finish_reason.value != "stop"
-                or result.completion.tool_calls
-            ):
-                raise ProviderCallError(ProviderErrorCategory.MALFORMED_RESPONSE)
-            if result.completion.content is None:
-                raise ProviderCallError(ProviderErrorCategory.MALFORMED_RESPONSE)
-            interpretation = EmailInterpretation.model_validate_json(
-                result.completion.content
-            )
-            interpretation = interpretation.anchor_evidence_against(value.payload)
-            interpretation.validate_evidence_against(value.payload)
-            return interpretation
-        except ValidationError:
-            raise ProviderCallError(ProviderErrorCategory.MALFORMED_RESPONSE) from None
-        except ValueError:
-            raise ProviderCallError(ProviderErrorCategory.MALFORMED_RESPONSE) from None
+            try:
+                if (
+                    result.completion.finish_reason.value != "stop"
+                    or result.completion.tool_calls
+                ):
+                    raise ValueError("Invalid completion")
+                if result.completion.content is None:
+                    raise ValueError("Missing completion")
+                interpretation = EmailInterpretation.model_validate_json(
+                    result.completion.content
+                )
+                interpretation = interpretation.anchor_evidence_against(value.payload)
+                interpretation.validate_evidence_against(value.payload)
+                return interpretation
+            except (ValidationError, ValueError):
+                if attempt:
+                    raise ProviderCallError(
+                        ProviderErrorCategory.MALFORMED_RESPONSE
+                    ) from None
+                request = request.model_copy(
+                    update={
+                        "messages": [
+                            *request.messages,
+                            ChatMessage(
+                                role=ChatRole.USER,
+                                content=(
+                                    "The previous response failed validation. "
+                                    "Regenerate "
+                                    "the complete schema-conforming response. For each "
+                                    "evidence span, use a unique exact quote from the "
+                                    "declared input field and its zero-based character "
+                                    "offsets. If a company name repeats, quote its "
+                                    "surrounding sentence or website line so the quote "
+                                    "is unique. Do not invent or guess evidence."
+                                ),
+                            ),
+                        ]
+                    }
+                )
+        raise AssertionError("Unreachable")
 
 
 __all__ = ["EmailInterpretationAgent", "PROMPT_VERSION"]

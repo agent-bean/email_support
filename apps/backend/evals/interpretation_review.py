@@ -218,6 +218,9 @@ def build_review(
                     if case_record
                     else None,
                     "output": output,
+                    "raw_model_responses": case_record.get("model_responses")
+                    if case_record
+                    else None,
                     "raw_model_response": case_record.get("model_response")
                     if case_record
                     else None,

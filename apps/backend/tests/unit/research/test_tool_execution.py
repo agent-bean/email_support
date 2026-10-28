@@ -391,3 +391,35 @@ async def test_public_toolset_scopes_companies_and_source_ids_per_run() -> None:
     assert isinstance(fetched_result, FetchResult)
     assert fetched == [("https://www.microsoft.com/about", source_id)]
     assert registry.resolve(source_id) == "https://www.microsoft.com/about"
+
+
+@pytest.mark.asyncio
+async def test_journal_reserves_and_retains_unknown_on_cancellation() -> None:
+    class Journal:
+        def __init__(self) -> None:
+            self.entries: dict[UUID, str] = {}
+
+        async def reserve(self, run_id: UUID, attempt_id: UUID, category: str) -> None:
+            self.entries[attempt_id] = "unknown"
+
+        async def complete(
+            self, run_id: UUID, attempt_id: UUID, outcome: str, usage: object
+        ) -> None:
+            self.entries[attempt_id] = outcome
+
+    journal = Journal()
+
+    async def cancelled() -> BaseModel:
+        assert list(journal.entries.values()) == ["unknown"]
+        raise asyncio.CancelledError
+
+    executor = ToolExecutor([], _budget(), journal=journal)
+    with pytest.raises(asyncio.CancelledError):
+        await executor.execute_provider_call(
+            cancelled,
+            role=ResearchRole.SYNTHESIS,
+            provider="gateway",
+            model="model",
+            run_id=uuid4(),
+        )
+    assert list(journal.entries.values()) == ["unknown"]

@@ -8,6 +8,7 @@ import time
 from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from typing import Protocol
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ValidationError
@@ -90,6 +91,14 @@ Sleep = Callable[[float], Awaitable[None]]
 Jitter = Callable[[], float]
 
 
+class AttemptJournal(Protocol):
+    async def reserve(self, run_id: UUID, attempt_id: UUID, category: str) -> None: ...
+
+    async def complete(
+        self, run_id: UUID, attempt_id: UUID, outcome: str, usage: ProviderUsage | None
+    ) -> None: ...
+
+
 class ToolExecutor:
     def __init__(
         self,
@@ -99,6 +108,7 @@ class ToolExecutor:
         events: list[ToolExecutionEvent] | None = None,
         sleep: Sleep = asyncio.sleep,
         jitter: Jitter = random.random,
+        journal: AttemptJournal | None = None,
     ) -> None:
         self._tools: dict[ToolName, ResearchTool] = {}
         for tool in tools:
@@ -109,6 +119,25 @@ class ToolExecutor:
         self.events = events if events is not None else []
         self._sleep = sleep
         self._jitter = jitter
+        self._journal = journal
+
+    async def _run_attempt(
+        self, run_id: UUID, category: str, call: Callable[[], Awaitable[BaseModel]]
+    ) -> BaseModel:
+        attempt_id = uuid4()
+        if self._journal is not None:
+            await self._journal.reserve(run_id, attempt_id, category)
+        try:
+            result = await call()
+        except ProviderCallError:
+            if self._journal is not None:
+                await self._journal.complete(run_id, attempt_id, "failed", None)
+            raise
+        if self._journal is not None:
+            await self._journal.complete(
+                run_id, attempt_id, "succeeded", _usage(result)
+            )
+        return result
 
     def metadata(self, role: ResearchRole) -> list[ToolMetadata]:
         return [
@@ -153,7 +182,11 @@ class ToolExecutor:
                         await self._budget.reserve_attempt()
                         attempts += 1
                         try:
-                            result = await tool.function(parsed_arguments)
+                            result = await self._run_attempt(
+                                run_id,
+                                tool.name.value,
+                                lambda: tool.function(parsed_arguments),
+                            )
                             if not isinstance(result, tool.result_model):
                                 raise ProviderCallError(
                                     ProviderErrorCategory.MALFORMED_RESPONSE
@@ -260,7 +293,7 @@ class ToolExecutor:
                 async with await self._budget.acquire():
                     await self._budget.reserve_attempt()
                     attempts += 1
-                    result = await call()
+                    result = await self._run_attempt(run_id, provider, call)
                     if not isinstance(result, BaseModel):
                         raise ProviderCallError(
                             ProviderErrorCategory.MALFORMED_RESPONSE

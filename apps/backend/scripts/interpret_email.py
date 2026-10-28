@@ -91,7 +91,7 @@ async def _interpret(input_path: Path, output_path: Path) -> None:
             executor = ToolExecutor(
                 [],
                 RunBudget(
-                    max_calls=1,
+                    max_calls=2,
                     max_attempts=settings.max_attempts,
                     max_concurrency=1,
                     deadline_seconds=settings.total_deadline_seconds,

@@ -302,6 +302,9 @@ class EvidenceRow(Base):
 
 class BriefingRow(Base):
     __tablename__ = "briefings"
+    __table_args__ = (
+        UniqueConstraint("id", "company_id", name="uq_briefings_id_company"),
+    )
 
     id: Mapped[UUID] = mapped_column(
         Uuid(as_uuid=True), primary_key=True, default=uuid4

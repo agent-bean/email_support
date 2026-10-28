@@ -62,8 +62,9 @@ async def test_empty_database_installs_through_real_alembic_revision(
         "owner_sessions",
         "google_connections",
         "normalized_inputs",
+        "briefing_runs",
     } <= tables
-    assert revision == "e7a21c4f9b30"
+    assert revision == "9d42cba781ef"
     await asyncio.to_thread(check_migration_drift, database_url)
 
 
@@ -122,7 +123,7 @@ async def test_guarded_restore_recovers_revision_and_committed_core_rows(
                 )
         assert getattr(duplicate_error.value.orig, "sqlstate", None) == "23505"
         assert restored_id == account_id
-        assert revision == "e7a21c4f9b30"
+        assert revision == "9d42cba781ef"
     finally:
         await dispose_database_engine(restored_engine)
         await asyncio.to_thread(database_lifecycle.drop_target, restored_database)
@@ -329,7 +330,7 @@ async def test_additive_upgrade_preserves_seeded_first_revision_records(
         finally:
             await dispose_database_engine(upgraded_engine)
 
-        assert revision == "e7a21c4f9b30"
+        assert revision == "9d42cba781ef"
         assert preserved_identity_revision == 1
         assert preserved_email == "Owner@Example.com"
         assert after_rows == before_rows
@@ -458,7 +459,7 @@ async def test_owner_access_migration_preserves_existing_decision_and_knowledge_
             await dispose_database_engine(upgraded_engine)
 
         assert after_rows == before_rows
-        assert revision == "e7a21c4f9b30"
+        assert revision == "9d42cba781ef"
     finally:
         await asyncio.to_thread(database_lifecycle.drop_target, database_name)
 
@@ -541,7 +542,7 @@ async def test_google_connection_upgrade_preserves_owner_session_and_canonical_a
         finally:
             await dispose_database_engine(upgraded_engine)
 
-        assert revision == "e7a21c4f9b30"
+        assert revision == "9d42cba781ef"
         assert tuple(session) == (
             token_digest,
             "configured-owner",
@@ -589,7 +590,7 @@ async def test_google_connection_upgrade_preserves_owner_session_and_canonical_a
                         {"id": account_id},
                     )
                 ).one()
-            assert restored_revision == "e7a21c4f9b30"
+            assert restored_revision == "9d42cba781ef"
             assert tuple(restored_session) == (
                 token_digest,
                 "configured-owner",

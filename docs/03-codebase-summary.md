@@ -13,7 +13,7 @@ Backend paths below are relative to `apps/backend/`; web paths are relative to `
 - `src/email_support/models/email_interpretation.py`, `agents/email_interpretation.py`, `services/company_identity.py` and `storage/postgres/persistence/identity.py` own normalized input provenance, grounded email interpretation, exact sender resolution and revision-checked owner corrections. `scripts/interpret_email.py` exposes the local-only interpretation and correction commands.
 - `migrations/versions/` contains the additive canonical-core and approval/knowledge revisions. `tests/database/` verifies migrations and storage against PostgreSQL; the guarded runner is [`scripts/check-database.sh`](../scripts/check-database.sh) and its backup/restore helpers are in `scripts/test_database.py`.
 - `scripts/export-openapi.py` writes the offline OpenAPI contract to `openapi.json`; `tests/unit/` groups model, persistence-contract, and database-guard tests by scope; `tests/integration/` covers the HTTP endpoint, and `tests/contracts/` covers the exported OpenAPI contract.
-- `src/email_support/worker.py` is the planned worker composition point; background company briefing work belongs under `workflows/company_briefing/`.
+- `src/email_support/worker.py` is the planned worker composition point. The local briefing graph and its canonical run and checkpoint services live under `workflows/company_briefing/`, `services/briefing_*` and `storage/postgres/`; `scripts/run_company_briefing.py` provides explicit local run, inspect and recover operations.
 - Shared product and persistence contracts belong in `models/`. PostgreSQL ORM mappings and queries belong under `storage/postgres/`; do not use ORM rows as API or workflow contracts.
 
 The intended backend boundaries are:
@@ -34,7 +34,7 @@ Use the architecture page for dependency direction and cross-boundary decisions.
 
 `apps/backend/evals/` owns versioned datasets, typed evaluation contracts, deterministic reference checks and the repository-local CLI. `datasets/` holds labelled scenarios and hashed source snapshots; `fixtures/` holds the evaluator oracle. The current runner validates datasets, checks evaluator behavior, and replays captured output without provider side effects. Replay reports relevance and identity outcomes separately from briefing claims. Keep genuine shared product claim/evidence contracts in `src/email_support/models/`; evaluation bookkeeping stays in `evals/`.
 
-`tests/` continues to own deterministic correctness, security and integration checks. Dataset validation and evaluator correctness belong in tests; quality measurements belong in evals. The current corpus is candidate-only and live workflow invocation is unsupported pending the production graph adapter. See [evaluation design](09-evaluation.md) for commands and review boundaries.
+`tests/` continues to own deterministic correctness, security and integration checks. Dataset validation and evaluator correctness belong in tests; quality measurements belong in evals. The current corpus is candidate-only. The separate `evals/live_graph.py` entry point captures explicitly configured runs of the production workflow without treating unreviewed claims or usefulness as passed. See [evaluation design](09-evaluation.md) for commands and review boundaries.
 
 ## Web entry points
 

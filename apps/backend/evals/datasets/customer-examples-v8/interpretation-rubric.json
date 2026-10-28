@@ -1,0 +1,296 @@
+{
+  "dataset_version": "customer-examples-v8",
+  "dataset_hash": "7133fdbeb747f961892dfe687ec6f598612d9c7b3dd3c6ffd00900c7792f8979",
+  "pairs": [
+    {
+      "id": "fpt-software",
+      "expected_company_mentions": [
+        "FPT Software"
+      ],
+      "expected_need": "Learn about enterprise AI solutions",
+      "unknowns_and_forbidden": "Company identity is unverified; meeting not supplied",
+      "cases": {
+        "en": {
+          "case_id": "fpt-software-en",
+          "case_hash": "a3ca4e4012605d3d67eaa933e391874f6a2710171c32a1f2b52cb7f3d084da16"
+        },
+        "vi": {
+          "case_id": "fpt-software-vi",
+          "case_hash": "5653c0924470b29ac42700d31c5238b1d961fdc5dafa2711e5b3ecf1651d7695"
+        }
+      },
+      "expected_follow_up": "reply",
+      "follow_up_guidance": "Respond to the business interest; meeting-briefing relevance is uncertain without an explicit discussion or preparation request.",
+      "relevance_review": "The email asks to learn about solutions but contains no explicit meeting, business discussion, or briefing request."
+    },
+    {
+      "id": "vinamilk",
+      "expected_company_mentions": [
+        "Vinamilk"
+      ],
+      "expected_need": "Discuss AI for document management",
+      "unknowns_and_forbidden": "Company identity is unverified; meeting not supplied",
+      "cases": {
+        "en": {
+          "case_id": "vinamilk-en",
+          "case_hash": "968934076dc70d0602ed4bb146f9a7db29b024947c124c9f3b20f732a7e5d00c"
+        },
+        "vi": {
+          "case_id": "vinamilk-vi",
+          "case_hash": "b3438f7c5c7270ddd00191bc9f4f38bc636c8bc5f1cb085b8ae6932e36f33031"
+        }
+      },
+      "expected_follow_up": "reply",
+      "follow_up_guidance": "Respond to the explicit request to discuss or arrange a business conversation; no meeting is assumed confirmed."
+    },
+    {
+      "id": "samsung-vietnam",
+      "expected_company_mentions": [
+        "Samsung Electronics Vietnam"
+      ],
+      "expected_need": "Schedule solution introduction next week",
+      "unknowns_and_forbidden": "No exact date or calendar event supplied",
+      "cases": {
+        "en": {
+          "case_id": "samsung-vietnam-en",
+          "case_hash": "9900cd0e18d14ba0cc2789e5978ec09d27754427df12876b78a6ef84eee89669"
+        },
+        "vi": {
+          "case_id": "samsung-vietnam-vi",
+          "case_hash": "a411cbc4cf58a57a9497820ffa589d8402a6163261f6b85e52e91d1358fc2746"
+        }
+      },
+      "expected_follow_up": "reply",
+      "follow_up_guidance": "Respond to the explicit request to discuss or arrange a business conversation; no meeting is assumed confirmed."
+    },
+    {
+      "id": "shopee-vietnam",
+      "expected_company_mentions": [
+        "Shopee Vietnam"
+      ],
+      "expected_need": "Explore OCR solutions",
+      "unknowns_and_forbidden": "Company identity is unverified; meeting not supplied",
+      "cases": {
+        "en": {
+          "case_id": "shopee-vietnam-en",
+          "case_hash": "3d695846cd2e263f31631ea1b0d72afd1e91aae3b62158c5bec647953fd80638"
+        },
+        "vi": {
+          "case_id": "shopee-vietnam-vi",
+          "case_hash": "60dda7801b3750277242aa12a297c40748c45b126aa85c35f672f975f3d16193"
+        }
+      },
+      "expected_follow_up": "reply",
+      "follow_up_guidance": "Respond to the business request; do not schedule without both parties agreeing to a specific time.",
+      "relevance_review": "Candidate uncertain for meeting-briefing relevance: the email expresses OCR interest but supplies no meeting or briefing context. The business inquiry still calls for a reply; owner review is pending."
+    },
+    {
+      "id": "viettel-solutions",
+      "expected_company_mentions": [
+        "Viettel Solutions"
+      ],
+      "expected_need": "Share capability profile for reference",
+      "unknowns_and_forbidden": "Attachment content is unavailable; no explicit next step or meeting",
+      "cases": {
+        "en": {
+          "case_id": "viettel-solutions-en",
+          "case_hash": "ad0ddd39d5269053ad108f6749e8315e79aa0a321f9eced2d1e2e325186c35fa"
+        },
+        "vi": {
+          "case_id": "viettel-solutions-vi",
+          "case_hash": "46a8fe0c6f7bcad1eff53aa7a2a987112254e4c7c35dab8b47a2ec3117a28102"
+        }
+      },
+      "relevance_review": "Candidate uncertain: the profile is shared without an explicit briefing request or business discussion.",
+      "expected_follow_up": "reply",
+      "follow_up_guidance": "Reply thanking the sender for their profile and ask whether they wish to discuss; do not send their profile back."
+    },
+    {
+      "id": "bosch-vietnam",
+      "expected_company_mentions": [
+        "Bosch Global Software Technologies Vietnam"
+      ],
+      "expected_need": "Discuss AI automation",
+      "unknowns_and_forbidden": "Company identity is unverified; meeting not supplied",
+      "cases": {
+        "en": {
+          "case_id": "bosch-vietnam-en",
+          "case_hash": "beca4be73a91895e296567933294d6674fc438762e833fd5de9414f8e1122438"
+        },
+        "vi": {
+          "case_id": "bosch-vietnam-vi",
+          "case_hash": "69d023e9cfd3e24c979ed2412b44da3cf24e51fe86f270feb812ff553748d604"
+        }
+      },
+      "expected_follow_up": "reply",
+      "follow_up_guidance": "Respond to the explicit request to discuss or arrange a business conversation; no meeting is assumed confirmed."
+    },
+    {
+      "id": "viettel-briefing",
+      "expected_company_mentions": [
+        "Viettel Solutions"
+      ],
+      "expected_need": "Prepare a company briefing about Viettel Solutions and AI solutions for an upcoming discussion.",
+      "unknowns_and_forbidden": "Attachment contents and exact meeting details are unavailable; do not infer identity or attachment facts.",
+      "cases": {
+        "en": {
+          "case_id": "viettel-briefing-en",
+          "case_hash": "bb8d5f4b5a53ac16589d01033544f3dc3342243eafd905912ed5d8fe61bf34c1"
+        },
+        "vi": {
+          "case_id": "viettel-briefing-vi",
+          "case_hash": "4bad347ce8a43b00d4267d50c491637a27da2957c510b5bb26a2d997b14d3f31"
+        }
+      },
+      "expected_follow_up": "reply",
+      "follow_up_guidance": "Respond to the business request; do not schedule without both parties agreeing to a specific time."
+    },
+    {
+      "id": "request-our-profile",
+      "expected_company_mentions": [],
+      "expected_need": "Review the synthetic business message and determine whether a reply is needed.",
+      "unknowns_and_forbidden": "Attachment content and calendar state are not supplied; no sending, attachment or scheduling effects are evaluated.",
+      "expected_follow_up": "reply",
+      "follow_up_guidance": "Reply with our selected synthetic-our-capability-profile.txt fixture; never attach the other party profile. No meeting has been agreed.",
+      "cases": {
+        "en": {
+          "case_id": "request-our-profile-en",
+          "case_hash": "a493003acc5452c70fe2c239570ccc16a5dce21070b00e9d398c33406e8cb387"
+        },
+        "vi": {
+          "case_id": "request-our-profile-vi",
+          "case_hash": "68dd1536993c00ac5ec97a2dd280df3d952c8280178af746def343a6acd6aa67"
+        }
+      }
+    },
+    {
+      "id": "meeting-proposed",
+      "expected_company_mentions": [],
+      "expected_need": "Review the synthetic business message and determine whether a reply is needed.",
+      "unknowns_and_forbidden": "Attachment content and calendar state are not supplied; no sending, attachment or scheduling effects are evaluated.",
+      "expected_follow_up": "reply",
+      "follow_up_guidance": "Draft a reply to agree or clarify availability; no date or mutual agreement has been established, so do not create a calendar event.",
+      "cases": {
+        "en": {
+          "case_id": "meeting-proposed-en",
+          "case_hash": "ff73fe90fbf2c766affe9ddefc194b1abbafdc0cb954891f0f921cade54a46d9"
+        },
+        "vi": {
+          "case_id": "meeting-proposed-vi",
+          "case_hash": "76f5afa58dd739c5561fa36979afd2cdb06d2d0f7f1fc4e917ee072648939f5b"
+        }
+      }
+    },
+    {
+      "id": "meeting-agreed",
+      "expected_company_mentions": [],
+      "expected_need": "Review the synthetic business message and determine whether a reply is needed.",
+      "unknowns_and_forbidden": "Attachment content and calendar state are not supplied; no sending, attachment or scheduling effects are evaluated.",
+      "expected_follow_up": "reply",
+      "follow_up_guidance": "Sender claims both parties agreed to a specific time; verify our own consent independently before scheduling. Scheduling remains unsupported by interpretation replay.",
+      "cases": {
+        "en": {
+          "case_id": "meeting-agreed-en",
+          "case_hash": "85b77ba7a38b27a0c1d192ebf0e4d1bb9b64431eb28c6e42b4027724865dbb83"
+        },
+        "vi": {
+          "case_id": "meeting-agreed-vi",
+          "case_hash": "d8dcea61e3569120041ab0921e35e3310932566561735433d01a7f5a7f5b03e8"
+        }
+      }
+    },
+    {
+      "id": "past-meeting-thanks",
+      "expected_company_mentions": [],
+      "expected_need": "No new business follow-up request is stated.",
+      "unknowns_and_forbidden": "Do not infer a new meeting or send an unsolicited follow-up.",
+      "expected_follow_up": "none",
+      "follow_up_guidance": "No follow-up is requested for this message.",
+      "cases": {
+        "en": {
+          "case_id": "past-meeting-thanks-en",
+          "case_hash": "e807bb225accd657e277e9bfc911266fe7b6d855707e72ef8ddcea6315f33a01"
+        },
+        "vi": {
+          "case_id": "past-meeting-thanks-vi",
+          "case_hash": "f4a9ad75d7246c6743ab3c8d499c561e01e888c3f00bede24e2a0144bb751b22"
+        }
+      }
+    },
+    {
+      "id": "store-promotion",
+      "expected_company_mentions": [],
+      "expected_need": "No new business follow-up request is stated.",
+      "unknowns_and_forbidden": "Do not infer a new meeting or send an unsolicited follow-up.",
+      "expected_follow_up": "none",
+      "follow_up_guidance": "No follow-up is requested for this message.",
+      "cases": {
+        "en": {
+          "case_id": "store-promotion-en",
+          "case_hash": "32a1bdba0c6768aa03d473343987a146ddf2dc74020494fe8820bf5ca4cf072d"
+        },
+        "vi": {
+          "case_id": "store-promotion-vi",
+          "case_hash": "b1a13e9f8af1c435f8ece7753c4f126980419c35bb8752e65ef4068c5785f4e5"
+        }
+      }
+    },
+    {
+      "id": "ambiguous-next-step",
+      "expected_company_mentions": [],
+      "expected_need": "Review the synthetic message and determine whether a reply is needed.",
+      "unknowns_and_forbidden": "No meeting or company identity is supplied; do not infer either.",
+      "relevance_review": "Candidate briefing relevance: uncertain. No meeting or briefing context is supplied.",
+      "expected_follow_up": "uncertain",
+      "follow_up_guidance": "A possible future revisit does not establish whether a reply is requested; retain uncertainty.",
+      "cases": {
+        "en": {
+          "case_id": "ambiguous-next-step-en",
+          "case_hash": "0a6432d55ec197d212cd0ca9870d289c2e0d12d10feea793d222132c408f1ebd"
+        },
+        "vi": {
+          "case_id": "ambiguous-next-step-vi",
+          "case_hash": "8c4ac3996adabbd3d1bc8402d5ae052055da3f4f9b4c49affa9e8b9242134124"
+        }
+      }
+    },
+    {
+      "id": "explicit-reply",
+      "expected_company_mentions": [],
+      "expected_need": "Review the synthetic message and determine whether a reply is needed.",
+      "unknowns_and_forbidden": "No meeting or company identity is supplied; do not infer either.",
+      "relevance_review": "Candidate briefing relevance: uncertain. No meeting or briefing context is supplied.",
+      "expected_follow_up": "reply",
+      "follow_up_guidance": "Answer the explicit question; no meeting is established.",
+      "cases": {
+        "en": {
+          "case_id": "explicit-reply-en",
+          "case_hash": "9c7c8b9726952f39a11c92c0e38f14ea4cb663f7545364372db0eafb38ffaeb9"
+        },
+        "vi": {
+          "case_id": "explicit-reply-vi",
+          "case_hash": "750de181fc76b3034bb4dd1ce5a78011e60dba804dc1ddfa41de95c7f8840365"
+        }
+      }
+    },
+    {
+      "id": "no-reply-needed",
+      "expected_company_mentions": [],
+      "expected_need": "Review the synthetic message and determine whether a reply is needed.",
+      "unknowns_and_forbidden": "No meeting or company identity is supplied; do not infer either.",
+      "relevance_review": "Candidate briefing relevance: irrelevant. No meeting or briefing context is supplied.",
+      "expected_follow_up": "none",
+      "follow_up_guidance": "The sender explicitly says no reply is needed.",
+      "cases": {
+        "en": {
+          "case_id": "no-reply-needed-en",
+          "case_hash": "c63326dcd6ef131c32a95fe248690fd2378c408bf935acbffee3a8c37d42d7e5"
+        },
+        "vi": {
+          "case_id": "no-reply-needed-vi",
+          "case_hash": "ac13e073e0d554a6df85d0bb8ed762a21013a881e5128b04ef966742f61d9bf5"
+        }
+      }
+    }
+  ]
+}
