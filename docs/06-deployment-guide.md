@@ -20,6 +20,8 @@ Use a protected production environment for deployment credentials and approval. 
 
 `make check` and `make check-api-drift` remain database-free. Maintainers can run the PostgreSQL migration, storage, backup, and restore suite with `make database-check`; `make database-up` and `make database-down` manage the reusable local test service. The local service binds to `127.0.0.1:55432` and keeps data and private credentials under the ignored `.test-database/` directory. A successful check removes its run's archives after cleanup verification. A failed run stops only the verified local service and retains local state and recovery files for investigation. Backend CI uses a job-scoped PostgreSQL service that is discarded with the job. These are development checks, not production backup storage, credentials, or a production restore procedure.
 
+Checkpoint bootstrap is an explicit test-database operation: `apps/backend/scripts/bootstrap_checkpoints.py --owned-database NAME` uses the guarded database lifecycle and verifies backups before migrations and saver setup. It does not initialize arbitrary production databases. The complete database backup includes the separate `briefing_checkpoints` schema. A deployment route and verified operational backup/restore procedure remain prerequisites for production use.
+
 ## Local authenticated development
 
 Owner sign-in is opt-in and uses a separate Compose project and persistent PostgreSQL data. It does not reuse `.test-database/`, the test administrator, or CI credentials. Create `.local-auth/owner.conf` with mode `0600`, owned by the current user, containing these keys and the operator's Google OAuth values:

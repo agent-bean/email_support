@@ -2,6 +2,7 @@
 
 from .auth import OAuthAttemptRow, OwnerSessionRow
 from .base import Base
+from .briefing_runs import BriefingRunRow
 from .core import (
     BriefingRow,
     BriefingVersionEvidenceRow,
@@ -21,6 +22,7 @@ from .decisions import (
     PreferenceRow,
 )
 from .google_connection import GoogleConnectionRow
+from .identity import NormalizedInputRow
 from .projections import ProjectionMetadataRow
 
 __all__ = [
@@ -28,6 +30,7 @@ __all__ = [
     "ApprovalRow",
     "Base",
     "BriefingRow",
+    "BriefingRunRow",
     "BriefingVersionEvidenceRow",
     "BriefingVersionRow",
     "CompanyRow",
@@ -40,6 +43,7 @@ __all__ = [
     "OAuthAttemptRow",
     "OwnerSessionRow",
     "MeetingRow",
+    "NormalizedInputRow",
     "PreferenceRow",
     "ProjectionMetadataRow",
     "ProviderAccountRow",

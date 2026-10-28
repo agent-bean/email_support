@@ -66,6 +66,35 @@ def test_contracts_reject_unknown_fields_and_finite_identifiers() -> None:
     assert EvidenceKind.MAIL.value == "mail"
     assert MeetingTimeKind.TIMED.value == "timed"
 
+
+def test_normalized_input_evidence_requires_only_its_own_source() -> None:
+    from email_support.models.email_interpretation import InputOriginKind
+    from email_support.models.persistence.core import EvidenceKind
+
+    source_id = uuid4()
+    record = EvidenceCreate(
+        kind=EvidenceKind.NORMALIZED_INPUT,
+        mail_message_id=None,
+        meeting_id=None,
+        source_url=None,
+        normalized_input_id=source_id,
+        source_text="Imported email source",
+        retrieved_at=datetime.now(UTC),
+    )
+    assert record.normalized_input_id == source_id
+    assert InputOriginKind.EVALUATION.value == "evaluation"
+
+    with pytest.raises(ValidationError):
+        EvidenceCreate(
+            kind=EvidenceKind.NORMALIZED_INPUT,
+            mail_message_id=uuid4(),
+            meeting_id=None,
+            source_url=None,
+            normalized_input_id=source_id,
+            source_text="Conflicting source fields",
+            retrieved_at=datetime.now(UTC),
+        )
+
     with pytest.raises(ValidationError):
         EvidenceCreate.model_validate(
             {

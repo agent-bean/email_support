@@ -22,6 +22,7 @@ class EvidenceKind(StrEnum):
     MAIL = "mail"
     MEETING = "meeting"
     WEB = "web"
+    NORMALIZED_INPUT = "normalized_input"
 
 
 class MeetingTimeKind(StrEnum):
@@ -64,6 +65,7 @@ class ContactCreate(PersistenceContract):
 class ContactRecord(ContactCreate):
     id: UUID
     company_id: UUID | None
+    identity_revision: PositiveInt = 1
     created_at: datetime
 
     _created_at_utc = field_validator("created_at")(_normalize_utc)
@@ -170,6 +172,7 @@ class EvidenceCreate(PersistenceContract):
     mail_message_id: UUID | None
     meeting_id: UUID | None
     source_url: AnyHttpUrl | None
+    normalized_input_id: UUID | None = None
     source_text: ExactText
     retrieved_at: datetime
 
@@ -187,13 +190,20 @@ class EvidenceCreate(PersistenceContract):
         sources = {
             EvidenceKind.MAIL: (self.mail_message_id is not None)
             and self.meeting_id is None
-            and self.source_url is None,
+            and self.source_url is None
+            and self.normalized_input_id is None,
             EvidenceKind.MEETING: (self.meeting_id is not None)
             and self.mail_message_id is None
-            and self.source_url is None,
+            and self.source_url is None
+            and self.normalized_input_id is None,
             EvidenceKind.WEB: self.source_url is not None
             and self.mail_message_id is None
-            and self.meeting_id is None,
+            and self.meeting_id is None
+            and self.normalized_input_id is None,
+            EvidenceKind.NORMALIZED_INPUT: self.normalized_input_id is not None
+            and self.mail_message_id is None
+            and self.meeting_id is None
+            and self.source_url is None,
         }
         if not sources[self.kind]:
             raise ValueError("evidence source fields must match its kind")

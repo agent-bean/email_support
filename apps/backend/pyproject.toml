@@ -18,6 +18,9 @@ dependencies = [
     "authlib>=1.9.1,<1.10",
     "httpx2>=2.16,<3",
     "cryptography>=45,<51",
+    "dnspython>=2.9,<3",
+    "langgraph>=1,<2",
+    "langgraph-checkpoint-postgres>=3,<4",
 ]
 
 [dependency-groups]
@@ -48,5 +51,5 @@ select = ["B", "E", "F", "I", "UP"]
 [tool.mypy]
 python_version = "3.13"
 strict = true
-files = ["src", "scripts", "tests", "migrations"]
+files = ["src", "scripts", "tests", "migrations", "evals"]
 show_error_codes = true

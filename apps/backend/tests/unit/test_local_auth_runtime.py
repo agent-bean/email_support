@@ -65,7 +65,7 @@ elif 'ps' in args and '--status' in args:
     else:
         print('owned-container')
 elif 'heads' in args:
-    print('3c0f6a9b21e8 (head)')
+    print('e7a21c4f9b30 (head)')
 elif 'psql' in ' '.join(args):
     if '-f -' in ' '.join(args):
         query = sys.stdin.read()
@@ -91,7 +91,7 @@ elif 'psql' in ' '.join(args):
         print('0')
     else:
         print(
-            '3c0f6a9b21e8'
+            'e7a21c4f9b30'
             if mode == 'head'
             else 'b17e9a4d2c61'
             if mode == 'phase2'

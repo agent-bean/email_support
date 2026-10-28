@@ -81,6 +81,7 @@ class ContactRow(Base):
             "length(regexp_replace(email, '[[:space:]]', '', 'g')) > 0",
             name="ck_contacts_email_nonblank",
         ),
+        CheckConstraint("identity_revision > 0", name="ck_contacts_identity_revision"),
         Index(
             "uq_contacts_email_domain_lower",
             text(
@@ -101,6 +102,9 @@ class ContactRow(Base):
     )
     email: Mapped[str] = mapped_column(Text, nullable=False)
     display_name: Mapped[str | None] = mapped_column(Text, nullable=True)
+    identity_revision: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default=text("1")
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -249,7 +253,10 @@ class EvidenceRow(Base):
             "(kind = 'meeting' AND mail_message_id IS NULL AND meeting_id IS NOT NULL "
             "AND source_url IS NULL) OR "
             "(kind = 'web' AND mail_message_id IS NULL AND meeting_id IS NULL "
-            "AND source_url IS NOT NULL)",
+            "AND source_url IS NOT NULL AND normalized_input_id IS NULL) OR "
+            "(kind = 'normalized_input' AND mail_message_id IS NULL "
+            "AND meeting_id IS NULL AND source_url IS NULL "
+            "AND normalized_input_id IS NOT NULL)",
             name="ck_evidence_source_matches_kind",
         ),
         CheckConstraint(
@@ -275,6 +282,15 @@ class EvidenceRow(Base):
         nullable=True,
     )
     source_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    normalized_input_id: Mapped[UUID | None] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey(
+            "normalized_inputs.id",
+            name="fk_evidence_normalized_input_id",
+            ondelete="RESTRICT",
+        ),
+        nullable=True,
+    )
     source_text: Mapped[str] = mapped_column(Text, nullable=False)
     retrieved_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False
@@ -286,6 +302,9 @@ class EvidenceRow(Base):
 
 class BriefingRow(Base):
     __tablename__ = "briefings"
+    __table_args__ = (
+        UniqueConstraint("id", "company_id", name="uq_briefings_id_company"),
+    )
 
     id: Mapped[UUID] = mapped_column(
         Uuid(as_uuid=True), primary_key=True, default=uuid4

@@ -123,6 +123,7 @@ async def create_contact(session: AsyncSession, value: ContactCreate) -> Contact
     return ContactRecord(
         id=row.id,
         company_id=row.company_id,
+        identity_revision=row.identity_revision,
         email=row.email,
         display_name=row.display_name,
         created_at=row.created_at,
@@ -136,6 +137,7 @@ async def get_contact(session: AsyncSession, contact_id: UUID) -> ContactRecord:
     return ContactRecord(
         id=row.id,
         company_id=row.company_id,
+        identity_revision=row.identity_revision,
         email=row.email,
         display_name=row.display_name,
         created_at=row.created_at,
@@ -283,6 +285,7 @@ async def create_evidence(
         mail_message_id=value.mail_message_id,
         meeting_id=value.meeting_id,
         source_url=str(value.source_url) if value.source_url is not None else None,
+        normalized_input_id=value.normalized_input_id,
         source_text=value.source_text,
         retrieved_at=value.retrieved_at,
     )
@@ -299,6 +302,7 @@ def _evidence_record(row: EvidenceRow) -> EvidenceRecord:
             "mail_message_id": row.mail_message_id,
             "meeting_id": row.meeting_id,
             "source_url": row.source_url,
+            "normalized_input_id": row.normalized_input_id,
             "source_text": row.source_text,
             "retrieved_at": row.retrieved_at,
             "created_at": row.created_at,

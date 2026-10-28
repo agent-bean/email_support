@@ -1,0 +1,28 @@
+{
+  "assertions": [
+    {
+      "claim": {
+        "id": "oracle-supported",
+        "kind": "fact",
+        "text": "The owner-reviewed source supports this authored oracle assertion.",
+        "evidence_ids": ["source-a"]
+      },
+      "source_ids": ["source-a"],
+      "review": "supported",
+      "expected_integrity": "valid",
+      "expected_support": "supported"
+    },
+    {
+      "claim": {
+        "id": "oracle-unsupported",
+        "kind": "fact",
+        "text": "The owner-reviewed source does not support this authored oracle assertion.",
+        "evidence_ids": ["source-a"]
+      },
+      "source_ids": ["source-a"],
+      "review": "unsupported",
+      "expected_integrity": "valid",
+      "expected_support": "unsupported"
+    }
+  ]
+}

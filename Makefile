@@ -32,7 +32,7 @@ backend-check:
 	cd apps/backend && uv run --locked pytest -q tests/unit tests/integration tests/contracts
 	cd apps/backend && uv run --locked ruff check .
 	cd apps/backend && uv run --locked ruff format --check .
-	cd apps/backend && uv run --locked mypy --strict src scripts tests migrations
+	cd apps/backend && uv run --locked mypy --strict src scripts tests migrations evals
 	@if [ "$${CI:-}" = "true" ]; then $(MAKE) backend-database-check; fi
 
 backend-database-check:

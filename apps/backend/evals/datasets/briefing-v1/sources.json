@@ -1,0 +1,28 @@
+{
+  "sources": [
+    {
+      "id": "microsoft-about",
+      "url": "https://www.microsoft.com/en-us/about",
+      "retrieved_at": "2026-10-27T07:20:00Z",
+      "published_at": null,
+      "text": "Microsoft’s mission is to empower every person and every organization on the planet to achieve more. We believe that companies that can do more, should.",
+      "sha256": "095e151aeeeb779e61e367238a81090e479b1b1c6f08f61185da5f41feb8a0ee"
+    },
+    {
+      "id": "salesforce-story",
+      "url": "https://www.salesforce.com/company/our-story/",
+      "retrieved_at": "2026-10-27T07:20:00Z",
+      "published_at": null,
+      "text": "Since 1999, we've been focused on helping companies connect with customers in new and better ways.",
+      "sha256": "83bddfebbed926a0a3ea50896ffb36d4cbb4b51cd042440644624033048a20f0"
+    },
+    {
+      "id": "adobe-about",
+      "url": "https://www.adobe.com/about-adobe.html",
+      "retrieved_at": "2026-10-27T07:20:00Z",
+      "published_at": null,
+      "text": "Adobe empowers everyone, everywhere to imagine, create, and bring any digital experience to life.",
+      "sha256": "478d97547bac23c6fe1c149b8009fc3accd401a440ab56154a50c83822def53c"
+    }
+  ]
+}

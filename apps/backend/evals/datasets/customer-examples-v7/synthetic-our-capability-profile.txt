@@ -1,0 +1,4 @@
+Synthetic example capability profile — fictional organization
+
+Example Solutions provides fictional document-processing and OCR services.
+This fixture is for evaluation only and does not represent a real company.
